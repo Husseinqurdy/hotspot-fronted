@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { Card, CardHeader, Badge, Button, Table, Alert, Tabs, Spinner, PageHeader, Input, Select } from '../components/UI'
 import { useLang } from '../contexts/LangContext'
 import { useAuth } from '../contexts/AuthContext'
+import { VoucherPrintCard } from './AllPages'
 
 const PRINT_STYLE = `
   @media print {
@@ -33,7 +34,6 @@ const COLOR_THEMES = [
 
 type ThemeId = typeof COLOR_THEMES[number]['id']
 
-// ── CODE SETTINGS ─────────────────────────────────────────
 interface CodeSettings {
   type: 'mixed' | 'letters' | 'numbers'
   case: 'upper' | 'lower'
@@ -45,75 +45,45 @@ function generateCodeWithSettings(settings: CodeSettings): string {
   if (settings.type === 'mixed') chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
   else if (settings.type === 'letters') chars = 'ABCDEFGHJKMNPQRSTUVWXYZ'
   else chars = '0123456789'
-
   if (settings.type !== 'numbers') {
     if (settings.case === 'lower') chars = chars.toLowerCase()
   }
-
   return Array.from({ length: settings.length }, () =>
     chars[Math.floor(Math.random() * chars.length)]
   ).join('')
 }
 
-function CodeSettingsPanel({ settings, onChange }: {
-  settings: CodeSettings
-  onChange: (s: CodeSettings) => void
-}) {
+function CodeSettingsPanel({ settings, onChange }: { settings: CodeSettings; onChange: (s: CodeSettings) => void }) {
   return (
     <div style={{ background: '#f8fafc', border: '1px solid var(--gray-200)', borderRadius: 10, padding: '12px 14px' }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
         ⚙️ Mipangilio ya Code
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-
-        {/* Aina ya code */}
         <div>
           <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>Aina ya Herufi</label>
           <div style={{ display: 'flex', gap: 6 }}>
-            {[
-              { v: 'mixed', l: '🔤 Mchanganyiko' },
-              { v: 'letters', l: '🔡 Herufi Tu' },
-              { v: 'numbers', l: '🔢 Namba Tu' },
-            ].map(opt => (
+            {[{ v: 'mixed', l: '🔤 Mchanganyiko' }, { v: 'letters', l: '🔡 Herufi Tu' }, { v: 'numbers', l: '🔢 Namba Tu' }].map(opt => (
               <button key={opt.v} onClick={() => onChange({ ...settings, type: opt.v as any })}
-                style={{
-                  padding: '5px 10px', borderRadius: 7, border: '1.5px solid',
-                  borderColor: settings.type === opt.v ? 'var(--primary)' : 'var(--gray-200)',
-                  background: settings.type === opt.v ? 'var(--primary-light)' : '#fff',
-                  color: settings.type === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)',
-                  fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                }}>
+                style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid', borderColor: settings.type === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: settings.type === opt.v ? 'var(--primary-light)' : '#fff', color: settings.type === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                 {opt.l}
               </button>
             ))}
           </div>
         </div>
-
-        {/* Kubwa au ndogo */}
         {settings.type !== 'numbers' && (
           <div>
             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>Ukubwa wa Herufi</label>
             <div style={{ display: 'flex', gap: 6 }}>
-              {[
-                { v: 'upper', l: '⬆️ KUBWA (ABC)' },
-                { v: 'lower', l: '⬇️ Ndogo (abc)' },
-              ].map(opt => (
+              {[{ v: 'upper', l: '⬆️ KUBWA (ABC)' }, { v: 'lower', l: '⬇️ Ndogo (abc)' }].map(opt => (
                 <button key={opt.v} onClick={() => onChange({ ...settings, case: opt.v as any })}
-                  style={{
-                    padding: '5px 10px', borderRadius: 7, border: '1.5px solid',
-                    borderColor: settings.case === opt.v ? 'var(--primary)' : 'var(--gray-200)',
-                    background: settings.case === opt.v ? 'var(--primary-light)' : '#fff',
-                    color: settings.case === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)',
-                    fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                  }}>
+                  style={{ padding: '5px 10px', borderRadius: 7, border: '1.5px solid', borderColor: settings.case === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: settings.case === opt.v ? 'var(--primary-light)' : '#fff', color: settings.case === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                   {opt.l}
                 </button>
               ))}
             </div>
           </div>
         )}
-
-        {/* Idadi ya herufi */}
         <div>
           <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>
             Idadi ya Herufi: <strong style={{ color: 'var(--primary)' }}>{settings.length}</strong>
@@ -121,77 +91,15 @@ function CodeSettingsPanel({ settings, onChange }: {
           <div style={{ display: 'flex', gap: 6 }}>
             {[4, 5, 6, 7, 8].map(n => (
               <button key={n} onClick={() => onChange({ ...settings, length: n })}
-                style={{
-                  width: 36, height: 36, borderRadius: 8, border: '1.5px solid',
-                  borderColor: settings.length === n ? 'var(--primary)' : 'var(--gray-200)',
-                  background: settings.length === n ? 'var(--primary-light)' : '#fff',
-                  color: settings.length === n ? 'var(--primary-dark)' : 'var(--gray-600)',
-                  fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                }}>
+                style={{ width: 36, height: 36, borderRadius: 8, border: '1.5px solid', borderColor: settings.length === n ? 'var(--primary)' : 'var(--gray-200)', background: settings.length === n ? 'var(--primary-light)' : '#fff', color: settings.length === n ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {n}
               </button>
             ))}
           </div>
         </div>
-
-        {/* Preview */}
         <div style={{ fontSize: 11, color: 'var(--gray-500)' }}>
-          Preview: <strong style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--primary)', letterSpacing: 2 }}>
-            {generateCodeWithSettings(settings)}
-          </strong>
+          Preview: <strong style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--primary)', letterSpacing: 2 }}>{generateCodeWithSettings(settings)}</strong>
         </div>
-      </div>
-    </div>
-  )
-}
-
-// ── VOUCHER PRINT CARD ────────────────────────────────────
-function VoucherPrintCard({ voucher, business_name, theme }: {
-  voucher: any; business_name: string; theme: typeof COLOR_THEMES[0]
-}) {
-  return (
-    <div style={{
-      width: 200, display: 'inline-block', margin: '4px', verticalAlign: 'top',
-      pageBreakInside: 'avoid', borderRadius: 10, overflow: 'hidden',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.15)', fontFamily: 'Arial, sans-serif',
-    }}>
-      <div style={{ background: theme.bg, padding: '8px 10px', textAlign: 'center' }}>
-        <div style={{ color: theme.accent, fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 2 }}>
-          📶 {business_name}
-        </div>
-        <div style={{ color: theme.text, fontSize: 9, opacity: 0.7 }}>WiFi Access Voucher</div>
-      </div>
-      <div style={{ background: theme.light, padding: '10px 8px', textAlign: 'center', borderBottom: `2px dashed ${theme.accent}` }}>
-        <div style={{ fontSize: 9, color: theme.bg, fontWeight: 600, marginBottom: 3 }}>CODE / NAMBA</div>
-        <div style={{ fontSize: 22, fontWeight: 900, letterSpacing: 3, color: theme.bg, fontFamily: 'Courier New, monospace' }}>
-          {voucher.code}
-        </div>
-      </div>
-      <div style={{ background: '#fff', padding: '8px 10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-          <span style={{ fontSize: 9, color: '#555' }}>Package:</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: theme.bg }}>{voucher.package_name || voucher.package || '—'}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-          <span style={{ fontSize: 9, color: '#555' }}>Bei/Price:</span>
-          <span style={{ fontSize: 9, fontWeight: 700, color: theme.bg }}>TZS {Number(voucher.package_price || voucher.price || 0).toLocaleString()}</span>
-        </div>
-        {voucher.duration && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-            <span style={{ fontSize: 9, color: '#555' }}>Muda:</span>
-            <span style={{ fontSize: 9, fontWeight: 700 }}>{voucher.duration}</span>
-          </div>
-        )}
-        {voucher.customer_phone && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-            <span style={{ fontSize: 9, color: '#555' }}>Simu:</span>
-            <span style={{ fontSize: 9 }}>{voucher.customer_phone}</span>
-          </div>
-        )}
-      </div>
-      <div style={{ background: theme.bg, padding: '5px 8px', textAlign: 'center' }}>
-        <div style={{ color: theme.text, fontSize: 8, opacity: 0.85 }}>Unganika WiFi → Ingiza code hii</div>
-        <div style={{ color: theme.accent, fontSize: 8, marginTop: 1 }}>Connect WiFi → Enter this code</div>
       </div>
     </div>
   )
@@ -215,20 +123,9 @@ export function VoucherManagementPage() {
   const [profiles, setProfiles] = useState<string[]>([])
   const [profilesLoading, setProfilesLoading] = useState(false)
 
-  // ✅ Code settings
-  const [codeSettings, setCodeSettings] = useState<CodeSettings>({
-    type: 'mixed', case: 'upper', length: 8
-  })
-
-  // Manual form — ✅ imeondoa package_id
-  const [manualForm, setManualForm] = useState({
-    router_id: '', profile: '', customer_phone: '', custom_code: ''
-  })
-
-  // Batch form — ✅ imeondoa package_id
-  const [batchForm, setBatchForm] = useState({
-    router_id: '', profile: '', quantity: '10'
-  })
+  const [codeSettings, setCodeSettings] = useState<CodeSettings>({ type: 'mixed', case: 'upper', length: 8 })
+  const [manualForm, setManualForm] = useState({ router_id: '', profile: '', customer_phone: '', custom_code: '' })
+  const [batchForm, setBatchForm] = useState({ router_id: '', profile: '', quantity: '10' })
 
   const [selectedTheme, setSelectedTheme] = useState<ThemeId>('blue')
   const [batchResult, setBatchResult] = useState<any[]>([])
@@ -272,6 +169,26 @@ export function VoucherManagementPage() {
     } finally { setProfilesLoading(false) }
   }
 
+  // ── Pata maelezo ya package (duration + speed) ────────────────────────────
+  const getProfileInfo = async (profileName: string) => {
+    try {
+      const res = await api.get('/packages/')
+      const pkgs = res.data.results || res.data
+      const pkg = pkgs.find((p: any) => p.mikrotik_profile === profileName)
+      if (pkg) {
+        const timeout = pkg.duration_unit === 'days'
+          ? `${pkg.duration_value * 24}h`
+          : `${pkg.duration_value}h`
+        return {
+          duration: pkg.duration_display || `${pkg.duration_value} ${pkg.duration_unit}`,
+          speed: `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
+          session_timeout: timeout,
+        }
+      }
+    } catch {}
+    return { duration: '—', speed: '—', session_timeout: '1h' }
+  }
+
   const handleManualRouterChange = async (routerId: string) => {
     setManualForm(prev => ({ ...prev, router_id: routerId, profile: '' }))
     const first = await fetchProfiles(routerId)
@@ -284,7 +201,6 @@ export function VoucherManagementPage() {
     if (first) setBatchForm(prev => ({ ...prev, router_id: routerId, profile: first }))
   }
 
-  // ✅ Tumia codeSettings kutengeneza code
   const makeCode = () => generateCodeWithSettings(codeSettings)
 
   const handleManualCreate = async () => {
@@ -294,17 +210,34 @@ export function VoucherManagementPage() {
     setSaving(true)
     try {
       const code = manualForm.custom_code || makeCode()
+      const profileInfo = await getProfileInfo(manualForm.profile)
+
+      // ── 1. Unda user kwenye MikroTik ────────────────────────────────────
       await api.post(`/mikrotik/${manualForm.router_id}/hotspot/users/`, {
         username: code,
         password: code,
         profile: manualForm.profile,
         comment: `Manual|${manualForm.customer_phone || 'N/A'}`,
       })
-      showAlrt('success', `✅ Voucher ${code} imeundwa kwenye MikroTik!`)
+
+      // ── 2. Weka scheduler — voucher itaisha automatically ────────────────
+      try {
+        await api.post(`/mikrotik/${manualForm.router_id}/voucher/schedule/`, {
+          username: code,
+          session_timeout: profileInfo.session_timeout,
+          profile: manualForm.profile,
+        })
+      } catch {
+        // Scheduler si lazima — endelea hata kama imeshindwa
+      }
+
+      showAlrt('success', `✅ Voucher ${code} imeundwa + scheduler imewekwa!`)
       setPrintVouchers([{
         code,
         package_name: manualForm.profile,
         customer_phone: manualForm.customer_phone,
+        duration: profileInfo.duration,
+        speed: profileInfo.speed,
       }])
       setShowPrintModal(true)
       setManualForm({ router_id: manualForm.router_id, profile: manualForm.profile, customer_phone: '', custom_code: '' })
@@ -323,6 +256,7 @@ export function VoucherManagementPage() {
       showAlrt('error', 'Quantity lazima iwe kati ya 1 na 200'); return
     }
     setSaving(true)
+    const profileInfo = await getProfileInfo(batchForm.profile)
     const results: any[] = []
     let failed = 0
     try {
@@ -334,7 +268,13 @@ export function VoucherManagementPage() {
             profile: batchForm.profile,
             comment: `Batch|${new Date().toLocaleDateString('sw-TZ')}`,
           })
-          results.push({ code, package_name: batchForm.profile, customer_phone: '' })
+          results.push({
+            code,
+            package_name: batchForm.profile,
+            customer_phone: '',
+            duration: profileInfo.duration,
+            speed: profileInfo.speed,
+          })
         } catch { failed++ }
       }
       setBatchResult(results)
@@ -370,7 +310,6 @@ export function VoucherManagementPage() {
   ] as const
   const FILTERS = [{ k: '', l: t('all') }, { k: 'active', l: 'Active' }, { k: 'used', l: t('used') }, { k: 'expired', l: t('expired') }]
 
-  // ── Profile dropdown reusable ─────────────────────────
   const ProfileDropdown = ({ routerId, value, onChange }: { routerId: string; value: string; onChange: (v: string) => void }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -474,11 +413,8 @@ export function VoucherManagementPage() {
             <div style={{ padding: '1.25rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-                  {/* ✅ Code Settings juu kabisa */}
                   <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} />
 
-                  {/* ✅ Hakuna Package dropdown */}
                   <Select label="Router (lazima iwe online) *" value={manualForm.router_id}
                     onChange={(e: any) => handleManualRouterChange(e.target.value)}>
                     <option value="">— Chagua Router —</option>
@@ -506,7 +442,6 @@ export function VoucherManagementPage() {
                     )}
                   </div>
 
-                  {/* Rangi ya print */}
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Rangi ya Voucher (Print)</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -527,7 +462,7 @@ export function VoucherManagementPage() {
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Preview ya Voucher</label>
                   {manualForm.router_id && manualForm.profile ? (
                     <VoucherPrintCard
-                      voucher={{ code: manualForm.custom_code || makeCode(), package_name: manualForm.profile, customer_phone: manualForm.customer_phone }}
+                      voucher={{ code: manualForm.custom_code || makeCode(), package_name: manualForm.profile, customer_phone: manualForm.customer_phone, duration: '—', speed: '—' }}
                       business_name={business_name}
                       theme={printThemeObj}
                     />
@@ -549,11 +484,8 @@ export function VoucherManagementPage() {
             <Card>
               <CardHeader title="Unda Vouchers Nyingi (Batch)" />
               <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-                {/* ✅ Code Settings */}
                 <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} />
 
-                {/* ✅ Hakuna Package dropdown */}
                 <Select label="Router (lazima iwe online) *" value={batchForm.router_id}
                   onChange={(e: any) => handleBatchRouterChange(e.target.value)}>
                   <option value="">— Chagua Router —</option>
@@ -570,7 +502,6 @@ export function VoucherManagementPage() {
                   placeholder="10" value={batchForm.quantity}
                   onChange={(e: any) => setBatchForm({ ...batchForm, quantity: e.target.value })} />
 
-                {/* Rangi */}
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Rangi ya Vouchers (Print)</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
@@ -584,12 +515,11 @@ export function VoucherManagementPage() {
                   </div>
                 </div>
 
-                {/* Preview mini */}
                 {batchForm.profile && (
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Preview</label>
-                    <div style={{ transform: 'scale(0.75)', transformOrigin: 'left top', marginBottom: -40 }}>
-                      <VoucherPrintCard voucher={{ code: makeCode(), package_name: batchForm.profile }} business_name={business_name} theme={theme} />
+                    <div style={{ transform: 'scale(0.65)', transformOrigin: 'left top', marginBottom: -90 }}>
+                      <VoucherPrintCard voucher={{ code: makeCode(), package_name: batchForm.profile, duration: '—', speed: '—' }} business_name={business_name} theme={theme} />
                     </div>
                   </div>
                 )}
@@ -630,7 +560,7 @@ export function VoucherManagementPage() {
         {/* Print Modal */}
         {showPrintModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-            <div style={{ background: '#fff', borderRadius: 16, maxWidth: 760, width: '100%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ background: '#fff', borderRadius: 16, maxWidth: 800, width: '100%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
               <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700 }}>🖨️ Chapisha Vouchers ({printVouchers.length})</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

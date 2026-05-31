@@ -5,6 +5,7 @@ import Layout from '../components/Layout'
 import { StatCard, Table, Badge, PageHeader, Card, CardHeader, Button, Modal, Input, Select, Alert, FormRow, FormActions, Spinner, ConfirmDialog } from '../components/UI'
 import { useLang } from '../contexts/LangContext'
 import { useAuth } from '../contexts/AuthContext'
+import { MikroTikPermissionsModal } from './MikroTikManager'
 
 const WEEK = [{ d: 'Ju', v: 12 }, { d: 'Al', v: 19 }, { d: 'Ju', v: 8 }, { d: 'Al', v: 24 }, { d: 'Ij', v: 16 }, { d: 'Ar', v: 31 }, { d: 'Ju', v: 22 }]
 
@@ -18,6 +19,219 @@ const P = '1.25rem'
 const nc: Record<string, any> = { vodacom: 'green', tigo: 'blue', airtel: 'red', halo: 'yellow', unknown: 'gray' }
 const sc: Record<string, any> = { completed: 'green', failed: 'red', processing: 'yellow', pending: 'gray' }
 const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
+
+// ════════════════════════════════════════════════════════
+// BADILIKO 1: DurationField component
+// ════════════════════════════════════════════════════════
+const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>Muda wa Package *</label>
+    <div style={{ display: 'flex', gap: 8 }}>
+      <input
+        type="number"
+        min="1"
+        placeholder="1"
+        value={form.duration_value || ''}
+        onChange={(e: any) => setForm({ ...form, duration_value: e.target.value })}
+        style={{
+          flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)',
+          borderRadius: 8, fontSize: 14, outline: 'none',
+        }}
+      />
+      <select
+        value={form.duration_unit || 'hours'}
+        onChange={(e: any) => setForm({ ...form, duration_unit: e.target.value })}
+        style={{
+          flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)',
+          borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff',
+          color: 'var(--gray-800)', cursor: 'pointer',
+        }}
+      >
+        <option value="hours">⏰ Masaa</option>
+        <option value="days">📅 Siku</option>
+      </select>
+    </div>
+    {(form.duration_value && form.duration_unit) && (
+      <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>
+        = {form.duration_unit === 'hours'
+          ? `${form.duration_value * 60} dakika`
+          : `${form.duration_value * 1440} dakika (${form.duration_value * 24} masaa)`}
+      </span>
+    )}
+  </div>
+)
+
+// ════════════════════════════════════════════════════════
+// BADILIKO 3: VoucherPrintCard mpya
+// ════════════════════════════════════════════════════════
+function VoucherPrintCard({ voucher, business_name, theme }: {
+  voucher: any; business_name: string; theme: any
+}) {
+  const uptime = voucher.uptime || voucher.duration || '—'
+  const speed = voucher.speed || (voucher.speed_up && voucher.speed_down
+    ? `${voucher.speed_down}mb / ${voucher.speed_up}mb`
+    : '—')
+  const price = voucher.package_price || voucher.price || 0
+  const packageName = voucher.package_name || voucher.package || '—'
+
+  return (
+    <div style={{
+      width: 340, display: 'inline-block', margin: '6px', verticalAlign: 'top',
+      pageBreakInside: 'avoid', fontFamily: "'Arial', sans-serif",
+      background: '#f0f4ff',
+      borderRadius: 16, overflow: 'hidden',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
+      border: '1px solid #e0e8ff',
+      position: 'relative',
+    }}>
+
+      {/* ── LEFT STRIP: Bei + PRICE label ── */}
+      <div style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0, width: 56,
+        background: `linear-gradient(180deg, ${theme.bg} 0%, #0d1a5c 100%)`,
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', gap: 4,
+        borderRight: '3px solid #c9a227',
+      }}>
+        {/* Bei rotated */}
+        <div style={{
+          transform: 'rotate(-90deg)', whiteSpace: 'nowrap',
+          color: '#fff', fontWeight: 900, fontSize: 22, letterSpacing: 2,
+          textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+        }}>
+          TZS {Number(price).toLocaleString()}
+        </div>
+        <div style={{
+          transform: 'rotate(-90deg)',
+          color: '#c9a227', fontWeight: 700, fontSize: 9,
+          letterSpacing: 3, marginTop: 8,
+        }}>
+          PRICE
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT ── */}
+      <div style={{ marginLeft: 56, padding: '14px 14px 14px 16px' }}>
+
+        {/* Header: Business name + WiFi icon */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+          <div>
+            {/* Gold ornament */}
+            <div style={{ fontSize: 10, color: '#c9a227', marginBottom: 2, letterSpacing: 2 }}>✦ ─── ✦ ─── ✦</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: theme.bg, letterSpacing: 1, lineHeight: 1.1 }}>
+              {business_name.toUpperCase()}
+            </div>
+            <div style={{ fontSize: 9, color: '#888', fontStyle: 'italic', marginTop: 1 }}>
+              Stay Connected. Stay Powered.
+            </div>
+            <div style={{ fontSize: 9, color: '#c9a227', marginTop: 3, letterSpacing: 2 }}>── ── ── ──</div>
+          </div>
+          {/* WiFi Router icon */}
+          <div style={{
+            background: theme.bg, borderRadius: 8, padding: '8px 10px',
+            border: '2px solid #c9a227', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 18, color: '#fff' }}>📶</div>
+          </div>
+        </div>
+
+        {/* UPTIME + SPEED boxes */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <div style={{
+            flex: 1, background: '#fff', borderRadius: 10, padding: '8px 10px',
+            border: '1px solid #e5eaf5',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+              <div style={{
+                width: 28, height: 28, background: theme.bg, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 14,
+              }}>📶</div>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>UPTIME</div>
+                <div style={{ fontSize: 8, color: '#888' }}>Reliability You Trust</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: theme.bg }}>{uptime}</div>
+          </div>
+          <div style={{
+            flex: 1, background: '#fff', borderRadius: 10, padding: '8px 10px',
+            border: '1px solid #e5eaf5',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+              <div style={{
+                width: 28, height: 28, background: theme.bg, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 14,
+              }}>⚡</div>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>SPEED</div>
+                <div style={{ fontSize: 8, color: '#888' }}>High Speed Internet</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 900, color: theme.bg }}>{speed}</div>
+          </div>
+        </div>
+
+        {/* Package info */}
+        <div style={{ marginBottom: 8, padding: '6px 10px', background: '#fff', borderRadius: 8, border: '1px solid #e5eaf5' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+            <span style={{ fontSize: 12 }}>📦</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: 1 }}>PACKAGE</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: theme.bg, marginLeft: 'auto' }}>{packageName}</span>
+          </div>
+          {voucher.customer_phone && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10 }}>📱</span>
+              <span style={{ fontSize: 10, color: '#666' }}>{voucher.customer_phone}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div style={{ borderTop: '1.5px dashed #c9a227', margin: '8px 0' }} />
+
+        {/* Voucher code box */}
+        <div style={{
+          background: '#fff',
+          border: '2px solid #c9a227',
+          borderRadius: 10,
+          padding: '8px 12px',
+          textAlign: 'center',
+          marginBottom: 8,
+          boxShadow: '0 2px 8px rgba(201,162,39,0.15)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 2 }}>
+            <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 11 }}>——</span>
+            <span style={{ fontSize: 26, fontWeight: 900, letterSpacing: 5, color: theme.bg, fontFamily: 'Courier New, monospace' }}>
+              {voucher.code}
+            </span>
+            <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 11 }}>——</span>
+          </div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#888', letterSpacing: 3 }}>VOUCHER CODE</div>
+        </div>
+
+        {/* Footer: quote + thank you */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <div style={{ fontSize: 9, color: '#666', fontStyle: 'italic', maxWidth: '55%', lineHeight: 1.5 }}>
+            <span style={{ color: '#c9a227', fontSize: 13, fontWeight: 900 }}>"</span>
+            {' '}Enjoy fast, reliable and{' '}
+            <span style={{ color: theme.bg, fontWeight: 700 }}>uninterrupted</span>{' '}
+            internet.{' '}
+            <span style={{ color: '#c9a227', fontSize: 13, fontWeight: 900 }}>"</span>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: theme.bg, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>
+              Thank You!
+            </div>
+            <div style={{ fontSize: 8, color: '#c9a227', letterSpacing: 1 }}>── For Choosing Us ──</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
 
 // ── ADMIN DASHBOARD ──────────────────────────────────────
 export function AdminDashboard() {
@@ -70,7 +284,6 @@ export function AdminDashboard() {
           <Table loading={loading} headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), 'Malipo', t('status')]}
             rows={(data?.clients || []).map((c: any) => [
               <div><div style={{ fontWeight: 600, fontSize: 13 }}>{c.business_name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{c.username}</div></div>,
-              // ✅ reference_prefix → identifier
               <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: 13, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 5, letterSpacing: '0.1em' }}>{c.identifier}</span>,
               `${c.commission_rate}%`,
               <span style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>TZS {Number(c.balance).toLocaleString()}</span>,
@@ -95,59 +308,90 @@ export function AdminClients() {
   const [showBalance, setShowBalance] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
+  const [showPermissions, setShowPermissions] = useState(false)   // ← MPYA
   const [selected, setSelected] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [balanceAmount, setBalanceAmount] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [form, setForm] = useState({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' })
+  const [form, setForm] = useState({
+    business_name: '', username: '', password: '',
+    email: '', phone: '', commission_rate: '10'
+  })
 
-  const fetch = () => { setLoading(true); api.get('/clients/').then(r => { setClients(r.data.results || r.data); setLoading(false) }) }
+  const fetch = () => {
+    setLoading(true)
+    api.get('/clients/').then(r => { setClients(r.data.results || r.data); setLoading(false) })
+  }
   useEffect(() => { fetch() }, [])
 
   const handleCreate = async () => {
     if (!form.business_name || !form.username || !form.password) { show('error', 'Jaza sehemu zote'); return }
     setSaving(true)
-    try { await api.post('/clients/', form); show('success', `${form.business_name} ameundwa!`); setShowCreate(false); setForm({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' }); fetch() }
-    catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
+    try {
+      await api.post('/clients/', form)
+      show('success', `${form.business_name} ameundwa!`)
+      setShowCreate(false)
+      setForm({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' })
+      fetch()
+    } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
     finally { setSaving(false) }
   }
 
   const handleBalance = async () => {
     if (!selected || !balanceAmount) return
-    try { const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount }); show('success', r.data.message); setShowBalance(false); setBalanceAmount(''); fetch() }
-    catch { show('error', t('error')) }
+    try {
+      const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount })
+      show('success', r.data.message)
+      setShowBalance(false)
+      setBalanceAmount('')
+      fetch()
+    } catch { show('error', t('error')) }
   }
 
   const handlePassword = async () => {
     if (!selected || !newPassword) return
-    try { await api.post(`/clients/${selected.id}/change-password/`, { new_password: newPassword }); show('success', 'Password imebadilishwa'); setShowPassword(false); setNewPassword('') }
-    catch { show('error', t('error')) }
+    try {
+      await api.post(`/clients/${selected.id}/change-password/`, { new_password: newPassword })
+      show('success', 'Password imebadilishwa')
+      setShowPassword(false)
+      setNewPassword('')
+    } catch { show('error', t('error')) }
   }
 
   const handleToggle = async (c: any, action: 'activate' | 'deactivate') => {
-    try { const r = await api.post(`/clients/${c.id}/${action}/`); show('success', r.data.message); fetch() }
-    catch { show('error', t('error')) }
+    try {
+      const r = await api.post(`/clients/${c.id}/${action}/`)
+      show('success', r.data.message)
+      fetch()
+    } catch { show('error', t('error')) }
   }
 
   const handleDelete = async () => {
     if (!selected) return
-    try { await api.delete(`/clients/${selected.id}/`); show('success', 'Imefutwa'); setShowDelete(false); setSelected(null); fetch() }
-    catch { show('error', t('error')) }
+    try {
+      await api.delete(`/clients/${selected.id}/`)
+      show('success', 'Imefutwa')
+      setShowDelete(false)
+      setSelected(null)
+      fetch()
+    } catch { show('error', t('error')) }
   }
 
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title={t('clients')} subtitle={`${clients.length} wateja`} action={<Button onClick={() => setShowCreate(true)} icon="➕">{t('add_client')}</Button>} />
+        <PageHeader title={t('clients')} subtitle={`${clients.length} wateja`}
+          action={<Button onClick={() => setShowCreate(true)} icon="➕">{t('add_client')}</Button>} />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
+
         <Card>
-          <Table loading={loading} headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), t('status'), '']}
+          <Table loading={loading}
+            headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), t('status'), '']}
             rows={clients.map(c => [
               <div>
                 <div style={{ fontWeight: 600, fontSize: 13 }}>{c.business_name}</div>
                 <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{c.username} {c.email ? `· ${c.email}` : ''}</div>
               </div>,
-              // ✅ reference_prefix → identifier
               <span style={{ fontFamily: 'monospace', fontWeight: 800, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 5, fontSize: 13, letterSpacing: '0.1em' }}>{c.identifier}</span>,
               `${c.commission_rate}%`,
               <span style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>TZS {Number(c.balance).toLocaleString()}</span>,
@@ -155,6 +399,8 @@ export function AdminClients() {
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowBalance(true) }} icon="💰">{t('add_balance')}</Button>
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPassword(true) }} icon="🔑">{t('change_password')}</Button>
+                {/* ── KITUFE KIPYA CHA PERMISSIONS ── */}
+                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPermissions(true) }} icon="🔐">MikroTik</Button>
                 <Button size="sm" variant={c.is_active ? 'warning' : 'success'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')}>
                   {c.is_active ? `⏸ ${t('deactivate')}` : `▶ ${t('activate')}`}
                 </Button>
@@ -168,21 +414,29 @@ export function AdminClients() {
         {/* Create */}
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('add_client')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Input label={`${t('business_name')} *`} placeholder="Mama Fatuma Hotspot" value={form.business_name} onChange={(e: any) => setForm({ ...form, business_name: e.target.value })} />
+            <Input label={`${t('business_name')} *`} placeholder="Mama Fatuma Hotspot"
+              value={form.business_name} onChange={(e: any) => setForm({ ...form, business_name: e.target.value })} />
             <FormRow>
-              <Input label={`${t('username')} *`} placeholder="mfatuma" value={form.username} onChange={(e: any) => setForm({ ...form, username: e.target.value })} />
-              <Input label={`${t('password')} *`} type="password" placeholder="••••••" value={form.password} onChange={(e: any) => setForm({ ...form, password: e.target.value })} />
+              <Input label={`${t('username')} *`} placeholder="mfatuma"
+                value={form.username} onChange={(e: any) => setForm({ ...form, username: e.target.value })} />
+              <Input label={`${t('password')} *`} type="password" placeholder="••••••"
+                value={form.password} onChange={(e: any) => setForm({ ...form, password: e.target.value })} />
             </FormRow>
             <FormRow>
-              <Input label={t('phone')} placeholder="0712345678" value={form.phone} onChange={(e: any) => setForm({ ...form, phone: e.target.value })} />
-              <Input label={t('email')} type="email" placeholder="email@example.com" value={form.email} onChange={(e: any) => setForm({ ...form, email: e.target.value })} />
+              <Input label={t('phone')} placeholder="0712345678"
+                value={form.phone} onChange={(e: any) => setForm({ ...form, phone: e.target.value })} />
+              <Input label={t('email')} type="email" placeholder="email@example.com"
+                value={form.email} onChange={(e: any) => setForm({ ...form, email: e.target.value })} />
             </FormRow>
-            <Input label={t('commission_rate')} type="number" placeholder="10" value={form.commission_rate} onChange={(e: any) => setForm({ ...form, commission_rate: e.target.value })} />
-            {/* ✅ Maelezo yaliyobadilishwa */}
+            <Input label={t('commission_rate')} type="number" placeholder="10"
+              value={form.commission_rate} onChange={(e: any) => setForm({ ...form, commission_rate: e.target.value })} />
             <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>
               ℹ️ Nambari ya utambulisho (ID) itatolewa automatically kwa mpangilio (1, 2, 3...)
             </div>
-            <FormActions><Button variant="ghost" onClick={() => setShowCreate(false)}>{t('cancel')}</Button><Button onClick={handleCreate} disabled={saving}>{saving ? t('loading') : t('create_client')}</Button></FormActions>
+            <FormActions>
+              <Button variant="ghost" onClick={() => setShowCreate(false)}>{t('cancel')}</Button>
+              <Button onClick={handleCreate} disabled={saving}>{saving ? t('loading') : t('create_client')}</Button>
+            </FormActions>
           </div>
         </Modal>
 
@@ -193,25 +447,44 @@ export function AdminClients() {
               <span style={{ fontSize: 13, color: 'var(--gray-500)' }}>{t('current_balance')}</span>
               <span style={{ fontSize: 16, fontWeight: 800, color: '#059669' }}>TZS {Number(selected?.balance || 0).toLocaleString()}</span>
             </div>
-            <Input label={`${t('amount')} (TZS)`} type="number" placeholder="50000" value={balanceAmount} onChange={(e: any) => setBalanceAmount(e.target.value)} />
-            <FormActions><Button variant="ghost" onClick={() => setShowBalance(false)}>{t('cancel')}</Button><Button variant="success" onClick={handleBalance} icon="💰">{t('add_balance')}</Button></FormActions>
+            <Input label={`${t('amount')} (TZS)`} type="number" placeholder="50000"
+              value={balanceAmount} onChange={(e: any) => setBalanceAmount(e.target.value)} />
+            <FormActions>
+              <Button variant="ghost" onClick={() => setShowBalance(false)}>{t('cancel')}</Button>
+              <Button variant="success" onClick={handleBalance} icon="💰">{t('add_balance')}</Button>
+            </FormActions>
           </div>
         </Modal>
 
         {/* Change Password */}
         <Modal open={showPassword} onClose={() => setShowPassword(false)} title={`${t('change_password')} — ${selected?.business_name}`} width={380}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <Input label={t('new_password')} type="password" placeholder="••••••••" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
-            <FormActions><Button variant="ghost" onClick={() => setShowPassword(false)}>{t('cancel')}</Button><Button onClick={handlePassword} icon="🔑">{t('save')}</Button></FormActions>
+            <Input label={t('new_password')} type="password" placeholder="••••••••"
+              value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
+            <FormActions>
+              <Button variant="ghost" onClick={() => setShowPassword(false)}>{t('cancel')}</Button>
+              <Button onClick={handlePassword} icon="🔑">{t('save')}</Button>
+            </FormActions>
           </div>
         </Modal>
 
+        {/* ── PERMISSIONS MODAL ── */}
+        {showPermissions && selected && (
+          <MikroTikPermissionsModal
+            client={selected}
+            onClose={() => { setShowPermissions(false); setSelected(null) }}
+            onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa ✓`); fetch() }}
+          />
+        )}
+
         {/* Delete Confirm */}
-        <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete} title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
+        <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete}
+          title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
       </div>
     </Layout>
   )
 }
+
 
 // ── ADMIN ROUTERS ────────────────────────────────────────
 export function AdminRouters() {
@@ -276,7 +549,6 @@ export function AdminPayments() {
             rows={payments.map(p => [
               p.client_name, p.phone_number,
               <strong style={{ fontSize: 13 }}>TZS {Number(p.amount).toLocaleString()}</strong>,
-              // ✅ reference_code → transaction_id
               <code style={{ fontSize: 11 }}>{p.transaction_id || '—'}</code>,
               <Badge text={p.network_display} color={nc[p.network] || 'gray'} />,
               <Badge text={p.status_display} color={sc[p.status] || 'gray'} />,
@@ -416,7 +688,7 @@ export function ClientDashboard() {
   const [loading, setLoading] = useState(true)
   useEffect(() => { api.get('/dashboard/client/').then(r => { setData(r.data); setLoading(false) }) }, [])
   const s = data?.stats
-  const identifier = data?.client?.identifier  // ✅
+  const identifier = data?.client?.identifier
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1100, margin: '0 auto' }}>
@@ -424,9 +696,7 @@ export function ClientDashboard() {
         <div style={{ background: 'linear-gradient(135deg,#1e1b4b,#312e81)', borderRadius: 14, padding: '1.1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ color: '#fff' }}>
             <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 3 }}>{t('reference')}</p>
-            {/* ✅ reference_prefix → identifier */}
             <p style={{ fontSize: 20, fontFamily: 'monospace', fontWeight: 800, color: '#a5b4fc', letterSpacing: '0.15em' }}>{identifier || '...'}</p>
-            {/* ✅ Maelezo ya jinsi ya kutumia */}
             {identifier && (
               <div style={{ marginTop: 8, background: 'rgba(255,255,255,0.07)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.7 }}>
                 <p style={{ margin: 0, fontWeight: 600, color: '#c7d2fe', marginBottom: 2 }}>📌 Jinsi wateja wako wanavyolipa:</p>
@@ -579,23 +849,40 @@ export function ClientPackages() {
   const [showModal, setShowModal] = useState(false)
   const [editPkg, setEditPkg] = useState<any>(null)
   const [showDelete, setShowDelete] = useState<any>(null)
-  const [form, setForm] = useState({ name: '', price: '', duration_minutes: '', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
+
+  // ════════════════════════════════════════════════════════
+  // BADILIKO 2: useState ya form — duration_value + duration_unit
+  // ════════════════════════════════════════════════════════
+  const [form, setForm] = useState({
+    name: '', price: '',
+    duration_value: '1',
+    duration_unit: 'hours',
+    speed_up: '2', speed_down: '2',
+    mikrotik_profile: '', shared_users: '1'
+  })
 
   const fetch = () => api.get('/packages/').then(r => setPackages(r.data.results || r.data))
   useEffect(() => { fetch() }, [])
 
+  // ════════════════════════════════════════════════════════
+  // BADILIKO 2: openCreate — duration_value + duration_unit
+  // ════════════════════════════════════════════════════════
   const openCreate = () => {
     setEditPkg(null)
-    setForm({ name: '', price: '', duration_minutes: '', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
+    setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
     setShowModal(true)
   }
 
+  // ════════════════════════════════════════════════════════
+  // BADILIKO 2: openEdit — duration_value + duration_unit
+  // ════════════════════════════════════════════════════════
   const openEdit = (pkg: any) => {
     setEditPkg(pkg)
     setForm({
       name: pkg.name,
       price: String(pkg.price),
-      duration_minutes: String(pkg.duration_minutes),
+      duration_value: String(pkg.duration_value || Math.round(pkg.duration_minutes / 60)),
+      duration_unit: pkg.duration_unit || 'hours',
       speed_up: pkg.speed_up,
       speed_down: pkg.speed_down,
       mikrotik_profile: pkg.mikrotik_profile,
@@ -614,7 +901,7 @@ export function ClientPackages() {
         show('success', `${form.name} imeundwa!`)
       }
       setShowModal(false)
-      setForm({ name: '', price: '', duration_minutes: '', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
+      setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
       fetch()
     } catch (e: any) {
       const err = e.response?.data
@@ -674,7 +961,6 @@ export function ClientPackages() {
 
               <div style={{ marginTop: 8, fontSize: 11, color: 'var(--gray-400)', fontFamily: 'monospace', marginBottom: 10 }}>{pkg.mikrotik_profile}</div>
 
-              {/* ✅ Edit na Delete buttons */}
               <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10 }}>
                 <Button size="sm" variant="ghost" onClick={() => openEdit(pkg)} icon="✏️" style={{ flex: 1 }}>{t('edit')}</Button>
                 <Button size="sm" variant="danger" onClick={() => setShowDelete(pkg)} style={{ flex: 1 }}>🗑 Futa</Button>
@@ -689,13 +975,16 @@ export function ClientPackages() {
           )}
         </div>
 
-        {/* ✅ Modal ya create/edit */}
+        {/* Modal ya create/edit */}
         <Modal open={showModal} onClose={() => setShowModal(false)} title={editPkg ? `Hariri: ${editPkg.name}` : t('add_package')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('package_name')} *`} placeholder="Saa 1, Siku 1..." value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
             <FormRow>
               <Input label={`${t('price')} *`} type="number" placeholder="500" value={form.price} onChange={(e: any) => setForm({ ...form, price: e.target.value })} />
-              <Input label={`${t('duration_minutes')} *`} type="number" placeholder="60" value={form.duration_minutes} onChange={(e: any) => setForm({ ...form, duration_minutes: e.target.value })} />
+              {/* ════════════════════════════════════════════════
+                  BADILIKO 1: DurationField badala ya duration_minutes
+                  ════════════════════════════════════════════════ */}
+              <DurationField form={form} setForm={setForm} />
             </FormRow>
             <FormRow>
               <Input label={t('speed_down')} type="number" placeholder="2" value={form.speed_down} onChange={(e: any) => setForm({ ...form, speed_down: e.target.value })} />
@@ -715,7 +1004,6 @@ export function ClientPackages() {
           </div>
         </Modal>
 
-        {/* ✅ Confirm delete */}
         <ConfirmDialog
           open={!!showDelete}
           onClose={() => setShowDelete(null)}
@@ -789,7 +1077,6 @@ export function ClientPayments() {
             rows={payments.map(p => [
               p.phone_number,
               <strong style={{ fontSize: 13 }}>TZS {Number(p.amount).toLocaleString()}</strong>,
-              // ✅ reference_code → transaction_id
               <code style={{ fontSize: 11, color: 'var(--gray-500)' }}>{p.transaction_id || '—'}</code>,
               <Badge text={p.network_display} color={nc[p.network] || 'gray'} />,
               <Badge text={p.status_display} color={sc[p.status] || 'gray'} />,
@@ -802,3 +1089,5 @@ export function ClientPayments() {
     </Layout>
   )
 }
+
+export { VoucherPrintCard, DurationField }
