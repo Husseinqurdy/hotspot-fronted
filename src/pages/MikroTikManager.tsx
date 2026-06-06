@@ -42,10 +42,787 @@ const ALL_TABS = [
   { key: 'scheduler',        label: 'Scheduler',         icon: '⏰' },
 ] as const
 
+// ── DETAIL ROW: read-only ─────────────────────────────────
+function DetailRow({ label, value, mono = false, full = false }: {
+  label: string; value: any; mono?: boolean; full?: boolean
+}) {
+  if (!value && value !== 0 && value !== false) return null
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: full ? 'column' : 'row',
+      justifyContent: full ? undefined : 'space-between',
+      alignItems: full ? 'flex-start' : 'flex-start',
+      padding: '8px 0',
+      borderBottom: '1px solid var(--gray-50)',
+      gap: full ? 4 : 8,
+    }}>
+      <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600, minWidth: full ? undefined : 140, flexShrink: 0 }}>
+        {label}
+      </span>
+      <span style={{
+        fontSize: 13, color: 'var(--gray-800)', fontFamily: mono ? 'monospace' : undefined,
+        wordBreak: 'break-all', textAlign: full ? 'left' : 'right',
+      }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+// ── EDIT ROW: field inayoweza kubadilika ──────────────────
+function EditRow({ label, name, value, onChange, mono = false, type = 'text', placeholder = '' }: {
+  label: string
+  name: string
+  value: string
+  onChange: (name: string, value: string) => void
+  mono?: boolean
+  type?: string
+  placeholder?: string
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        {label}
+      </label>
+      <input
+        type={type}
+        value={value ?? ''}
+        placeholder={placeholder}
+        onChange={e => onChange(name, e.target.value)}
+        style={{
+          padding: '7px 10px',
+          border: '1.5px solid var(--gray-200)',
+          borderRadius: 7,
+          fontSize: 13,
+          fontFamily: mono ? 'monospace' : undefined,
+          outline: 'none',
+          color: 'var(--gray-800)',
+          background: '#fff',
+          transition: 'border-color 0.15s',
+        }}
+        onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+        onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
+      />
+    </div>
+  )
+}
+
+// ── EDIT SELECT ROW ───────────────────────────────────────
+function EditSelectRow({ label, name, value, options, onChange }: {
+  label: string
+  name: string
+  value: string
+  options: { value: string; label: string }[]
+  onChange: (name: string, value: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        {label}
+      </label>
+      <select
+        value={value ?? ''}
+        onChange={e => onChange(name, e.target.value)}
+        style={{
+          padding: '7px 10px',
+          border: '1.5px solid var(--gray-200)',
+          borderRadius: 7,
+          fontSize: 13,
+          outline: 'none',
+          color: 'var(--gray-800)',
+          background: '#fff',
+          cursor: 'pointer',
+        }}
+      >
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  )
+}
+
+// ── EDIT TEXTAREA ROW ─────────────────────────────────────
+function EditTextareaRow({ label, name, value, onChange, placeholder = '', minHeight = 100 }: {
+  label: string
+  name: string
+  value: string
+  onChange: (name: string, value: string) => void
+  placeholder?: string
+  minHeight?: number
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
+      <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        {label}
+      </label>
+      <textarea
+        value={value ?? ''}
+        placeholder={placeholder}
+        onChange={e => onChange(name, e.target.value)}
+        style={{
+          padding: '8px 10px',
+          border: '1.5px solid var(--gray-200)',
+          borderRadius: 7,
+          fontSize: 12,
+          fontFamily: 'monospace',
+          outline: 'none',
+          color: 'var(--gray-800)',
+          background: '#fff',
+          resize: 'vertical',
+          minHeight,
+          lineHeight: 1.6,
+          transition: 'border-color 0.15s',
+        }}
+        onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+        onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
+      />
+    </div>
+  )
+}
+
+// ── TABS za detail window ─────────────────────────────────
+function DetailTabs({ tabs, active, onChange }: {
+  tabs: { key: string; label: string }[]
+  active: string
+  onChange: (k: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', borderBottom: '2px solid var(--gray-100)', marginBottom: '1rem' }}>
+      {tabs.map(t => (
+        <button key={t.key} onClick={() => onChange(t.key)}
+          style={{
+            padding: '8px 16px', border: 'none', background: 'none',
+            fontSize: 13, fontWeight: active === t.key ? 700 : 500,
+            color: active === t.key ? 'var(--primary)' : 'var(--gray-500)',
+            borderBottom: active === t.key ? '2px solid var(--primary)' : '2px solid transparent',
+            marginBottom: -2, cursor: 'pointer', transition: 'all 0.15s',
+          }}>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+// ── EDIT MODE TOGGLE button ───────────────────────────────
+function EditModeToggle({ editing, onToggle }: { editing: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        padding: '4px 10px',
+        borderRadius: 7,
+        border: `1.5px solid ${editing ? 'var(--primary)' : 'var(--gray-200)'}`,
+        background: editing ? 'var(--primary-light)' : '#fff',
+        color: editing ? 'var(--primary-dark)' : 'var(--gray-500)',
+        fontSize: 12,
+        fontWeight: 600,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 5,
+        transition: 'all 0.15s',
+      }}
+    >
+      {editing ? '👁 View' : '✏️ Edit'}
+    </button>
+  )
+}
+
+// ════════════════════════════════════════════════════════
+// DETAIL MODAL: Server Profile — tabs: General, Scripts
+// ════════════════════════════════════════════════════════
+function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
+  profile: any
+  routerId: number
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [activeTab, setActiveTab] = useState('general')
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState<Record<string, string>>({ ...profile })
+  const [saving, setSaving] = useState(false)
+  const [alert, setAlert] = useState<{ type: any; msg: string } | null>(null)
+  const [dirty, setDirty] = useState(false)
+
+  const handleChange = (name: string, value: string) => {
+    setForm(prev => ({ ...prev, [name]: value }))
+    setDirty(true)
+  }
+
+  const handleApply = async () => {
+    setSaving(true)
+    try {
+      await api.patch(`/mikrotik/${routerId}/hotspot/profiles/`, {
+        profile_name: profile.name,
+        ...form,
+      })
+      setAlert({ type: 'success', msg: 'Profile imesasishwa ✓' })
+      setDirty(false)
+      onSaved()
+    } catch (e: any) {
+      setAlert({ type: 'error', msg: e.response?.data?.error || 'Imeshindwa kuhifadhi' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleOK = async () => {
+    if (dirty) await handleApply()
+    onClose()
+  }
+
+  const tabs = [
+    { key: 'general', label: 'General' },
+    { key: 'scripts', label: 'Scripts' },
+  ]
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+      <div style={{ background: '#fff', borderRadius: 14, maxWidth: 520, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
+
+        {/* Header */}
+        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>📋 Hotspot User Profile</div>
+            <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginTop: 2 }}>{profile.name}</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
+            <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+          </div>
+        </div>
+
+        {/* Alert */}
+        {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem' }}>
+          <DetailTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+          {activeTab === 'general' && (
+            editing ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <EditRow label="Name" name="name" value={form.name} onChange={handleChange} mono />
+                <EditRow label="Rate Limit" name="rate-limit" value={form['rate-limit']} onChange={handleChange} mono placeholder="e.g. 2M/2M" />
+                <EditRow label="Session Timeout" name="session-timeout" value={form['session-timeout']} onChange={handleChange} placeholder="e.g. 1h / unlimited" />
+                <EditRow label="Idle Timeout" name="idle-timeout" value={form['idle-timeout']} onChange={handleChange} placeholder="e.g. 30m / unlimited" />
+                <EditRow label="Keepalive Timeout" name="keepalive-timeout" value={form['keepalive-timeout']} onChange={handleChange} />
+                <EditRow label="Shared Users" name="shared-users" value={form['shared-users']} onChange={handleChange} type="number" placeholder="1" />
+                <EditRow label="DNS Name" name="dns-name" value={form['dns-name']} onChange={handleChange} />
+                <EditRow label="HTML Directory" name="html-directory" value={form['html-directory']} onChange={handleChange} mono />
+                <EditRow label="HTTP Cookie Lifetime" name="http-cookie-lifetime" value={form['http-cookie-lifetime']} onChange={handleChange} />
+                <EditRow label="Status Auto-Refresh" name="status-autorefresh" value={form['status-autorefresh']} onChange={handleChange} />
+                <EditRow label="Address Pool" name="address-pool" value={form['address-pool']} onChange={handleChange} />
+                <EditRow label="MAC Cookie Timeout" name="mac-cookie-timeout" value={form['mac-cookie-timeout']} onChange={handleChange} />
+              </div>
+            ) : (
+              <div>
+                <DetailRow label="Name" value={form.name} mono />
+                <DetailRow label="Rate Limit" value={form['rate-limit'] || 'unlimited'} mono />
+                <DetailRow label="Session Timeout" value={form['session-timeout'] || 'unlimited'} />
+                <DetailRow label="Idle Timeout" value={form['idle-timeout'] || 'unlimited'} />
+                <DetailRow label="Keepalive Timeout" value={form['keepalive-timeout'] || '—'} />
+                <DetailRow label="Shared Users" value={form['shared-users'] || '1'} />
+                <DetailRow label="DNS Name" value={form['dns-name'] || '—'} />
+                <DetailRow label="HTML Directory" value={form['html-directory'] || '—'} mono />
+                <DetailRow label="HTTP Cookie Lifetime" value={form['http-cookie-lifetime'] || '—'} />
+                <DetailRow label="Status Auto-Refresh" value={form['status-autorefresh'] || '—'} />
+                <DetailRow label="Transparent Proxy" value={form['transparent-proxy'] || '—'} />
+                <DetailRow label="Address Pool" value={form['address-pool'] || '—'} />
+                <DetailRow label="MAC Cookie Timeout" value={form['mac-cookie-timeout'] || '—'} />
+              </div>
+            )
+          )}
+
+          {activeTab === 'scripts' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[
+                { label: 'On Login', key: 'on-login' },
+                { label: 'On Logout', key: 'on-logout' },
+              ].map(({ label, key }) => (
+                <div key={key}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>{label}</div>
+                  {editing ? (
+                    <EditTextareaRow
+                      label={label}
+                      name={key}
+                      value={form[key] || ''}
+                      onChange={handleChange}
+                      placeholder={`# Script ya ${label.toLowerCase()}\n# Mfano: :log info "User ameingia"`}
+                      minHeight={120}
+                    />
+                  ) : (
+                    form[key] ? (
+                      <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '10px 14px' }}>
+                        <pre style={{ fontSize: 12, color: '#e0e7ff', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace' }}>
+                          {form[key]}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '8px 12px', background: 'var(--gray-50)', borderRadius: 8, fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic' }}>
+                        Hakuna script
+                      </div>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'flex-end', gap: 8, flexShrink: 0 }}>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          {editing && dirty && (
+            <Button variant="ghost" onClick={handleApply} disabled={saving}>
+              {saving ? <Spinner size={14} /> : '💾 Apply'}
+            </Button>
+          )}
+          <Button onClick={handleOK} disabled={saving}>
+            {saving ? <Spinner size={14} /> : 'OK'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════
+// DETAIL MODAL: User — tabs: General, Statistics
+// ════════════════════════════════════════════════════════
+function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, availableProfiles = [] }: {
+  user: any
+  routerId: number
+  onClose: () => void
+  onDelete: (username: string) => void
+  onSaved: () => void
+  availableProfiles?: string[]
+}) {
+  const [activeTab, setActiveTab] = useState('general')
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState<Record<string, string>>({ ...user })
+  const [saving, setSaving] = useState(false)
+  const [alert, setAlert] = useState<{ type: any; msg: string } | null>(null)
+  const [dirty, setDirty] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const handleChange = (name: string, value: string) => {
+    setForm(prev => ({ ...prev, [name]: value }))
+    setDirty(true)
+  }
+
+  const handleApply = async () => {
+    setSaving(true)
+    try {
+      await api.patch(`/mikrotik/${routerId}/hotspot/users/`, {
+        username: user.name,
+        ...form,
+      })
+      setAlert({ type: 'success', msg: 'User imesasishwa ✓' })
+      setDirty(false)
+      onSaved()
+    } catch (e: any) {
+      setAlert({ type: 'error', msg: e.response?.data?.error || 'Imeshindwa kuhifadhi' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleOK = async () => {
+    if (dirty) await handleApply()
+    onClose()
+  }
+
+  const tabs = [
+    { key: 'general',    label: 'General' },
+    { key: 'statistics', label: 'Statistics' },
+  ]
+
+  const profileOptions = availableProfiles.length > 0
+    ? availableProfiles.map(p => ({ value: p, label: p }))
+    : [{ value: form.profile || 'default', label: form.profile || 'default' }]
+
+  const disabledOptions = [
+    { value: 'false', label: 'Active — mtumiaji anaweza kuingia' },
+    { value: 'true',  label: 'Disabled — mtumiaji amezuiwa' },
+  ]
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div style={{ background: '#fff', borderRadius: 14, maxWidth: 480, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
+
+          {/* Header */}
+          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>👤 Hotspot User</div>
+              <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, marginTop: 2, fontFamily: 'monospace' }}>{user.name}</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
+              <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+            </div>
+          </div>
+
+          {/* Alert */}
+          {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
+
+          {/* Content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem' }}>
+            <DetailTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+            {activeTab === 'general' && (
+              editing ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* Name: read-only hata katika edit mode */}
+                  <div style={{ padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Name</div>
+                    <div style={{ padding: '7px 10px', background: 'var(--gray-50)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', color: 'var(--gray-500)', border: '1.5px solid var(--gray-100)' }}>
+                      {form.name} <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>(haiwezi kubadilika)</span>
+                    </div>
+                  </div>
+                  <EditRow label="Password" name="password" value={form.password || ''} onChange={handleChange} mono placeholder="Weka password mpya" />
+                  <EditSelectRow label="Profile" name="profile" value={form.profile || 'default'} options={profileOptions} onChange={handleChange} />
+                  <EditRow label="Comment" name="comment" value={form.comment || ''} onChange={handleChange} placeholder="Jina la mteja au maelezo" />
+                  <EditRow label="Limit Uptime" name="limit-uptime" value={form['limit-uptime'] || ''} onChange={handleChange} placeholder="e.g. 1h / unlimited" />
+                  <EditRow label="Limit Bytes In" name="limit-bytes-in" value={form['limit-bytes-in'] || ''} onChange={handleChange} placeholder="bytes (0 = unlimited)" />
+                  <EditRow label="Limit Bytes Out" name="limit-bytes-out" value={form['limit-bytes-out'] || ''} onChange={handleChange} placeholder="bytes (0 = unlimited)" />
+                  <EditRow label="Limit Bytes Total" name="limit-bytes-total" value={form['limit-bytes-total'] || ''} onChange={handleChange} placeholder="bytes (0 = unlimited)" />
+                  <EditRow label="MAC Address" name="mac-address" value={form['mac-address'] || ''} onChange={handleChange} mono placeholder="AA:BB:CC:DD:EE:FF" />
+                  <EditRow label="IP Address" name="address" value={form.address || ''} onChange={handleChange} mono placeholder="192.168.1.100" />
+                  <EditSelectRow label="Disabled" name="disabled" value={form.disabled || 'false'} options={disabledOptions} onChange={handleChange} />
+                </div>
+              ) : (
+                <div>
+                  <DetailRow label="Name" value={user.name} mono />
+                  <DetailRow label="Password" value={user.password || '(hidden)'} mono />
+                  <DetailRow label="Profile" value={<Badge text={form.profile || 'default'} color="indigo" />} />
+                  <DetailRow label="Comment" value={form.comment || '—'} />
+                  <DetailRow label="Limit Uptime" value={form['limit-uptime'] || 'unlimited'} />
+                  <DetailRow label="Limit Bytes In" value={form['limit-bytes-in'] || 'unlimited'} />
+                  <DetailRow label="Limit Bytes Out" value={form['limit-bytes-out'] || 'unlimited'} />
+                  <DetailRow label="Limit Bytes Total" value={form['limit-bytes-total'] || 'unlimited'} />
+                  <DetailRow label="MAC Address" value={form['mac-address'] || '—'} mono />
+                  <DetailRow label="IP Address" value={form.address || '—'} mono />
+                  <DetailRow label="Disabled" value={
+                    <Badge
+                      text={form.disabled === 'true' ? 'Yes' : 'No'}
+                      color={form.disabled === 'true' ? 'red' : 'green'}
+                    />
+                  } />
+                </div>
+              )
+            )}
+
+            {activeTab === 'statistics' && (
+              <div>
+                <DetailRow label="Uptime" value={user.uptime || '—'} />
+                <DetailRow label="Bytes In" value={user['bytes-in'] ? `${Number(user['bytes-in']).toLocaleString()} B` : '—'} />
+                <DetailRow label="Bytes Out" value={user['bytes-out'] ? `${Number(user['bytes-out']).toLocaleString()} B` : '—'} />
+                <DetailRow label="Packets In" value={user['packets-in'] || '—'} />
+                <DetailRow label="Packets Out" value={user['packets-out'] || '—'} />
+                <DetailRow label="Last Logged In" value={user['last-logged-in'] || '—'} />
+                {(!user.uptime && !user['bytes-in']) && (
+                  <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--gray-400)', fontSize: 13 }}>
+                    Hakuna statistics — user hajawahi kuingia
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon="🗑">Remove</Button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              {editing && dirty && (
+                <Button variant="ghost" onClick={handleApply} disabled={saving}>
+                  {saving ? <Spinner size={14} /> : '💾 Apply'}
+                </Button>
+              )}
+              <Button onClick={handleOK} disabled={saving}>
+                {saving ? <Spinner size={14} /> : 'OK'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => { onDelete(user.name); setConfirmDelete(false); onClose() }}
+        title="Futa User"
+        message={`Futa user "${user.name}"? Hatua hii haiwezi kurudishwa!`}
+        danger
+      />
+    </>
+  )
+}
+
+// ════════════════════════════════════════════════════════
+// DETAIL MODAL: Scheduler — tabs: General, Script
+// ════════════════════════════════════════════════════════
+function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete, onToggle }: {
+  scheduler: any
+  routerId: number
+  onClose: () => void
+  onSaved: () => void
+  onDelete: (id: string) => void
+  onToggle: (s: any) => void
+}) {
+  const [activeTab, setActiveTab] = useState('general')
+  const [editing, setEditing] = useState(false)
+  const [form, setForm] = useState<Record<string, string>>({ ...scheduler })
+  const [saving, setSaving] = useState(false)
+  const [alert, setAlert] = useState<{ type: any; msg: string } | null>(null)
+  const [dirty, setDirty] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const isDisabled = form.disabled === 'true'
+
+  const handleChange = (name: string, value: string) => {
+    setForm(prev => ({ ...prev, [name]: value }))
+    setDirty(true)
+  }
+
+  const handleApply = async () => {
+    setSaving(true)
+    try {
+      await api.patch(`/mikrotik/${routerId}/scheduler/`, {
+        scheduler_id: scheduler['.id'],
+        name: form.name,
+        'start-date': form['start-date'],
+        'start-time': form['start-time'],
+        interval: form.interval,
+        'on-event': form['on-event'],
+        policy: form.policy,
+        comment: form.comment,
+        disabled: form.disabled,
+      })
+      setAlert({ type: 'success', msg: 'Scheduler imesasishwa ✓' })
+      setDirty(false)
+      onSaved()
+    } catch (e: any) {
+      setAlert({ type: 'error', msg: e.response?.data?.error || 'Imeshindwa kuhifadhi' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleOK = async () => {
+    if (dirty) await handleApply()
+    onClose()
+  }
+
+  const tabs = [
+    { key: 'general', label: 'General' },
+    { key: 'script',  label: 'Script' },
+  ]
+
+  const policyOptions = [
+    { value: 'read,write,reboot',               label: 'read, write, reboot' },
+    { value: 'read,write',                       label: 'read, write' },
+    { value: 'read,write,reboot,policy,sensitive', label: 'Full' },
+    { value: 'read',                             label: 'read only' },
+  ]
+
+  const intervalPresets = [
+    { l: 'Mara moja', v: '00:00:00' },
+    { l: 'Kila dakika', v: '00:01:00' },
+    { l: 'Kila saa', v: '01:00:00' },
+    { l: 'Kila saa 6', v: '06:00:00' },
+    { l: 'Kila siku', v: '1d 00:00:00' },
+    { l: 'Kila wiki', v: '7d 00:00:00' },
+  ]
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div style={{ background: '#fff', borderRadius: 14, maxWidth: 540, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
+
+          {/* Header */}
+          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>⏰ Scheduler</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700 }}>{scheduler.name}</span>
+                <Badge text={isDisabled ? 'Disabled' : 'Running'} color={isDisabled ? 'red' : 'green'} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
+              <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+            </div>
+          </div>
+
+          {/* Alert */}
+          {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
+
+          {/* Content */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem' }}>
+            <DetailTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+
+            {activeTab === 'general' && (
+              editing ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <EditRow label="Name" name="name" value={form.name} onChange={handleChange} mono />
+                  <EditRow label="Comment" name="comment" value={form.comment || ''} onChange={handleChange} placeholder="Maelezo ya scheduler" />
+                  <EditRow label="Start Date" name="start-date" value={form['start-date'] || ''} onChange={handleChange} placeholder="jan/01/1970" mono />
+                  <EditRow label="Start Time" name="start-time" value={form['start-time'] || ''} onChange={handleChange} placeholder="00:00:00" mono />
+                  {/* Interval + presets */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interval</label>
+                    <input
+                      value={form.interval || ''}
+                      onChange={e => handleChange('interval', e.target.value)}
+                      placeholder="00:00:00"
+                      style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', outline: 'none' }}
+                      onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+                      onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
+                    />
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 2 }}>
+                      {intervalPresets.map(p => (
+                        <button key={p.v} onClick={() => handleChange('interval', p.v)}
+                          style={{
+                            padding: '3px 8px', borderRadius: 6, border: '1px solid',
+                            borderColor: form.interval === p.v ? 'var(--primary)' : 'var(--gray-200)',
+                            background: form.interval === p.v ? 'var(--primary-light)' : '#fff',
+                            color: form.interval === p.v ? 'var(--primary-dark)' : 'var(--gray-600)',
+                            fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                          }}>
+                          {p.l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <EditSelectRow label="Policy" name="policy" value={form.policy || 'read,write,reboot'} options={policyOptions} onChange={handleChange} />
+                  <EditSelectRow
+                    label="Status"
+                    name="disabled"
+                    value={form.disabled || 'false'}
+                    options={[
+                      { value: 'false', label: '▶ Enabled — inafanya kazi' },
+                      { value: 'true',  label: '⏸ Disabled — imesimamishwa' },
+                    ]}
+                    onChange={handleChange}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <DetailRow label="Name" value={scheduler.name} mono />
+                  <DetailRow label="Comment" value={form.comment || '—'} />
+                  <DetailRow label="Start Date" value={form['start-date'] || '—'} />
+                  <DetailRow label="Start Time" value={form['start-time'] || '—'} mono />
+                  <DetailRow label="Interval" value={form.interval || 'once'} mono />
+                  <DetailRow label="Policy" value={form.policy || '—'} />
+                  <DetailRow label="Run Count" value={
+                    <span style={{ fontWeight: 700, color: (scheduler['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)' }}>
+                      {scheduler['run-count'] || '0'}
+                    </span>
+                  } />
+                  <DetailRow label="Next Run" value={scheduler['next-run'] || '—'} />
+                  <DetailRow label="Status" value={
+                    <Badge text={isDisabled ? 'Disabled' : 'Running'} color={isDisabled ? 'red' : 'green'} />
+                  } />
+                </div>
+              )
+            )}
+
+            {activeTab === 'script' && (
+              <div>
+                {editing ? (
+                  <>
+                    <EditTextareaRow
+                      label="On Event Script"
+                      name="on-event"
+                      value={form['on-event'] || ''}
+                      onChange={handleChange}
+                      placeholder={`# Script ya scheduler\n# Mfano:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`}
+                      minHeight={180}
+                    />
+                    {/* Quick examples */}
+                    <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 11, color: '#a5b4fc' }}>
+                      💡 Mifano ya haraka:
+                      <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {[
+                          { l: 'Log message',    v: ':log info "Scheduler imefanya kazi"' },
+                          { l: 'Futa used users', v: '/ip hotspot user remove [find comment~"used"]' },
+                          { l: 'Reboot router',  v: '/system reboot' },
+                        ].map((ex, i) => (
+                          <button key={i}
+                            onClick={() => handleChange('on-event', ex.v)}
+                            style={{ textAlign: 'left', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', color: '#e0e7ff', fontSize: 11 }}>
+                            <span style={{ color: '#818cf8' }}>{ex.l}:</span> <code>{ex.v}</code>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 8 }}>On Event Script</div>
+                    {form['on-event'] ? (
+                      <div style={{ background: '#1e1b4b', borderRadius: 10, padding: '14px 16px' }}>
+                        <pre style={{ fontSize: 13, color: '#e0e7ff', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace', lineHeight: 1.6 }}>
+                          {form['on-event']}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div style={{ padding: '1rem', background: 'var(--gray-50)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', fontStyle: 'italic' }}>
+                        Hakuna script
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon="🗑">Remove</Button>
+              <Button
+                variant={isDisabled ? 'success' : 'warning'}
+                size="sm"
+                onClick={() => { onToggle(scheduler); onClose() }}
+              >
+                {isDisabled ? '▶ Enable' : '⏸ Disable'}
+              </Button>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              {editing && dirty && (
+                <Button variant="ghost" onClick={handleApply} disabled={saving}>
+                  {saving ? <Spinner size={14} /> : '💾 Apply'}
+                </Button>
+              )}
+              <Button onClick={handleOK} disabled={saving}>
+                {saving ? <Spinner size={14} /> : 'OK'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => { onDelete(scheduler['.id']); setConfirmDelete(false); onClose() }}
+        title="Futa Scheduler"
+        message={`Futa scheduler "${scheduler.name}"? Script haitatekelezwa tena.`}
+        danger
+      />
+    </>
+  )
+}
+
 function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedTabs: Tab[] }) {
   const { t } = useLang()
 
-  // Tabs zinazoonekana — filter kulingana na permissions
   const visibleTabs = ALL_TABS.filter(t => allowedTabs.includes(t.key as Tab))
 
   const [tab, setTab] = useState<Tab>(
@@ -55,6 +832,11 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const [loading, setLoading] = useState(false)
   const [alert, setAlert] = useState<{ type: any; msg: string } | null>(null)
   const intervalRef = useRef<any>(null)
+
+  // ── Detail modals state ───────────────────────────────
+  const [selectedProfile,   setSelectedProfile]   = useState<any>(null)
+  const [selectedUser,      setSelectedUser]       = useState<any>(null)
+  const [selectedScheduler, setSelectedScheduler] = useState<any>(null)
 
   const [confirmDisconnect, setConfirmDisconnect]           = useState<string | null>(null)
   const [confirmDeleteUser, setConfirmDeleteUser]           = useState<string | null>(null)
@@ -89,23 +871,17 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
   const [countdown, setCountdown] = useState(5)
 
-  // Kama hakuna tabs — onyesha ujumbe wa ruhusa
   if (visibleTabs.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--gray-400)' }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>
-          Huna ruhusa ya kufikia MikroTik Manager
-        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Huna ruhusa ya kufikia MikroTik Manager</div>
         <div style={{ fontSize: 13 }}>Wasiliana na admin wako kukupa ruhusa.</div>
       </div>
     )
   }
 
-  const showAlrt = (type: any, msg: string) => {
-    setAlert({ type, msg })
-    setTimeout(() => setAlert(null), 5000)
-  }
+  const showAlrt = (type: any, msg: string) => { setAlert({ type, msg }); setTimeout(() => setAlert(null), 5000) }
 
   const fetchTab = async (currentTab: Tab, silent = false) => {
     if (!silent) setLoading(true)
@@ -114,9 +890,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       setData((prev: any) => ({ ...prev, [currentTab]: res.data }))
     } catch (e: any) {
       if (!silent) showAlrt('error', e.response?.data?.error || 'Hitilafu ya muunganiko')
-    } finally {
-      if (!silent) setLoading(false)
-    }
+    } finally { if (!silent) setLoading(false) }
   }
 
   useEffect(() => {
@@ -124,46 +898,36 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (tab === 'active' || tab === 'hosts') {
       setCountdown(5)
-      const countTick = setInterval(() => {
-        setCountdown(c => { if (c <= 1) return 5; return c - 1 })
-      }, 1000)
-      intervalRef.current = setInterval(() => {
-        fetchTab(tab, true)
-        setCountdown(5)
-      }, 5000)
+      const countTick = setInterval(() => { setCountdown(c => { if (c <= 1) return 5; return c - 1 }) }, 1000)
+      intervalRef.current = setInterval(() => { fetchTab(tab, true); setCountdown(5) }, 5000)
       return () => { clearInterval(intervalRef.current); clearInterval(countTick) }
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
   }, [tab, routerId])
 
   const openAddUser = async () => {
-    setShowAddUser(true)
-    setProfilesLoading(true)
+    setShowAddUser(true); setProfilesLoading(true)
     try {
       const res = await api.get(`/mikrotik/${routerId}/hotspot/profiles/`)
       const names: string[] = (res.data.profiles || []).map((p: any) => p.name).filter(Boolean)
       const list = names.length > 0 ? names : ['default']
       setAvailableProfiles(list)
       setNewUser(prev => ({ ...prev, profile: list[0] }))
-    } catch {
-      setAvailableProfiles(['default'])
-      setNewUser(prev => ({ ...prev, profile: 'default' }))
-    } finally { setProfilesLoading(false) }
+    } catch { setAvailableProfiles(['default']); setNewUser(prev => ({ ...prev, profile: 'default' })) }
+    finally { setProfilesLoading(false) }
   }
 
   const handleDeleteUser = async (username: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/users/delete/`, { data: { username } })
-      showAlrt('success', `User ${username} amefutwa ✓`)
-      fetchTab('users')
+      showAlrt('success', `User ${username} amefutwa ✓`); fetchTab('users')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
 
   const handleDisconnect = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/sessions/`, { data: { session_id: id } })
-      showAlrt('success', 'Session imekatwa ✓')
-      fetchTab('active', true)
+      showAlrt('success', 'Session imekatwa ✓'); fetchTab('active', true)
     } catch { showAlrt('error', t('error')) }
   }
 
@@ -173,17 +937,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/users/`, payload)
       showAlrt('success', `User ${newUser.username} ameongezwa ✓`)
-      setShowAddUser(false)
-      setNewUser({ username: '', password: '', profile: '', comment: '' })
-      fetchTab('users')
+      setShowAddUser(false); setNewUser({ username: '', password: '', profile: '', comment: '' }); fetchTab('users')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
 
   const handleDeleteBinding = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/ip-bindings/`, { data: { binding_id: id } })
-      showAlrt('success', 'IP Binding imefutwa ✓')
-      fetchTab('ip_bindings')
+      showAlrt('success', 'IP Binding imefutwa ✓'); fetchTab('ip_bindings')
     } catch { showAlrt('error', t('error')) }
   }
 
@@ -192,17 +953,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/ip-bindings/`, newBinding)
       showAlrt('success', 'IP Binding imeongezwa ✓')
-      setShowAddBinding(false)
-      setNewBinding({ mac_address: '', ip_address: '', type: 'regular', comment: '' })
-      fetchTab('ip_bindings')
+      setShowAddBinding(false); setNewBinding({ mac_address: '', ip_address: '', type: 'regular', comment: '' }); fetchTab('ip_bindings')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
 
   const handleDeleteWG = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/walled-garden/`, { data: { entry_id: id } })
-      showAlrt('success', 'Walled Garden entry imefutwa ✓')
-      fetchTab('walled_garden')
+      showAlrt('success', 'Walled Garden entry imefutwa ✓'); fetchTab('walled_garden')
     } catch { showAlrt('error', t('error')) }
   }
 
@@ -211,17 +969,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/walled-garden/`, newWG)
       showAlrt('success', `${newWG.dst_host} imeongezwa ✓`)
-      setShowAddWG(false)
-      setNewWG({ dst_host: '', action: 'allow', comment: '' })
-      fetchTab('walled_garden')
+      setShowAddWG(false); setNewWG({ dst_host: '', action: 'allow', comment: '' }); fetchTab('walled_garden')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
 
   const handleDeleteWGIP = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/walled-garden-ip/`, { data: { entry_id: id } })
-      showAlrt('success', 'Walled Garden IP imefutwa ✓')
-      fetchTab('walled_garden_ip')
+      showAlrt('success', 'Walled Garden IP imefutwa ✓'); fetchTab('walled_garden_ip')
     } catch { showAlrt('error', t('error')) }
   }
 
@@ -230,25 +985,21 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/walled-garden-ip/`, newWGIP)
       showAlrt('success', `${newWGIP.dst_address} imeongezwa ✓`)
-      setShowAddWGIP(false)
-      setNewWGIP({ dst_address: '', action: 'accept', comment: '' })
-      fetchTab('walled_garden_ip')
+      setShowAddWGIP(false); setNewWGIP({ dst_address: '', action: 'accept', comment: '' }); fetchTab('walled_garden_ip')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
 
   const handleDeleteCookie = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/cookies/`, { data: { cookie_id: id } })
-      showAlrt('success', 'Cookie imefutwa ✓')
-      fetchTab('cookies')
+      showAlrt('success', 'Cookie imefutwa ✓'); fetchTab('cookies')
     } catch { showAlrt('error', t('error')) }
   }
 
   const handleClearAllCookies = async () => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/cookies/`, { data: {} })
-      showAlrt('success', 'Cookies zote zimefutwa ✓')
-      fetchTab('cookies')
+      showAlrt('success', 'Cookies zote zimefutwa ✓'); fetchTab('cookies')
     } catch { showAlrt('error', t('error')) }
   }
 
@@ -259,6 +1010,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   }
 
   const openEditScheduler = (item: any) => {
+    setSelectedScheduler(null)
     setEditScheduler(item)
     setNewScheduler({
       name: item.name || '', start_date: item['start-date'] || 'jan/01/1970',
@@ -280,17 +1032,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         await api.post(`/mikrotik/${routerId}/scheduler/`, newScheduler)
         showAlrt('success', `Scheduler "${newScheduler.name}" imeongezwa ✓`)
       }
-      setShowAddScheduler(false)
-      setEditScheduler(null)
-      fetchTab('scheduler')
+      setShowAddScheduler(false); setEditScheduler(null); fetchTab('scheduler')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
 
   const handleDeleteScheduler = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/scheduler/`, { data: { scheduler_id: id } })
-      showAlrt('success', 'Scheduler imefutwa ✓')
-      fetchTab('scheduler')
+      showAlrt('success', 'Scheduler imefutwa ✓'); fetchTab('scheduler')
     } catch { showAlrt('error', t('error')) }
   }
 
@@ -367,13 +1116,21 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {!loading && tab === 'server_profiles' && (
         <Card>
           <CardHeader title={`Server Profiles (${(d?.profiles || []).length})`} />
-          <Table headers={['Name', 'DNS Name', 'HTML Dir', 'Rate Limit', 'Idle Timeout', 'Session Timeout', 'Shared Users']}
+          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
+            💡 Bonyeza profile yoyote kuona na kuhariri maelezo yake (General, Scripts)
+          </div>
+          <Table headers={['Name', 'Rate Limit', 'Session Timeout', 'Shared Users', 'On Login Script', '']}
             rows={(d?.profiles || []).map((p: any) => [
-              <strong>{p.name}</strong>, p['dns-name'] || '—', p['html-directory'] || '—',
+              <strong style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => setSelectedProfile(p)}>
+                {p.name}
+              </strong>,
               p['rate-limit'] || <span style={{ color: 'var(--gray-400)' }}>unlimited</span>,
-              p['idle-timeout'] || <span style={{ color: 'var(--gray-400)' }}>unlimited</span>,
               p['session-timeout'] || <span style={{ color: 'var(--gray-400)' }}>unlimited</span>,
               p['shared-users'] || '1',
+              p['on-login']
+                ? <Badge text="✓ Ipo" color="green" />
+                : <Badge text="Hakuna" color="gray" />,
+              <Button size="sm" variant="ghost" onClick={() => setSelectedProfile(p)} icon="✏️">Edit</Button>,
             ])} emptyMessage="Hakuna server profiles" />
         </Card>
       )}
@@ -382,15 +1139,25 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {!loading && tab === 'users' && (
         <Card>
           <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon="➕">{t('add_user')}</Button>} />
-          <Table headers={['Name', 'Profile', 'Password', 'Limit Uptime', 'Limit Bytes Total', 'Comment', '']}
+          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
+            💡 Bonyeza jina la user kuona na kuhariri maelezo yake
+          </div>
+          <Table headers={['Name', 'Profile', 'Limit Uptime', 'Comment', 'Status', '']}
             rows={(d?.users || []).map((u: any) => [
-              <code style={{ fontWeight: 700, color: 'var(--primary)' }}>{u.name}</code>,
+              <code
+                style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }}
+                onClick={() => setSelectedUser(u)}
+              >
+                {u.name}
+              </code>,
               <Badge text={u.profile || 'default'} color="indigo" />,
-              <code style={{ fontSize: 11, color: 'var(--gray-400)' }}>{u.password ? '••••••' : '—'}</code>,
               u['limit-uptime'] || <span style={{ color: 'var(--gray-300)' }}>—</span>,
-              u['limit-bytes-total'] || <span style={{ color: 'var(--gray-300)' }}>—</span>,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
-              <Button size="sm" variant="danger" onClick={() => setConfirmDeleteUser(u.name)} icon="🗑">{t('delete_user')}</Button>,
+              <Badge
+                text={u.disabled === 'true' ? 'Disabled' : 'Active'}
+                color={u.disabled === 'true' ? 'red' : 'green'}
+              />,
+              <Button size="sm" variant="ghost" onClick={() => setSelectedUser(u)} icon="✏️">Edit</Button>,
             ])} emptyMessage="Hakuna users" />
         </Card>
       )}
@@ -507,47 +1274,62 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         <Card>
           <CardHeader title={`Scheduler (${(d?.schedulers || []).length})`} action={<Button size="sm" onClick={openAddScheduler} icon="➕">Add Schedule</Button>} />
           <div style={{ padding: '8px 16px', background: '#f0fdf4', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#166534' }}>
-            ⏰ Scripts zinazotekelezwa kwa wakati maalum — kama <strong>System → Scheduler</strong> kwenye WinBox
+            ⏰ Bonyeza scheduler kuona na kuhariri script yake kamili
           </div>
-          <Table headers={['Name', 'Start Date', 'Start Time', 'Interval', 'Run Count', 'Next Run', 'Policy', 'Status', '']}
+          <Table headers={['Name', 'Interval', 'Run Count', 'Next Run', 'Status', '']}
             rows={(d?.schedulers || []).map((s: any) => [
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary)' }}>{s.name}</div>
+              <div style={{ cursor: 'pointer' }} onClick={() => setSelectedScheduler(s)}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary)', textDecoration: 'underline dotted' }}>{s.name}</div>
                 {s.comment && <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{s.comment}</div>}
               </div>,
-              s['start-date'] || '—',
-              <code style={{ fontSize: 12 }}>{s['start-time'] || '—'}</code>,
               s.interval ? <Badge text={s.interval} color="blue" /> : <span style={{ color: 'var(--gray-300)' }}>once</span>,
-              <span style={{ fontWeight: 600, color: s['run-count'] > 0 ? '#059669' : 'var(--gray-400)' }}>{s['run-count'] || '0'}</span>,
+              <span style={{ fontWeight: 600, color: (s['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)' }}>{s['run-count'] || '0'}</span>,
               s['next-run'] || <span style={{ color: 'var(--gray-300)' }}>—</span>,
-              <div style={{ fontSize: 11, color: 'var(--gray-500)', maxWidth: 120, wordBreak: 'break-all' }}>{s.policy || '—'}</div>,
               <Badge text={s.disabled === 'true' ? 'Disabled' : 'Running'} color={s.disabled === 'true' ? 'red' : 'green'} />,
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 4 }}>
                 <Button size="sm" variant="ghost" onClick={() => openEditScheduler(s)} icon="✏️">Edit</Button>
                 <Button size="sm" variant={s.disabled === 'true' ? 'success' : 'warning'} onClick={() => handleToggleScheduler(s)}>
-                  {s.disabled === 'true' ? '▶ Enable' : '⏸ Disable'}
+                  {s.disabled === 'true' ? '▶' : '⏸'}
                 </Button>
                 <Button size="sm" variant="danger" onClick={() => setConfirmDeleteScheduler(s['.id'])} icon="🗑">Del</Button>
               </div>,
-            ])} emptyMessage="Hakuna schedulers — bonyeza 'Add Schedule' kuongeza" />
-
-          {(d?.schedulers || []).length > 0 && (
-            <div style={{ padding: '1rem', borderTop: '1px solid var(--gray-100)' }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 8 }}>📜 Scripts za Schedulers:</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {(d?.schedulers || []).map((s: any, i: number) => s['on-event'] && (
-                  <div key={i} style={{ background: '#1e1b4b', borderRadius: 8, padding: '10px 14px' }}>
-                    <div style={{ fontSize: 11, color: '#a5b4fc', fontWeight: 700, marginBottom: 4 }}>⏰ {s.name}</div>
-                    <pre style={{ fontSize: 12, color: '#e0e7ff', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace' }}>{s['on-event']}</pre>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+            ])} emptyMessage="Hakuna schedulers" />
         </Card>
       )}
 
-      {/* ── MODALS ── */}
+      {/* ── DETAIL MODALS (with edit) ── */}
+      {selectedProfile && (
+        <ServerProfileDetailModal
+          profile={selectedProfile}
+          routerId={routerId}
+          onClose={() => setSelectedProfile(null)}
+          onSaved={() => fetchTab('server_profiles')}
+        />
+      )}
+
+      {selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          routerId={routerId}
+          onClose={() => setSelectedUser(null)}
+          onDelete={(username) => { handleDeleteUser(username); setSelectedUser(null) }}
+          onSaved={() => fetchTab('users')}
+          availableProfiles={availableProfiles}
+        />
+      )}
+
+      {selectedScheduler && (
+        <SchedulerDetailModal
+          scheduler={selectedScheduler}
+          routerId={routerId}
+          onClose={() => setSelectedScheduler(null)}
+          onSaved={() => fetchTab('scheduler')}
+          onDelete={(id) => { handleDeleteScheduler(id); setSelectedScheduler(null) }}
+          onToggle={(s) => { handleToggleScheduler(s) }}
+        />
+      )}
+
+      {/* ── ADD/EDIT MODALS (unchanged) ── */}
       {showAddUser && (
         <div style={modalOverlay}><div style={modalBox}>
           {modalHeader(t('add_user'), () => setShowAddUser(false))}
@@ -666,11 +1448,11 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Policy (ruhusa za script)</label>
+              <label style={labelStyle}>Policy</label>
               <select value={newScheduler.policy} onChange={(e: any) => setNewScheduler({ ...newScheduler, policy: e.target.value })} style={selectStyle}>
                 <option value="read,write,reboot">read, write, reboot</option>
                 <option value="read,write">read, write</option>
-                <option value="read,write,reboot,policy,sensitive">Full (read, write, reboot, policy, sensitive)</option>
+                <option value="read,write,reboot,policy,sensitive">Full</option>
                 <option value="read">read only</option>
               </select>
             </div>
@@ -727,7 +1509,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   )
 }
 
-// ── LABELS za kuelezea kila feature ──────────────────────
+// ── FEATURE LABELS ────────────────────────────────────────
 const FEATURE_LABELS: Record<string, { label: string; icon: string; desc: string }> = {
   servers:          { label: 'Servers',          icon: '🖥',  desc: 'Ona hotspot servers' },
   server_profiles:  { label: 'Server Profiles',  icon: '📋',  desc: 'Ona server profiles' },
@@ -760,7 +1542,6 @@ function RouterCard({ router, onSelect }: { router: any; onSelect: () => void })
   )
 }
 
-// ── CLIENT MikroTik Page — fetch permissions kwanza ──────
 export function ClientMikroTikPage() {
   const { t } = useLang()
   const [routers, setRouters] = useState<any[]>([])
@@ -769,10 +1550,7 @@ export function ClientMikroTikPage() {
   const [allowedTabs, setAllowedTabs] = useState<Tab[]>([])
 
   useEffect(() => {
-    Promise.all([
-      api.get('/routers/'),
-      api.get('/clients/my-mikrotik-permissions/'),
-    ]).then(([r, p]) => {
+    Promise.all([api.get('/routers/'), api.get('/clients/my-mikrotik-permissions/')]).then(([r, p]) => {
       setRouters(r.data.results || r.data)
       setAllowedTabs(p.data.mikrotik_permissions || [])
       setLoading(false)
@@ -785,7 +1563,6 @@ export function ClientMikroTikPage() {
         {!selectedRouter ? (
           <>
             <PageHeader title={t('mikrotik_mgmt')} subtitle="IP → Hotspot (kama Winbox)" />
-            {/* Onyesha features zilizoruhusiwa */}
             {!loading && allowedTabs.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: '1rem' }}>
                 {allowedTabs.map(key => {
@@ -827,19 +1604,14 @@ export function ClientMikroTikPage() {
   )
 }
 
-// ── ADMIN MikroTik Page — ana access yote ────────────────
 export function AdminMikroTikPage() {
   const { t } = useLang()
   const [routers, setRouters] = useState<any[]>([])
   const [selectedRouter, setSelectedRouter] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
-
-  // Admin ana access yote bila kikwazo
   const allTabs = ALL_TABS.map(t => t.key) as Tab[]
 
-  useEffect(() => {
-    api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) })
-  }, [])
+  useEffect(() => { api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) }) }, [])
 
   return (
     <Layout>
@@ -869,65 +1641,52 @@ export function AdminMikroTikPage() {
   )
 }
 
-// ── PERMISSIONS MODAL — export kwa Pages.tsx ─────────────
 export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
   client: any; onClose: () => void; onSaved: () => void
 }) {
   const [permissions, setPermissions] = useState<string[]>(client.mikrotik_permissions || [])
   const [saving, setSaving] = useState(false)
   const [alert, setAlert] = useState<{ type: any; msg: string } | null>(null)
-
   const ALL_FEATURES = Object.keys(FEATURE_LABELS)
 
   const toggle = (key: string) => {
-    setPermissions(prev =>
-      prev.includes(key) ? prev.filter(p => p !== key) : [...prev, key]
-    )
+    setPermissions(prev => prev.includes(key) ? prev.filter(p => p !== key) : [...prev, key])
   }
 
   const handleSave = async () => {
     setSaving(true)
     try {
       await api.post(`/clients/${client.id}/mikrotik-permissions/`, { permissions })
-      onSaved()
-      onClose()
-    } catch {
-      setAlert({ type: 'error', msg: 'Imeshindwa kuhifadhi permissions' })
-    } finally { setSaving(false) }
+      onSaved(); onClose()
+    } catch { setAlert({ type: 'error', msg: 'Imeshindwa kuhifadhi permissions' }) }
+    finally { setSaving(false) }
   }
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: '1.5rem', maxWidth: 520, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', animation: 'modalIn 0.2s ease' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>🔐 MikroTik Permissions</h3>
-            <p style={{ fontSize: 12, color: 'var(--gray-500)' }}>{client.business_name}</p>
+      <div style={{ background: '#fff', borderRadius: 16, maxWidth: 520, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', animation: 'modalIn 0.2s ease' }}>
+        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--gray-100)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>🔐 MikroTik Permissions</h3>
+              <p style={{ fontSize: 12, color: 'var(--gray-500)' }}>{client.business_name}</p>
+            </div>
+            <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
           </div>
-          <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+          {alert && <Alert type={alert.type} message={alert.msg} />}
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button onClick={() => setPermissions(ALL_FEATURES)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#166534', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✅ Chagua Zote</button>
+            <button onClick={() => setPermissions([])} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #fee2e2', background: '#fef2f2', color: '#991b1b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>❌ Futa Zote</button>
+          </div>
         </div>
-
-        {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-
-        <div style={{ marginBottom: '1rem', display: 'flex', gap: 8 }}>
-          <button onClick={() => setPermissions(ALL_FEATURES)}
-            style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#166534', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-            ✅ Chagua Zote
-          </button>
-          <button onClick={() => setPermissions([])}
-            style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #fee2e2', background: '#fef2f2', color: '#991b1b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-            ❌ Futa Zote
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: '1.25rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {ALL_FEATURES.map(key => {
             const f = FEATURE_LABELS[key]
             const checked = permissions.includes(key)
             return (
               <div key={key} onClick={() => toggle(key)}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${checked ? '#6366f1' : 'var(--gray-200)'}`, background: checked ? '#eef2ff' : '#fafafa', cursor: 'pointer', transition: 'all 0.15s' }}>
-                <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${checked ? '#6366f1' : 'var(--gray-300)'}`, background: checked ? '#6366f1' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${checked ? '#6366f1' : 'var(--gray-300)'}`, background: checked ? '#6366f1' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {checked && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900 }}>✓</span>}
                 </div>
                 <span style={{ fontSize: 18 }}>{f.icon}</span>
@@ -939,12 +1698,12 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
             )
           })}
         </div>
-
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <Button variant="ghost" onClick={onClose}>Funga</Button>
-          <Button onClick={handleSave} disabled={saving} icon="💾">
-            {saving ? 'Inahifadhi...' : `Hifadhi (${permissions.length} features)`}
-          </Button>
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--gray-100)', flexShrink: 0, display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center', background: '#fafafa', borderRadius: '0 0 16px 16px' }}>
+          <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{permissions.length} / {ALL_FEATURES.length} features zimechaguliwa</span>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <Button variant="ghost" onClick={onClose}>Funga</Button>
+            <Button onClick={handleSave} disabled={saving} icon="💾">{saving ? 'Inahifadhi...' : 'Hifadhi'}</Button>
+          </div>
         </div>
       </div>
       <style>{`@keyframes modalIn { from { opacity:0; transform:scale(0.95) } to { opacity:1; transform:scale(1) } }`}</style>

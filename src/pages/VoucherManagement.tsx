@@ -134,6 +134,40 @@ export function VoucherManagementPage() {
   const [printTheme, setPrintTheme] = useState<ThemeId>('blue')
   const [showPrintModal, setShowPrintModal] = useState(false)
   const [printVouchers, setPrintVouchers] = useState<any[]>([])
+  const [allPackages, setAllPackages] = useState<any[]>([])
+
+useEffect(() => {
+  api.get('/packages/').then(r => setAllPackages(r.data.results || r.data)).catch(() => {})
+}, [])
+
+// Function ya kupata info ya package kutoka jina lake
+const enrichVoucherForPrint = (v: any) => {
+  // Kama ina duration/speed tayari — rudisha ilivyo
+  if (v.duration && v.duration !== '—' && v.speed && v.speed !== '—') return v
+
+  // Tafuta package inayolingana
+  const pkg = allPackages.find((p: any) =>
+    p.name === v.package_name ||
+    p.mikrotik_profile === v.package_name ||
+    p.mikrotik_profile === v.profile
+  )
+
+  if (pkg) {
+    return {
+      ...v,
+      duration: v.duration && v.duration !== '—'
+        ? v.duration
+        : pkg.duration_display || (pkg.duration_unit === 'days'
+          ? `Siku ${pkg.duration_value}`
+          : `Saa ${pkg.duration_value}`),
+      speed: v.speed && v.speed !== '—'
+        ? v.speed
+        : `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
+      package_price: v.package_price || pkg.price,
+    }
+  }
+  return v
+}
 
   const showAlrt = (type: any, msg: string) => { setAlert({ type, msg }); setTimeout(() => setAlert(null), 5000) }
   const theme = COLOR_THEMES.find(t => t.id === selectedTheme) || COLOR_THEMES[0]
@@ -296,10 +330,12 @@ export function VoucherManagementPage() {
   }
 
   const openPrintSelected = () => {
-    const toprint = vouchers.filter((_, i) => selectedForPrint.has(i))
-    setPrintVouchers(toprint)
-    setShowPrintModal(true)
-  }
+  const toprint = vouchers
+    .filter((_, i) => selectedForPrint.has(i))
+    .map(enrichVoucherForPrint)
+  setPrintVouchers(toprint)
+  setShowPrintModal(true)
+}
 
   const business_name = clientInfo?.business_name || 'NetSafi Hotspot'
   const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }

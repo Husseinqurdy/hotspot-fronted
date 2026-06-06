@@ -20,9 +20,6 @@ const nc: Record<string, any> = { vodacom: 'green', tigo: 'blue', airtel: 'red',
 const sc: Record<string, any> = { completed: 'green', failed: 'red', processing: 'yellow', pending: 'gray' }
 const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
 
-// ════════════════════════════════════════════════════════
-// BADILIKO 1: DurationField component
-// ════════════════════════════════════════════════════════
 const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>Muda wa Package *</label>
@@ -61,173 +58,169 @@ const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
   </div>
 )
 
-// ════════════════════════════════════════════════════════
-// BADILIKO 3: VoucherPrintCard mpya
-// ════════════════════════════════════════════════════════
 function VoucherPrintCard({ voucher, business_name, theme }: {
   voucher: any; business_name: string; theme: any
 }) {
-  const uptime = voucher.uptime || voucher.duration || '—'
-  const speed = voucher.speed || (voucher.speed_up && voucher.speed_down
-    ? `${voucher.speed_down}mb / ${voucher.speed_up}mb`
-    : '—')
-  const price = voucher.package_price || voucher.price || 0
+  const price = Number(voucher.package_price || voucher.price || 0)
+
+  const priceDisplay = price > 0
+    ? price >= 10000
+      ? `${(price / 1000).toFixed(0)}K`
+      : price.toLocaleString()
+    : '—'
+
+  const uptime = voucher.duration
+    || voucher.duration_display
+    || voucher.uptime
+    || '—'
+
+  const speed = voucher.speed
+    || (voucher.speed_down && voucher.speed_up
+        ? `${voucher.speed_down}mb / ${voucher.speed_up}mb`
+        : null)
+    || '—'
+
   const packageName = voucher.package_name || voucher.package || '—'
+  const priceFontSize = priceDisplay.length > 6 ? 11 : priceDisplay.length > 4 ? 14 : 17
 
   return (
     <div style={{
       width: 340, display: 'inline-block', margin: '6px', verticalAlign: 'top',
-      pageBreakInside: 'avoid', fontFamily: "'Arial', sans-serif",
-      background: '#f0f4ff',
-      borderRadius: 16, overflow: 'hidden',
+      pageBreakInside: 'avoid', fontFamily: 'Arial, sans-serif',
+      background: '#f0f4ff', borderRadius: 16, overflow: 'hidden',
       boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-      border: '1px solid #e0e8ff',
-      position: 'relative',
+      border: '1px solid #e0e8ff', position: 'relative',
     }}>
-
-      {/* ── LEFT STRIP: Bei + PRICE label ── */}
       <div style={{
         position: 'absolute', left: 0, top: 0, bottom: 0, width: 56,
         background: `linear-gradient(180deg, ${theme.bg} 0%, #0d1a5c 100%)`,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', gap: 4,
+        justifyContent: 'center', gap: 2,
         borderRight: '3px solid #c9a227',
       }}>
-        {/* Bei rotated */}
         <div style={{
           transform: 'rotate(-90deg)', whiteSpace: 'nowrap',
-          color: '#fff', fontWeight: 900, fontSize: 22, letterSpacing: 2,
+          color: '#fff', fontWeight: 900,
+          fontSize: priceFontSize,
+          letterSpacing: priceFontSize > 14 ? 2 : 0.5,
           textShadow: '0 1px 4px rgba(0,0,0,0.4)',
+          maxWidth: 120,
         }}>
-          TZS {Number(price).toLocaleString()}
+          TZS {priceDisplay}
         </div>
         <div style={{
           transform: 'rotate(-90deg)',
-          color: '#c9a227', fontWeight: 700, fontSize: 9,
-          letterSpacing: 3, marginTop: 8,
-        }}>
-          PRICE
-        </div>
+          color: '#c9a227', fontWeight: 700, fontSize: 8,
+          letterSpacing: 3, marginTop: 6,
+        }}>PRICE</div>
       </div>
 
-      {/* ── MAIN CONTENT ── */}
-      <div style={{ marginLeft: 56, padding: '14px 14px 14px 16px' }}>
-
-        {/* Header: Business name + WiFi icon */}
+      <div style={{ marginLeft: 56, padding: '12px 12px 12px 14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
           <div>
-            {/* Gold ornament */}
-            <div style={{ fontSize: 10, color: '#c9a227', marginBottom: 2, letterSpacing: 2 }}>✦ ─── ✦ ─── ✦</div>
-            <div style={{ fontSize: 18, fontWeight: 900, color: theme.bg, letterSpacing: 1, lineHeight: 1.1 }}>
+            <div style={{ fontSize: 9, color: '#c9a227', marginBottom: 2, letterSpacing: 2 }}>✦ ─── ✦ ─── ✦</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: theme.bg, letterSpacing: 1, lineHeight: 1.1 }}>
               {business_name.toUpperCase()}
             </div>
-            <div style={{ fontSize: 9, color: '#888', fontStyle: 'italic', marginTop: 1 }}>
-              Stay Connected. Stay Powered.
-            </div>
-            <div style={{ fontSize: 9, color: '#c9a227', marginTop: 3, letterSpacing: 2 }}>── ── ── ──</div>
+            <div style={{ fontSize: 8, color: '#888', fontStyle: 'italic', marginTop: 1 }}>Stay Connected. Stay Powered.</div>
+            <div style={{ fontSize: 8, color: '#c9a227', marginTop: 3, letterSpacing: 2 }}>── ── ── ──</div>
           </div>
-          {/* WiFi Router icon */}
           <div style={{
-            background: theme.bg, borderRadius: 8, padding: '8px 10px',
+            background: theme.bg, borderRadius: 8, padding: '7px 9px',
             border: '2px solid #c9a227', textAlign: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <div style={{ fontSize: 18, color: '#fff' }}>📶</div>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="12" cy="18" r="1.5" fill="white"/>
+            </svg>
           </div>
         </div>
 
-        {/* UPTIME + SPEED boxes */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-          <div style={{
-            flex: 1, background: '#fff', borderRadius: 10, padding: '8px 10px',
-            border: '1px solid #e5eaf5',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-              <div style={{
-                width: 28, height: 28, background: theme.bg, borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 14,
-              }}>📶</div>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+          <div style={{ flex: 1, background: '#fff', borderRadius: 9, padding: '7px 8px', border: '1px solid #e5eaf5' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+              <div style={{ width: 24, height: 24, background: theme.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  <circle cx="12" cy="18" r="1.5" fill="white"/>
+                </svg>
+              </div>
               <div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>UPTIME</div>
-                <div style={{ fontSize: 8, color: '#888' }}>Reliability You Trust</div>
+                <div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>UPTIME</div>
+                <div style={{ fontSize: 7, color: '#888' }}>Reliability You Trust</div>
               </div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: theme.bg }}>{uptime}</div>
+            <div style={{ fontSize: uptime.length > 8 ? 10 : 12, fontWeight: 900, color: theme.bg }}>{uptime}</div>
           </div>
-          <div style={{
-            flex: 1, background: '#fff', borderRadius: 10, padding: '8px 10px',
-            border: '1px solid #e5eaf5',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-              <div style={{
-                width: 28, height: 28, background: theme.bg, borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 14,
-              }}>⚡</div>
+
+          <div style={{ flex: 1, background: '#fff', borderRadius: 9, padding: '7px 8px', border: '1px solid #e5eaf5' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+              <div style={{ width: 24, height: 24, background: theme.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C6.48 2 2 6.48 2 12C2 14.74 3.08 17.22 4.85 19H19.15C20.92 17.22 22 14.74 22 12C22 6.48 17.52 2 12 2Z" stroke="white" strokeWidth="2"/>
+                  <path d="M12 12L16 8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  <circle cx="12" cy="12" r="1.5" fill="white"/>
+                </svg>
+              </div>
               <div>
-                <div style={{ fontSize: 9, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>SPEED</div>
-                <div style={{ fontSize: 8, color: '#888' }}>High Speed Internet</div>
+                <div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>SPEED</div>
+                <div style={{ fontSize: 7, color: '#888' }}>High Speed Internet</div>
               </div>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 900, color: theme.bg }}>{speed}</div>
+            <div style={{ fontSize: speed.length > 10 ? 9 : 11, fontWeight: 900, color: theme.bg }}>{speed}</div>
           </div>
         </div>
 
-        {/* Package info */}
-        <div style={{ marginBottom: 8, padding: '6px 10px', background: '#fff', borderRadius: 8, border: '1px solid #e5eaf5' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <span style={{ fontSize: 12 }}>📦</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#555', letterSpacing: 1 }}>PACKAGE</span>
+        <div style={{ marginBottom: 8, padding: '5px 8px', background: '#fff', borderRadius: 7, border: '1px solid #e5eaf5' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+              <path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/>
+              <path d="M12 3V21" stroke={theme.bg} strokeWidth="2"/>
+              <path d="M3 8L12 13L21 8" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/>
+            </svg>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#555', letterSpacing: 1 }}>PACKAGE</span>
             <span style={{ fontSize: 10, fontWeight: 700, color: theme.bg, marginLeft: 'auto' }}>{packageName}</span>
           </div>
           {voucher.customer_phone && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 10 }}>📱</span>
-              <span style={{ fontSize: 10, color: '#666' }}>{voucher.customer_phone}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M6.6 10.8C7.8 13.2 9.8 15.2 12.2 16.4L14.2 14.4C14.5 14.1 14.9 14 15.3 14.2C16.5 14.6 17.8 14.8 19.1 14.8C19.7 14.8 20.1 15.2 20.1 15.8V19.1C20.1 19.7 19.7 20.1 19.1 20.1C10.2 20.1 3 12.9 3 4C3 3.4 3.4 3 4 3H7.3C7.9 3 8.3 3.4 8.3 4C8.3 5.3 8.5 6.6 8.9 7.8C9 8.2 8.9 8.6 8.6 8.9L6.6 10.8Z" stroke={theme.bg} strokeWidth="1.5"/>
+              </svg>
+              <span style={{ fontSize: 9, color: '#666' }}>{voucher.customer_phone}</span>
             </div>
           )}
         </div>
 
-        {/* Divider */}
-        <div style={{ borderTop: '1.5px dashed #c9a227', margin: '8px 0' }} />
+        <div style={{ borderTop: '1.5px dashed #c9a227', margin: '6px 0' }} />
 
-        {/* Voucher code box */}
-        <div style={{
-          background: '#fff',
-          border: '2px solid #c9a227',
-          borderRadius: 10,
-          padding: '8px 12px',
-          textAlign: 'center',
-          marginBottom: 8,
-          boxShadow: '0 2px 8px rgba(201,162,39,0.15)',
-        }}>
+        <div style={{ background: '#fff', border: '2px solid #c9a227', borderRadius: 10, padding: '7px 10px', textAlign: 'center', marginBottom: 7, boxShadow: '0 2px 8px rgba(201,162,39,0.15)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 2 }}>
-            <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 11 }}>——</span>
-            <span style={{ fontSize: 26, fontWeight: 900, letterSpacing: 5, color: theme.bg, fontFamily: 'Courier New, monospace' }}>
+            <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 10 }}>——</span>
+            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: 5, color: theme.bg, fontFamily: 'Courier New, monospace' }}>
               {voucher.code}
             </span>
-            <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 11 }}>——</span>
+            <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 10 }}>——</span>
           </div>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#888', letterSpacing: 3 }}>VOUCHER CODE</div>
+          <div style={{ fontSize: 8, fontWeight: 700, color: '#888', letterSpacing: 3 }}>VOUCHER CODE</div>
         </div>
 
-        {/* Footer: quote + thank you */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div style={{ fontSize: 9, color: '#666', fontStyle: 'italic', maxWidth: '55%', lineHeight: 1.5 }}>
-            <span style={{ color: '#c9a227', fontSize: 13, fontWeight: 900 }}>"</span>
+          <div style={{ fontSize: 8, color: '#666', fontStyle: 'italic', maxWidth: '55%', lineHeight: 1.5 }}>
+            <span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>
             {' '}Enjoy fast, reliable and{' '}
-            <span style={{ color: theme.bg, fontWeight: 700 }}>uninterrupted</span>{' '}
-            internet.{' '}
-            <span style={{ color: '#c9a227', fontSize: 13, fontWeight: 900 }}>"</span>
+            <span style={{ color: theme.bg, fontWeight: 700 }}>uninterrupted</span>{' '}internet.{' '}
+            <span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 14, fontWeight: 900, color: theme.bg, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>
-              Thank You!
-            </div>
-            <div style={{ fontSize: 8, color: '#c9a227', letterSpacing: 1 }}>── For Choosing Us ──</div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: theme.bg, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Thank You!</div>
+            <div style={{ fontSize: 7, color: '#c9a227', letterSpacing: 1 }}>── For Choosing Us ──</div>
           </div>
         </div>
-
       </div>
     </div>
   )
@@ -308,7 +301,7 @@ export function AdminClients() {
   const [showBalance, setShowBalance] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
-  const [showPermissions, setShowPermissions] = useState(false)   // ← MPYA
+  const [showPermissions, setShowPermissions] = useState(false)
   const [selected, setSelected] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [balanceAmount, setBalanceAmount] = useState('')
@@ -399,7 +392,6 @@ export function AdminClients() {
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowBalance(true) }} icon="💰">{t('add_balance')}</Button>
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPassword(true) }} icon="🔑">{t('change_password')}</Button>
-                {/* ── KITUFE KIPYA CHA PERMISSIONS ── */}
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPermissions(true) }} icon="🔐">MikroTik</Button>
                 <Button size="sm" variant={c.is_active ? 'warning' : 'success'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')}>
                   {c.is_active ? `⏸ ${t('deactivate')}` : `▶ ${t('activate')}`}
@@ -411,7 +403,6 @@ export function AdminClients() {
           />
         </Card>
 
-        {/* Create */}
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('add_client')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('business_name')} *`} placeholder="Mama Fatuma Hotspot"
@@ -440,7 +431,6 @@ export function AdminClients() {
           </div>
         </Modal>
 
-        {/* Balance */}
         <Modal open={showBalance} onClose={() => setShowBalance(false)} title={`${t('add_balance')} — ${selected?.business_name}`} width={380}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: 'var(--gray-50)', borderRadius: 9, padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
@@ -456,7 +446,6 @@ export function AdminClients() {
           </div>
         </Modal>
 
-        {/* Change Password */}
         <Modal open={showPassword} onClose={() => setShowPassword(false)} title={`${t('change_password')} — ${selected?.business_name}`} width={380}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <Input label={t('new_password')} type="password" placeholder="••••••••"
@@ -468,7 +457,6 @@ export function AdminClients() {
           </div>
         </Modal>
 
-        {/* ── PERMISSIONS MODAL ── */}
         {showPermissions && selected && (
           <MikroTikPermissionsModal
             client={selected}
@@ -477,14 +465,12 @@ export function AdminClients() {
           />
         )}
 
-        {/* Delete Confirm */}
         <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete}
           title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
       </div>
     </Layout>
   )
 }
-
 
 // ── ADMIN ROUTERS ────────────────────────────────────────
 export function AdminRouters() {
@@ -849,10 +835,8 @@ export function ClientPackages() {
   const [showModal, setShowModal] = useState(false)
   const [editPkg, setEditPkg] = useState<any>(null)
   const [showDelete, setShowDelete] = useState<any>(null)
-
-  // ════════════════════════════════════════════════════════
-  // BADILIKO 2: useState ya form — duration_value + duration_unit
-  // ════════════════════════════════════════════════════════
+  const [syncingAll, setSyncingAll] = useState(false)
+  const [syncingPkg, setSyncingPkg] = useState<number | null>(null)
   const [form, setForm] = useState({
     name: '', price: '',
     duration_value: '1',
@@ -861,21 +845,41 @@ export function ClientPackages() {
     mikrotik_profile: '', shared_users: '1'
   })
 
-  const fetch = () => api.get('/packages/').then(r => setPackages(r.data.results || r.data))
-  useEffect(() => { fetch() }, [])
+  const fetchPackages = () => api.get('/packages/').then(r => setPackages(r.data.results || r.data))
+  useEffect(() => { fetchPackages() }, [])
 
-  // ════════════════════════════════════════════════════════
-  // BADILIKO 2: openCreate — duration_value + duration_unit
-  // ════════════════════════════════════════════════════════
+  const handleSyncPkg = async (pkgId: number) => {
+    setSyncingPkg(pkgId)
+    try {
+      const r = await api.post(`/packages/${pkgId}/sync-from-mikrotik/`)
+      show('success', r.data?.message || 'Package imesasishwa kutoka MikroTik ✓')
+      fetchPackages()
+    } catch (e: any) {
+      show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router')
+    } finally {
+      setSyncingPkg(null)
+    }
+  }
+
+  const handleSyncAll = async () => {
+    setSyncingAll(true)
+    try {
+      const r = await api.post('/packages/sync-all-from-mikrotik/')
+      show('success', r.data?.message || 'Packages zote zimesasishwa ✓')
+      fetchPackages()
+    } catch (e: any) {
+      show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router')
+    } finally {
+      setSyncingAll(false)
+    }
+  }
+
   const openCreate = () => {
     setEditPkg(null)
     setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
     setShowModal(true)
   }
 
-  // ════════════════════════════════════════════════════════
-  // BADILIKO 2: openEdit — duration_value + duration_unit
-  // ════════════════════════════════════════════════════════
   const openEdit = (pkg: any) => {
     setEditPkg(pkg)
     setForm({
@@ -902,7 +906,7 @@ export function ClientPackages() {
       }
       setShowModal(false)
       setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
-      fetch()
+      fetchPackages()
     } catch (e: any) {
       const err = e.response?.data
       show('error', typeof err === 'object' ? Object.values(err).flat().join(', ') : t('error'))
@@ -915,7 +919,7 @@ export function ClientPackages() {
       await api.delete(`/packages/${showDelete.id}/`)
       show('success', `${showDelete.name} imefutwa!`)
       setShowDelete(null)
-      fetch()
+      fetchPackages()
     } catch { show('error', t('error')) }
   }
 
@@ -924,7 +928,24 @@ export function ClientPackages() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader title={t('packages')} subtitle="Unda na simamia vifurushi vyako" action={<Button onClick={openCreate} icon="➕">{t('add_package')}</Button>} />
+        <PageHeader
+          title={t('packages')}
+          subtitle="Unda na simamia vifurushi vyako"
+          action={
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button
+                variant="ghost"
+                onClick={handleSyncAll}
+                disabled={syncingAll}
+                icon={syncingAll ? undefined : '🔄'}
+              >
+                {syncingAll ? '⏳ Inasync...' : 'Sync All'}
+              </Button>
+              <Button onClick={openCreate} icon="➕">{t('add_package')}</Button>
+            </div>
+          }
+        />
+
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
         {identifier && (
@@ -961,7 +982,16 @@ export function ClientPackages() {
 
               <div style={{ marginTop: 8, fontSize: 11, color: 'var(--gray-400)', fontFamily: 'monospace', marginBottom: 10 }}>{pkg.mikrotik_profile}</div>
 
-              <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10 }}>
+              <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10, flexWrap: 'wrap' }}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleSyncPkg(pkg.id)}
+                  disabled={syncingPkg === pkg.id}
+                  style={{ flex: 1 }}
+                >
+                  {syncingPkg === pkg.id ? '⏳' : '🔄'} Sync
+                </Button>
                 <Button size="sm" variant="ghost" onClick={() => openEdit(pkg)} icon="✏️" style={{ flex: 1 }}>{t('edit')}</Button>
                 <Button size="sm" variant="danger" onClick={() => setShowDelete(pkg)} style={{ flex: 1 }}>🗑 Futa</Button>
               </div>
@@ -975,15 +1005,11 @@ export function ClientPackages() {
           )}
         </div>
 
-        {/* Modal ya create/edit */}
         <Modal open={showModal} onClose={() => setShowModal(false)} title={editPkg ? `Hariri: ${editPkg.name}` : t('add_package')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('package_name')} *`} placeholder="Saa 1, Siku 1..." value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
             <FormRow>
               <Input label={`${t('price')} *`} type="number" placeholder="500" value={form.price} onChange={(e: any) => setForm({ ...form, price: e.target.value })} />
-              {/* ════════════════════════════════════════════════
-                  BADILIKO 1: DurationField badala ya duration_minutes
-                  ════════════════════════════════════════════════ */}
               <DurationField form={form} setForm={setForm} />
             </FormRow>
             <FormRow>

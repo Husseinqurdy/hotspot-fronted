@@ -34,12 +34,12 @@ export default function Layout({ children }: { children: ReactNode }) {
     <>
       {/* Logo */}
       <div style={{ padding: '1.1rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="white"/>
-          </svg>
-        </div>
+        {/* ── Logo: netsafi2.png ── */}
+        <img
+          src="/netsafi2.png"
+          alt="NetSafi"
+          style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'contain', flexShrink: 0 }}
+        />
         <div style={{ flex: 1, overflow: 'hidden' }}>
           <div style={{ color: '#fff', fontWeight: 800, fontSize: 15 }}>NetSafi</div>
           <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -112,12 +112,12 @@ export default function Layout({ children }: { children: ReactNode }) {
         <header style={{ background: '#fff', borderBottom: '1px solid var(--gray-100)', padding: '0.7rem 1rem', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
           <button onClick={() => setMobileOpen(true)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--gray-600)', padding: 4 }} aria-label="Menu">☰</button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="white"/>
-              </svg>
-            </div>
+            {/* ── Mobile header logo: netsafi2.png ── */}
+            <img
+              src="/netsafi2.png"
+              alt="NetSafi"
+              style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'contain' }}
+            />
             <span style={{ fontWeight: 800, fontSize: 15, color: 'var(--gray-900)' }}>NetSafi</span>
           </div>
           <div style={{ marginLeft: 'auto' }}>

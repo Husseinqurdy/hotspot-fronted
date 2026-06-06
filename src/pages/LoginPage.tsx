@@ -33,12 +33,24 @@ export default function LoginPage() {
         <div style={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#312e81 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '3rem 2rem', position: 'relative', overflow: 'hidden', minHeight: 280 }}>
           {[...Array(4)].map((_, i) => <div key={i} style={{ position: 'absolute', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.05)', width: `${(i + 1) * 200}px`, height: `${(i + 1) * 200}px`, top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }} />)}
           <div style={{ position: 'relative', textAlign: 'center', color: '#fff', maxWidth: 340 }}>
-            <div style={{ width: 72, height: 72, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', boxShadow: '0 0 40px rgba(99,102,241,0.4)' }}>
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
-                <path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/>
-                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="white"/>
-              </svg>
+
+            {/* ── Logo mpya: netsafi2.png ── */}
+            <div style={{ margin: '0 auto 1.25rem', display: 'flex', justifyContent: 'center' }}>
+              <img
+                src="/netsafi2.png"
+                alt="NetSafi Logo"
+                style={{
+                  width: 90,
+                  height: 90,
+                  objectFit: 'contain',
+                  borderRadius: 20,
+                  boxShadow: '0 0 40px rgba(99,102,241,0.4)',
+                  background: 'rgba(255,255,255,0.05)',
+                  padding: 4,
+                }}
+              />
             </div>
+
             <h1 style={{ fontSize: 'clamp(28px,5vw,38px)', fontWeight: 900, letterSpacing: '-1px', marginBottom: 8 }}>NetSafi</h1>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)', lineHeight: 1.7, marginBottom: '2rem' }}>{t('app_tagline')}</p>
             {[
