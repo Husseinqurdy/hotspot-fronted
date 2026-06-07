@@ -434,7 +434,7 @@ const enrichVoucherForPrint = (v: any) => {
                   v.customer_phone || '—',
                   <Badge text={v.status_display || v.status} color={vs[v.status] || 'gray'} />,
                   new Date(v.created_at).toLocaleString('sw-TZ'),
-                  <Button size="sm" variant="ghost" onClick={() => { setPrintVouchers([v]); setShowPrintModal(true) }} icon="🖨">Print</Button>,
+                  <Button size="sm" variant="ghost" onClick={() => { setPrintVouchers([enrichVoucherForPrint(v)]); setShowPrintModal(true) }} icon="🖨">Print</Button>,
                 ])}
                 emptyMessage={t('no_vouchers')}
               />

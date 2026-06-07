@@ -57,6 +57,7 @@ const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
     )}
   </div>
 )
+////// VOUCHER PRINT CARD /////////
 
 function VoucherPrintCard({ voucher, business_name, theme }: {
   voucher: any; business_name: string; theme: any
@@ -99,6 +100,11 @@ function VoucherPrintCard({ voucher, business_name, theme }: {
         borderRight: '3px solid #c9a227',
       }}>
         <div style={{
+          transform: 'rotate(-90deg)',
+          color: '#c9a227', fontWeight: 700, fontSize: 8,
+          letterSpacing: 3, marginBottom: 6,
+        }}>PRICE</div>
+        <div style={{
           transform: 'rotate(-90deg)', whiteSpace: 'nowrap',
           color: '#fff', fontWeight: 900,
           fontSize: priceFontSize,
@@ -108,11 +114,6 @@ function VoucherPrintCard({ voucher, business_name, theme }: {
         }}>
           TZS {priceDisplay}
         </div>
-        <div style={{
-          transform: 'rotate(-90deg)',
-          color: '#c9a227', fontWeight: 700, fontSize: 8,
-          letterSpacing: 3, marginTop: 6,
-        }}>PRICE</div>
       </div>
 
       <div style={{ marginLeft: 56, padding: '12px 12px 12px 14px' }}>
