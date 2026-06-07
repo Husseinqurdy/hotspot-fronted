@@ -124,19 +124,8 @@ export function VoucherManagementPage() {
   const [profilesLoading, setProfilesLoading] = useState(false)
 
   const [codeSettings, setCodeSettings] = useState<CodeSettings>({ type: 'mixed', case: 'upper', length: 8 })
-
-  // ── Scheduler fields zimeongezwa ──────────────────────────────────────────
-  const today = new Date().toISOString().split('T')[0]
-  const nowTime = new Date().toTimeString().slice(0, 5)
-
-  const [manualForm, setManualForm] = useState({
-    router_id: '', profile: '', customer_phone: '', custom_code: '',
-    start_date: today, start_time: nowTime,
-  })
-  const [batchForm, setBatchForm] = useState({
-    router_id: '', profile: '', quantity: '10',
-    start_date: today, start_time: nowTime,
-  })
+  const [manualForm, setManualForm] = useState({ router_id: '', profile: '', customer_phone: '', custom_code: '' })
+  const [batchForm, setBatchForm] = useState({ router_id: '', profile: '', quantity: '10' })
 
   const [selectedTheme, setSelectedTheme] = useState<ThemeId>('blue')
   const [batchResult, setBatchResult] = useState<any[]>([])
@@ -147,34 +136,38 @@ export function VoucherManagementPage() {
   const [printVouchers, setPrintVouchers] = useState<any[]>([])
   const [allPackages, setAllPackages] = useState<any[]>([])
 
-  useEffect(() => {
-    api.get('/packages/').then(r => setAllPackages(r.data.results || r.data)).catch(() => {})
-  }, [])
+useEffect(() => {
+  api.get('/packages/').then(r => setAllPackages(r.data.results || r.data)).catch(() => {})
+}, [])
 
-  // ── Enricher: inaongeza duration/speed/price kutoka packages ─────────────
-  const enrichVoucherForPrint = (v: any) => {
-    const pkg = allPackages.find((p: any) =>
-      p.name === v.package_name ||
-      p.mikrotik_profile === v.package_name ||
-      p.mikrotik_profile === v.profile
-    )
+// Function ya kupata info ya package kutoka jina lake
+const enrichVoucherForPrint = (v: any) => {
+  // Kama ina duration/speed tayari — rudisha ilivyo
+  if (v.duration && v.duration !== '—' && v.speed && v.speed !== '—') return v
 
-    if (pkg) {
-      return {
-        ...v,
-        duration: (v.duration && v.duration !== '—')
-          ? v.duration
-          : pkg.duration_display || (pkg.duration_unit === 'days'
-            ? `Siku ${pkg.duration_value}`
-            : `Saa ${pkg.duration_value}`),
-        speed: (v.speed && v.speed !== '—')
-          ? v.speed
-          : `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
-        package_price: v.package_price || pkg.price,
-      }
+  // Tafuta package inayolingana
+  const pkg = allPackages.find((p: any) =>
+    p.name === v.package_name ||
+    p.mikrotik_profile === v.package_name ||
+    p.mikrotik_profile === v.profile
+  )
+
+  if (pkg) {
+    return {
+      ...v,
+      duration: v.duration && v.duration !== '—'
+        ? v.duration
+        : pkg.duration_display || (pkg.duration_unit === 'days'
+          ? `Siku ${pkg.duration_value}`
+          : `Saa ${pkg.duration_value}`),
+      speed: v.speed && v.speed !== '—'
+        ? v.speed
+        : `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
+      package_price: v.package_price || pkg.price,
     }
-    return v
   }
+  return v
+}
 
   const showAlrt = (type: any, msg: string) => { setAlert({ type, msg }); setTimeout(() => setAlert(null), 5000) }
   const theme = COLOR_THEMES.find(t => t.id === selectedTheme) || COLOR_THEMES[0]
@@ -210,20 +203,24 @@ export function VoucherManagementPage() {
     } finally { setProfilesLoading(false) }
   }
 
+  // ── Pata maelezo ya package (duration + speed) ────────────────────────────
   const getProfileInfo = async (profileName: string) => {
     try {
       const res = await api.get('/packages/')
       const pkgs = res.data.results || res.data
       const pkg = pkgs.find((p: any) => p.mikrotik_profile === profileName)
       if (pkg) {
+        const timeout = pkg.duration_unit === 'days'
+          ? `${pkg.duration_value * 24}h`
+          : `${pkg.duration_value}h`
         return {
           duration: pkg.duration_display || `${pkg.duration_value} ${pkg.duration_unit}`,
           speed: `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
-          price: pkg.price,
+          session_timeout: timeout,
         }
       }
     } catch {}
-    return { duration: '—', speed: '—', price: 0 }
+    return { duration: '—', speed: '—', session_timeout: '1h' }
   }
 
   const handleManualRouterChange = async (routerId: string) => {
@@ -240,7 +237,6 @@ export function VoucherManagementPage() {
 
   const makeCode = () => generateCodeWithSettings(codeSettings)
 
-  // ── MANUAL CREATE — scheduler imeondolewa ────────────────────────────────
   const handleManualCreate = async () => {
     if (!manualForm.router_id || !manualForm.profile) {
       showAlrt('error', 'Chagua router na profile'); return
@@ -250,40 +246,41 @@ export function VoucherManagementPage() {
       const code = manualForm.custom_code || makeCode()
       const profileInfo = await getProfileInfo(manualForm.profile)
 
-      // Unda user kwenye MikroTik tu — hakuna scheduler
+      // ── 1. Unda user kwenye MikroTik ────────────────────────────────────
       await api.post(`/mikrotik/${manualForm.router_id}/hotspot/users/`, {
         username: code,
         password: code,
         profile: manualForm.profile,
         comment: `Manual|${manualForm.customer_phone || 'N/A'}`,
-        start_date: toMikroTikDate(manualForm.start_date),
-        start_time: toMikroTikTime(manualForm.start_time),
       })
 
-      showAlrt('success', `✅ Voucher ${code} imeundwa!`)
-      setPrintVouchers([enrichVoucherForPrint({
+      // ── 2. Weka scheduler — voucher itaisha automatically ────────────────
+      try {
+        await api.post(`/mikrotik/${manualForm.router_id}/voucher/schedule/`, {
+          username: code,
+          session_timeout: profileInfo.session_timeout,
+          profile: manualForm.profile,
+        })
+      } catch {
+        // Scheduler si lazima — endelea hata kama imeshindwa
+      }
+
+      showAlrt('success', `✅ Voucher ${code} imeundwa + scheduler imewekwa!`)
+      setPrintVouchers([{
         code,
         package_name: manualForm.profile,
         customer_phone: manualForm.customer_phone,
         duration: profileInfo.duration,
         speed: profileInfo.speed,
-        package_price: profileInfo.price,
-      })])
+      }])
       setShowPrintModal(true)
-      setManualForm(prev => ({
-        ...prev,
-        customer_phone: '',
-        custom_code: '',
-        start_date: today,
-        start_time: nowTime,
-      }))
+      setManualForm({ router_id: manualForm.router_id, profile: manualForm.profile, customer_phone: '', custom_code: '' })
       fetchVouchers()
     } catch (e: any) {
       showAlrt('error', e.response?.data?.error || 'Imeshindwa — angalia router ipo online')
     } finally { setSaving(false) }
   }
 
-  // ── BATCH CREATE — scheduler imeondolewa ─────────────────────────────────
   const handleBatchCreate = async () => {
     if (!batchForm.router_id || !batchForm.profile) {
       showAlrt('error', 'Chagua router na profile'); return
@@ -304,17 +301,14 @@ export function VoucherManagementPage() {
             username: code, password: code,
             profile: batchForm.profile,
             comment: `Batch|${new Date().toLocaleDateString('sw-TZ')}`,
-            start_date: toMikroTikDate(batchForm.start_date),
-            start_time: toMikroTikTime(batchForm.start_time),
           })
-          results.push(enrichVoucherForPrint({
+          results.push({
             code,
             package_name: batchForm.profile,
             customer_phone: '',
             duration: profileInfo.duration,
             speed: profileInfo.speed,
-            package_price: profileInfo.price,
-          }))
+          })
         } catch { failed++ }
       }
       setBatchResult(results)
@@ -336,12 +330,12 @@ export function VoucherManagementPage() {
   }
 
   const openPrintSelected = () => {
-    const toprint = vouchers
-      .filter((_, i) => selectedForPrint.has(i))
-      .map(enrichVoucherForPrint)
-    setPrintVouchers(toprint)
-    setShowPrintModal(true)
-  }
+  const toprint = vouchers
+    .filter((_, i) => selectedForPrint.has(i))
+    .map(enrichVoucherForPrint)
+  setPrintVouchers(toprint)
+  setShowPrintModal(true)
+}
 
   const business_name = clientInfo?.business_name || 'NetSafi Hotspot'
   const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
@@ -351,58 +345,6 @@ export function VoucherManagementPage() {
     { key: 'batch',  label: 'Unda Batch',          icon: '📦' },
   ] as const
   const FILTERS = [{ k: '', l: t('all') }, { k: 'active', l: 'Active' }, { k: 'used', l: t('used') }, { k: 'expired', l: t('expired') }]
-
-  // ── Badilisha ISO date (2026-06-07) → MikroTik format (jun/07/2026) ───────
-  const toMikroTikDate = (iso: string) => {
-    if (!iso) return 'jan/01/1970'
-    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
-    const [y, m, d] = iso.split('-')
-    return `${months[parseInt(m) - 1]}/${d}/${y}`
-  }
-
-  // ── Badilisha HH:MM → HH:MM:SS ────────────────────────────────────────────
-  const toMikroTikTime = (t: string) => {
-    if (!t) return '00:00:00'
-    return t.length === 5 ? `${t}:00` : t
-  }
-
-  // ── Start Date/Time fields component ─────────────────────────────────────
-  const ScheduleFields = ({ form, setForm }: { form: any; setForm: any }) => (
-    <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: '10px 14px' }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: '#166534', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-        📅 Tarehe na Saa ya Kuanza
-      </div>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)' }}>Start Date</label>
-          <input
-            type="date"
-            value={form.start_date}
-            onChange={(e: any) => setForm((prev: any) => ({ ...prev, start_date: e.target.value }))}
-            style={{ padding: '8px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff' }}
-          />
-          <span style={{ fontSize: 10, color: '#166534' }}>
-            → {toMikroTikDate(form.start_date)}
-          </span>
-        </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)' }}>Start Time</label>
-          <input
-            type="time"
-            value={form.start_time}
-            onChange={(e: any) => setForm((prev: any) => ({ ...prev, start_time: e.target.value }))}
-            style={{ padding: '8px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, outline: 'none', background: '#fff' }}
-          />
-          <span style={{ fontSize: 10, color: '#166534' }}>
-            → {toMikroTikTime(form.start_time)}
-          </span>
-        </div>
-      </div>
-      <div style={{ fontSize: 11, color: '#166534', marginTop: 6 }}>
-        💡 Voucher itaanza kufanya kazi tarehe na saa uliyochagua
-      </div>
-    </div>
-  )
 
   const ProfileDropdown = ({ routerId, value, onChange }: { routerId: string; value: string; onChange: (v: string) => void }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -492,7 +434,6 @@ export function VoucherManagementPage() {
                   v.customer_phone || '—',
                   <Badge text={v.status_display || v.status} color={vs[v.status] || 'gray'} />,
                   new Date(v.created_at).toLocaleString('sw-TZ'),
-                  // ✅ FIX: enrichVoucherForPrint inatumiwa hapa
                   <Button size="sm" variant="ghost" onClick={() => { setPrintVouchers([enrichVoucherForPrint(v)]); setShowPrintModal(true) }} icon="🖨">Print</Button>,
                 ])}
                 emptyMessage={t('no_vouchers')}
@@ -537,9 +478,6 @@ export function VoucherManagementPage() {
                     )}
                   </div>
 
-                  {/* ✅ Start Date/Time fields */}
-                  <ScheduleFields form={manualForm} setForm={setManualForm} />
-
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Rangi ya Voucher (Print)</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -560,13 +498,7 @@ export function VoucherManagementPage() {
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Preview ya Voucher</label>
                   {manualForm.router_id && manualForm.profile ? (
                     <VoucherPrintCard
-                      voucher={enrichVoucherForPrint({
-                        code: manualForm.custom_code || makeCode(),
-                        package_name: manualForm.profile,
-                        customer_phone: manualForm.customer_phone,
-                        duration: '—',
-                        speed: '—',
-                      })}
+                      voucher={{ code: manualForm.custom_code || makeCode(), package_name: manualForm.profile, customer_phone: manualForm.customer_phone, duration: '—', speed: '—' }}
                       business_name={business_name}
                       theme={printThemeObj}
                     />
@@ -606,9 +538,6 @@ export function VoucherManagementPage() {
                   placeholder="10" value={batchForm.quantity}
                   onChange={(e: any) => setBatchForm({ ...batchForm, quantity: e.target.value })} />
 
-                {/* ✅ Start Date/Time fields kwa batch */}
-                <ScheduleFields form={batchForm} setForm={setBatchForm} />
-
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Rangi ya Vouchers (Print)</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
@@ -626,16 +555,7 @@ export function VoucherManagementPage() {
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Preview</label>
                     <div style={{ transform: 'scale(0.65)', transformOrigin: 'left top', marginBottom: -90 }}>
-                      <VoucherPrintCard
-                        voucher={enrichVoucherForPrint({
-                          code: makeCode(),
-                          package_name: batchForm.profile,
-                          duration: '—',
-                          speed: '—',
-                        })}
-                        business_name={business_name}
-                        theme={theme}
-                      />
+                      <VoucherPrintCard voucher={{ code: makeCode(), package_name: batchForm.profile, duration: '—', speed: '—' }} business_name={business_name} theme={theme} />
                     </div>
                   </div>
                 )}
