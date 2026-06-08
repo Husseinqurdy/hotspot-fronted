@@ -6,18 +6,39 @@ import { useLang } from '../contexts/LangContext'
 import { useAuth } from '../contexts/AuthContext'
 import { VoucherPrintCard } from './AllPages'
 
+// ════════════════════════════════════════════════════════
+// PRINT STYLE — iliyorekebishwa kwa A4 grid 2x columns
+// ════════════════════════════════════════════════════════
 const PRINT_STYLE = `
   @media print {
     body * { visibility: hidden !important; }
     #voucher-print-area, #voucher-print-area * { visibility: visible !important; }
     #voucher-print-area {
       position: fixed !important;
-      left: 0 !important; top: 0 !important;
+      left: 0 !important;
+      top: 0 !important;
       width: 100% !important;
-      padding: 5mm !important;
+      padding: 6mm !important;
       background: white !important;
     }
-    @page { margin: 8mm; size: A4; }
+    #voucher-print-area .voucher-grid {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 4mm !important;
+      width: 100% !important;
+    }
+    #voucher-print-area .voucher-grid > div {
+      width: 100% !important;
+      margin: 0 !important;
+      display: inline-block !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      box-sizing: border-box !important;
+    }
+    @page {
+      margin: 6mm;
+      size: A4 portrait;
+    }
   }
 `
 
@@ -136,38 +157,28 @@ export function VoucherManagementPage() {
   const [printVouchers, setPrintVouchers] = useState<any[]>([])
   const [allPackages, setAllPackages] = useState<any[]>([])
 
-useEffect(() => {
-  api.get('/packages/').then(r => setAllPackages(r.data.results || r.data)).catch(() => {})
-}, [])
+  useEffect(() => {
+    api.get('/packages/').then(r => setAllPackages(r.data.results || r.data)).catch(() => {})
+  }, [])
 
-// Function ya kupata info ya package kutoka jina lake
-const enrichVoucherForPrint = (v: any) => {
-  // Kama ina duration/speed tayari — rudisha ilivyo
-  if (v.duration && v.duration !== '—' && v.speed && v.speed !== '—') return v
-
-  // Tafuta package inayolingana
-  const pkg = allPackages.find((p: any) =>
-    p.name === v.package_name ||
-    p.mikrotik_profile === v.package_name ||
-    p.mikrotik_profile === v.profile
-  )
-
-  if (pkg) {
-    return {
-      ...v,
-      duration: v.duration && v.duration !== '—'
-        ? v.duration
-        : pkg.duration_display || (pkg.duration_unit === 'days'
-          ? `Siku ${pkg.duration_value}`
-          : `Saa ${pkg.duration_value}`),
-      speed: v.speed && v.speed !== '—'
-        ? v.speed
-        : `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
-      package_price: v.package_price || pkg.price,
+  const enrichVoucherForPrint = (v: any) => {
+    if (v.duration && v.duration !== '—' && v.speed && v.speed !== '—') return v
+    const pkg = allPackages.find((p: any) =>
+      p.name === v.package_name ||
+      p.mikrotik_profile === v.package_name ||
+      p.mikrotik_profile === v.profile
+    )
+    if (pkg) {
+      return {
+        ...v,
+        duration: v.duration && v.duration !== '—' ? v.duration
+          : pkg.duration_display || (pkg.duration_unit === 'days' ? `Siku ${pkg.duration_value}` : `Saa ${pkg.duration_value}`),
+        speed: v.speed && v.speed !== '—' ? v.speed : `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
+        package_price: v.package_price || pkg.price,
+      }
     }
+    return v
   }
-  return v
-}
 
   const showAlrt = (type: any, msg: string) => { setAlert({ type, msg }); setTimeout(() => setAlert(null), 5000) }
   const theme = COLOR_THEMES.find(t => t.id === selectedTheme) || COLOR_THEMES[0]
@@ -203,16 +214,13 @@ const enrichVoucherForPrint = (v: any) => {
     } finally { setProfilesLoading(false) }
   }
 
-  // ── Pata maelezo ya package (duration + speed) ────────────────────────────
   const getProfileInfo = async (profileName: string) => {
     try {
       const res = await api.get('/packages/')
       const pkgs = res.data.results || res.data
       const pkg = pkgs.find((p: any) => p.mikrotik_profile === profileName)
       if (pkg) {
-        const timeout = pkg.duration_unit === 'days'
-          ? `${pkg.duration_value * 24}h`
-          : `${pkg.duration_value}h`
+        const timeout = pkg.duration_unit === 'days' ? `${pkg.duration_value * 24}h` : `${pkg.duration_value}h`
         return {
           duration: pkg.duration_display || `${pkg.duration_value} ${pkg.duration_unit}`,
           speed: `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
@@ -238,41 +246,22 @@ const enrichVoucherForPrint = (v: any) => {
   const makeCode = () => generateCodeWithSettings(codeSettings)
 
   const handleManualCreate = async () => {
-    if (!manualForm.router_id || !manualForm.profile) {
-      showAlrt('error', 'Chagua router na profile'); return
-    }
+    if (!manualForm.router_id || !manualForm.profile) { showAlrt('error', 'Chagua router na profile'); return }
     setSaving(true)
     try {
       const code = manualForm.custom_code || makeCode()
       const profileInfo = await getProfileInfo(manualForm.profile)
-
-      // ── 1. Unda user kwenye MikroTik ────────────────────────────────────
       await api.post(`/mikrotik/${manualForm.router_id}/hotspot/users/`, {
-        username: code,
-        password: code,
-        profile: manualForm.profile,
+        username: code, password: code, profile: manualForm.profile,
         comment: `Manual|${manualForm.customer_phone || 'N/A'}`,
       })
-
-      // ── 2. Weka scheduler — voucher itaisha automatically ────────────────
       try {
         await api.post(`/mikrotik/${manualForm.router_id}/voucher/schedule/`, {
-          username: code,
-          session_timeout: profileInfo.session_timeout,
-          profile: manualForm.profile,
+          username: code, session_timeout: profileInfo.session_timeout, profile: manualForm.profile,
         })
-      } catch {
-        // Scheduler si lazima — endelea hata kama imeshindwa
-      }
-
+      } catch {}
       showAlrt('success', `✅ Voucher ${code} imeundwa + scheduler imewekwa!`)
-      setPrintVouchers([{
-        code,
-        package_name: manualForm.profile,
-        customer_phone: manualForm.customer_phone,
-        duration: profileInfo.duration,
-        speed: profileInfo.speed,
-      }])
+      setPrintVouchers([{ code, package_name: manualForm.profile, customer_phone: manualForm.customer_phone, duration: profileInfo.duration, speed: profileInfo.speed }])
       setShowPrintModal(true)
       setManualForm({ router_id: manualForm.router_id, profile: manualForm.profile, customer_phone: '', custom_code: '' })
       fetchVouchers()
@@ -282,13 +271,9 @@ const enrichVoucherForPrint = (v: any) => {
   }
 
   const handleBatchCreate = async () => {
-    if (!batchForm.router_id || !batchForm.profile) {
-      showAlrt('error', 'Chagua router na profile'); return
-    }
+    if (!batchForm.router_id || !batchForm.profile) { showAlrt('error', 'Chagua router na profile'); return }
     const qty = parseInt(batchForm.quantity)
-    if (isNaN(qty) || qty < 1 || qty > 200) {
-      showAlrt('error', 'Quantity lazima iwe kati ya 1 na 200'); return
-    }
+    if (isNaN(qty) || qty < 1 || qty > 200) { showAlrt('error', 'Quantity lazima iwe kati ya 1 na 200'); return }
     setSaving(true)
     const profileInfo = await getProfileInfo(batchForm.profile)
     const results: any[] = []
@@ -298,17 +283,10 @@ const enrichVoucherForPrint = (v: any) => {
         const code = makeCode()
         try {
           await api.post(`/mikrotik/${batchForm.router_id}/hotspot/users/`, {
-            username: code, password: code,
-            profile: batchForm.profile,
+            username: code, password: code, profile: batchForm.profile,
             comment: `Batch|${new Date().toLocaleDateString('sw-TZ')}`,
           })
-          results.push({
-            code,
-            package_name: batchForm.profile,
-            customer_phone: '',
-            duration: profileInfo.duration,
-            speed: profileInfo.speed,
-          })
+          results.push({ code, package_name: batchForm.profile, customer_phone: '', duration: profileInfo.duration, speed: profileInfo.speed })
         } catch { failed++ }
       }
       setBatchResult(results)
@@ -321,7 +299,119 @@ const enrichVoucherForPrint = (v: any) => {
     finally { setSaving(false) }
   }
 
-  const handlePrint = () => { window.print() }
+  // ════════════════════════════════════════════════════════
+  // PRINT — inafungua tab mpya na HTML iliyoundwa vizuri kwa A4
+  // ════════════════════════════════════════════════════════
+  const handlePrint = () => {
+    const themeObj = printThemeObj
+    const biz = business_name
+
+    // Tengeneza HTML ya kila voucher kwa njia ya inline styles kamili
+    const vouchersHtml = printVouchers.map(v => {
+      const price = Number(v.package_price || v.price || 0)
+      const priceDisplay = price > 0 ? (price >= 10000 ? `${(price / 1000).toFixed(0)}K` : price.toLocaleString()) : '—'
+      const uptime = v.duration || v.duration_display || v.uptime || '—'
+      const speed = v.speed || (v.speed_down && v.speed_up ? `${v.speed_down}mb / ${v.speed_up}mb` : '—') || '—'
+      const packageName = v.package_name || v.package || '—'
+      const priceFontSize = priceDisplay.length > 6 ? 11 : priceDisplay.length > 4 ? 14 : 17
+
+      return `
+        <div style="background:#f0f4ff;border-radius:12px;overflow:hidden;border:1px solid #e0e8ff;position:relative;page-break-inside:avoid;break-inside:avoid;font-family:Arial,sans-serif;">
+          <!-- Left strip -->
+          <div style="position:absolute;left:0;top:0;bottom:0;width:50px;background:linear-gradient(180deg,${themeObj.bg} 0%,#0d1a5c 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:3px solid #c9a227;">
+            <div style="transform:rotate(-90deg);white-space:nowrap;color:#fff;font-weight:900;font-size:${priceFontSize}px;letter-spacing:${priceFontSize > 14 ? 2 : 0.5}px;text-shadow:0 1px 4px rgba(0,0,0,0.4);max-width:110px;">TZS ${priceDisplay}</div>
+            <div style="transform:rotate(-90deg);color:#c9a227;font-weight:700;font-size:7px;letter-spacing:3px;margin-top:4px;">PRICE</div>
+          </div>
+          <!-- Main content -->
+          <div style="margin-left:50px;padding:10px 10px 10px 12px;">
+            <!-- Header -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;">
+              <div>
+                <div style="font-size:8px;color:#c9a227;margin-bottom:2px;letter-spacing:2px;">✦ ─── ✦ ─── ✦</div>
+                <div style="font-size:14px;font-weight:900;color:${themeObj.bg};letter-spacing:1px;line-height:1.1;">${biz.toUpperCase()}</div>
+                <div style="font-size:7px;color:#888;font-style:italic;margin-top:1px;">Stay Connected. Stay Powered.</div>
+                <div style="font-size:7px;color:#c9a227;margin-top:2px;letter-spacing:2px;">── ── ── ──</div>
+              </div>
+              <div style="background:${themeObj.bg};border-radius:7px;padding:6px 7px;border:2px solid #c9a227;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="18" r="1.5" fill="white"/></svg>
+              </div>
+            </div>
+            <!-- UPTIME + SPEED -->
+            <div style="display:flex;gap:5px;margin-bottom:6px;">
+              <div style="flex:1;background:#fff;border-radius:7px;padding:5px 6px;border:1px solid #e5eaf5;">
+                <div style="font-size:7px;font-weight:700;color:#333;letter-spacing:0.5px;margin-bottom:2px;">UPTIME</div>
+                <div style="font-size:${uptime.length > 8 ? 9 : 11}px;font-weight:900;color:${themeObj.bg};">${uptime}</div>
+              </div>
+              <div style="flex:1;background:#fff;border-radius:7px;padding:5px 6px;border:1px solid #e5eaf5;">
+                <div style="font-size:7px;font-weight:700;color:#333;letter-spacing:0.5px;margin-bottom:2px;">SPEED</div>
+                <div style="font-size:${speed.length > 10 ? 8 : 10}px;font-weight:900;color:${themeObj.bg};">${speed}</div>
+              </div>
+            </div>
+            <!-- Package -->
+            <div style="margin-bottom:6px;padding:4px 6px;background:#fff;border-radius:6px;border:1px solid #e5eaf5;">
+              <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:8px;font-weight:700;color:#555;letter-spacing:1px;">📦 PACKAGE</span>
+                <span style="font-size:9px;font-weight:700;color:${themeObj.bg};margin-left:auto;">${packageName}</span>
+              </div>
+              ${v.customer_phone ? `<div style="font-size:8px;color:#666;margin-top:2px;">📞 ${v.customer_phone}</div>` : ''}
+            </div>
+            <!-- Divider -->
+            <div style="border-top:1.5px dashed #c9a227;margin:5px 0;"></div>
+            <!-- Voucher code -->
+            <div style="background:#fff;border:2px solid #c9a227;border-radius:8px;padding:5px 8px;text-align:center;margin-bottom:5px;">
+              <div style="font-size:20px;font-weight:900;letter-spacing:5px;color:${themeObj.bg};font-family:'Courier New',monospace;">— ${v.code} —</div>
+              <div style="font-size:7px;font-weight:700;color:#888;letter-spacing:3px;">VOUCHER CODE</div>
+            </div>
+            <!-- Footer -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+              <div style="font-size:7px;color:#666;font-style:italic;max-width:55%;line-height:1.4;">
+                <span style="color:#c9a227;font-size:10px;font-weight:900;">"</span> Enjoy fast, reliable and <span style="color:${themeObj.bg};font-weight:700;">uninterrupted</span> internet. <span style="color:#c9a227;font-size:10px;font-weight:900;">"</span>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px;font-weight:900;color:${themeObj.bg};font-style:italic;font-family:Georgia,serif;">Thank You!</div>
+                <div style="font-size:6px;color:#c9a227;letter-spacing:1px;">── For Choosing Us ──</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }).join('')
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Vouchers — ${biz}</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { background: white; font-family: Arial, sans-serif; }
+          .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5mm;
+            padding: 5mm;
+          }
+          @page { size: A4 portrait; margin: 5mm; }
+          @media print {
+            body { margin: 0; }
+            .grid { padding: 0; gap: 4mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="grid">${vouchersHtml}</div>
+        <script>window.onload = function(){ window.print(); }<\/script>
+      </body>
+      </html>
+    `
+
+    const win = window.open('', '_blank')
+    if (win) {
+      win.document.write(html)
+      win.document.close()
+    }
+  }
 
   const toggleSelect = (id: number) => {
     setSelectedForPrint(prev => {
@@ -330,12 +420,10 @@ const enrichVoucherForPrint = (v: any) => {
   }
 
   const openPrintSelected = () => {
-  const toprint = vouchers
-    .filter((_, i) => selectedForPrint.has(i))
-    .map(enrichVoucherForPrint)
-  setPrintVouchers(toprint)
-  setShowPrintModal(true)
-}
+    const toprint = vouchers.filter((_, i) => selectedForPrint.has(i)).map(enrichVoucherForPrint)
+    setPrintVouchers(toprint)
+    setShowPrintModal(true)
+  }
 
   const business_name = clientInfo?.business_name || 'NetSafi Hotspot'
   const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
@@ -352,13 +440,9 @@ const enrichVoucherForPrint = (v: any) => {
         Hotspot Profile * {profilesLoading && <Spinner size={12} />}
       </label>
       {!routerId ? (
-        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>
-          Chagua router kwanza...
-        </div>
+        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>Chagua router kwanza...</div>
       ) : profilesLoading ? (
-        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>
-          Inapakia profiles kutoka MikroTik...
-        </div>
+        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>Inapakia profiles kutoka MikroTik...</div>
       ) : (
         <select value={value} onChange={(e: any) => onChange(e.target.value)}
           style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', background: '#fff', color: 'var(--gray-800)' }}>
@@ -377,7 +461,6 @@ const enrichVoucherForPrint = (v: any) => {
 
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
-        {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[
             { l: t('all'), v: stats?.total || 0, c: '#6366f1', i: '🎫' },
@@ -450,34 +533,16 @@ const enrichVoucherForPrint = (v: any) => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} />
-
-                  <Select label="Router (lazima iwe online) *" value={manualForm.router_id}
-                    onChange={(e: any) => handleManualRouterChange(e.target.value)}>
+                  <Select label="Router (lazima iwe online) *" value={manualForm.router_id} onChange={(e: any) => handleManualRouterChange(e.target.value)}>
                     <option value="">— Chagua Router —</option>
                     {routers.map(r => <option key={r.id} value={r.id}>🟢 {r.name} ({r.host})</option>)}
                   </Select>
-
-                  <ProfileDropdown
-                    routerId={manualForm.router_id}
-                    value={manualForm.profile}
-                    onChange={v => setManualForm(prev => ({ ...prev, profile: v }))}
-                  />
-
-                  <Input label="Simu ya Mteja (optional)" placeholder="0744123456"
-                    value={manualForm.customer_phone}
-                    onChange={(e: any) => setManualForm({ ...manualForm, customer_phone: e.target.value })} />
-
+                  <ProfileDropdown routerId={manualForm.router_id} value={manualForm.profile} onChange={v => setManualForm(prev => ({ ...prev, profile: v }))} />
+                  <Input label="Simu ya Mteja (optional)" placeholder="0744123456" value={manualForm.customer_phone} onChange={(e: any) => setManualForm({ ...manualForm, customer_phone: e.target.value })} />
                   <div>
-                    <Input label="Code ya Maalum (acha tupu = random)" placeholder="ABCD1234"
-                      value={manualForm.custom_code}
-                      onChange={(e: any) => setManualForm({ ...manualForm, custom_code: e.target.value })} />
-                    {!manualForm.custom_code && (
-                      <p style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>
-                        Preview code: <strong style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{makeCode()}</strong>
-                      </p>
-                    )}
+                    <Input label="Code ya Maalum (acha tupu = random)" placeholder="ABCD1234" value={manualForm.custom_code} onChange={(e: any) => setManualForm({ ...manualForm, custom_code: e.target.value })} />
+                    {!manualForm.custom_code && <p style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>Preview code: <strong style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{makeCode()}</strong></p>}
                   </div>
-
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Rangi ya Voucher (Print)</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -487,13 +552,10 @@ const enrichVoucherForPrint = (v: any) => {
                       ))}
                     </div>
                   </div>
-
                   <Button onClick={handleManualCreate} disabled={saving || !manualForm.router_id || !manualForm.profile} icon="✨">
                     {saving ? 'Inaunda...' : 'Unda Voucher'}
                   </Button>
                 </div>
-
-                {/* Preview */}
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Preview ya Voucher</label>
                   {manualForm.router_id && manualForm.profile ? (
@@ -504,8 +566,7 @@ const enrichVoucherForPrint = (v: any) => {
                     />
                   ) : (
                     <div style={{ border: '2px dashed var(--gray-200)', borderRadius: 12, padding: '2rem', textAlign: 'center', color: 'var(--gray-400)' }}>
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>🎫</div>
-                      Chagua router na profile
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>🎫</div>Chagua router na profile
                     </div>
                   )}
                 </div>
@@ -521,23 +582,12 @@ const enrichVoucherForPrint = (v: any) => {
               <CardHeader title="Unda Vouchers Nyingi (Batch)" />
               <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} />
-
-                <Select label="Router (lazima iwe online) *" value={batchForm.router_id}
-                  onChange={(e: any) => handleBatchRouterChange(e.target.value)}>
+                <Select label="Router (lazima iwe online) *" value={batchForm.router_id} onChange={(e: any) => handleBatchRouterChange(e.target.value)}>
                   <option value="">— Chagua Router —</option>
                   {routers.map(r => <option key={r.id} value={r.id}>🟢 {r.name} ({r.host})</option>)}
                 </Select>
-
-                <ProfileDropdown
-                  routerId={batchForm.router_id}
-                  value={batchForm.profile}
-                  onChange={v => setBatchForm(prev => ({ ...prev, profile: v }))}
-                />
-
-                <Input label="Idadi ya Vouchers (1–200) *" type="number" min="1" max="200"
-                  placeholder="10" value={batchForm.quantity}
-                  onChange={(e: any) => setBatchForm({ ...batchForm, quantity: e.target.value })} />
-
+                <ProfileDropdown routerId={batchForm.router_id} value={batchForm.profile} onChange={v => setBatchForm(prev => ({ ...prev, profile: v }))} />
+                <Input label="Idadi ya Vouchers (1–200) *" type="number" min="1" max="200" placeholder="10" value={batchForm.quantity} onChange={(e: any) => setBatchForm({ ...batchForm, quantity: e.target.value })} />
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Rangi ya Vouchers (Print)</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
@@ -550,7 +600,6 @@ const enrichVoucherForPrint = (v: any) => {
                     ))}
                   </div>
                 </div>
-
                 {batchForm.profile && (
                   <div>
                     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Preview</label>
@@ -559,11 +608,9 @@ const enrichVoucherForPrint = (v: any) => {
                     </div>
                   </div>
                 )}
-
                 <Button onClick={handleBatchCreate} disabled={saving || !batchForm.router_id || !batchForm.profile} icon="⚡">
                   {saving ? 'Inaunda...' : `Unda Vouchers ${batchForm.quantity || 0}`}
                 </Button>
-
                 {saving && (
                   <div style={{ textAlign: 'center', color: 'var(--gray-500)', fontSize: 13 }}>
                     <div style={{ marginBottom: 6 }}>Inaunda vouchers kwenye MikroTik...</div>
@@ -593,7 +640,7 @@ const enrichVoucherForPrint = (v: any) => {
           </div>
         )}
 
-        {/* Print Modal */}
+        {/* ── PRINT MODAL ── */}
         {showPrintModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
             <div style={{ background: '#fff', borderRadius: 16, maxWidth: 800, width: '100%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
@@ -610,13 +657,16 @@ const enrichVoucherForPrint = (v: any) => {
                   <button onClick={() => setShowPrintModal(false)} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
                 </div>
               </div>
+
+              {/* Preview kwenye modal — grid ya 2 columns */}
               <div id="voucher-print-area" style={{ flex: 1, overflowY: 'auto', padding: '1rem', background: '#f9fafb' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                <div className="voucher-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                   {printVouchers.map((v, i) => (
                     <VoucherPrintCard key={i} voucher={v} business_name={business_name} theme={printThemeObj} />
                   ))}
                 </div>
               </div>
+
               <div style={{ padding: '0.875rem', borderTop: '1px solid var(--gray-100)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <Button variant="ghost" onClick={() => setShowPrintModal(false)}>Funga</Button>
                 <Button variant="success" onClick={handlePrint} icon="🖨️">Chapisha Sasa</Button>

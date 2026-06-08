@@ -1136,31 +1136,113 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       )}
 
       {/* 3. USERS */}
-      {!loading && tab === 'users' && (
-        <Card>
-          <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon="➕">{t('add_user')}</Button>} />
-          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
-            💡 Bonyeza jina la user kuona na kuhariri maelezo yake
-          </div>
-          <Table headers={['Name', 'Profile', 'Limit Uptime', 'Comment', 'Status', '']}
-            rows={(d?.users || []).map((u: any) => [
-              <code
-                style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }}
-                onClick={() => setSelectedUser(u)}
-              >
-                {u.name}
-              </code>,
-              <Badge text={u.profile || 'default'} color="indigo" />,
-              u['limit-uptime'] || <span style={{ color: 'var(--gray-300)' }}>—</span>,
-              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
-              <Badge
-                text={u.disabled === 'true' ? 'Disabled' : 'Active'}
-                color={u.disabled === 'true' ? 'red' : 'green'}
-              />,
-              <Button size="sm" variant="ghost" onClick={() => setSelectedUser(u)} icon="✏️">Edit</Button>,
-            ])} emptyMessage="Hakuna users" />
-        </Card>
-      )}
+{!loading && tab === 'users' && (
+  <Card>
+    <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon="➕">{t('add_user')}</Button>} />
+    <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
+      💡 Bonyeza jina la user kuona na kuhariri maelezo yake
+    </div>
+    <Table
+      headers={['Name', 'Profile', 'Limit Uptime', 'Uptime / Hali', 'Comment', 'Status', '']}
+      rows={(d?.users || []).map((u: any) => {
+        // ── Hesabu hali ya matumizi ya voucher ──────────────────
+        const limitUptime  = u['limit-uptime']  || ''   // e.g. "01:00:00" au "1d 00:00:00"
+        const currentUptime = u.uptime || ''             // e.g. "00:23:41" — muda uliotumika
+        const lastLogin    = u['last-logged-in'] || ''   // tarehe ya login ya mwisho
+
+        // Je, user amewahi kuingia?
+        const hasStarted = currentUptime && currentUptime !== '00:00:00'
+        const neverUsed  = !currentUptime && !lastLogin
+
+        // ── Badge ya hali ya matumizi ────────────────────────────
+        let usageBadge: any
+        if (neverUsed) {
+          usageBadge = (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+              background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
+            }}>
+              ⭕ Haijatumika
+            </span>
+          )
+        } else if (hasStarted) {
+          usageBadge = (
+            <div>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
+              }}>
+                ▶ {currentUptime}
+              </span>
+              {lastLogin && (
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
+                  Login: {lastLogin}
+                </div>
+              )}
+            </div>
+          )
+        } else {
+          // Ana last-logged-in lakini uptime = 0 — amewahi kuingia, sasa nje
+          usageBadge = (
+            <div>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb',
+              }}>
+                ⏸ Nje
+              </span>
+              {lastLogin && (
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
+                  Mwisho: {lastLogin}
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        return [
+          // Name — clickable
+          <code
+            style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }}
+            onClick={() => setSelectedUser(u)}
+          >
+            {u.name}
+          </code>,
+
+          // Profile
+          <Badge text={u.profile || 'default'} color="indigo" />,
+
+          // Limit Uptime — muda unaoruhusiwa
+          u['limit-uptime']
+            ? <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-700)', fontWeight: 600 }}>
+                {u['limit-uptime']}
+              </span>
+            : <span style={{ color: 'var(--gray-300)', fontSize: 12 }}>unlimited</span>,
+
+          // Uptime / Hali — muda uliotumika au hali
+          usageBadge,
+
+          // Comment
+          <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
+
+          // Disabled status
+          <Badge
+            text={u.disabled === 'true' ? 'Disabled' : 'Active'}
+            color={u.disabled === 'true' ? 'red' : 'green'}
+          />,
+
+          // Actions
+          <Button size="sm" variant="ghost" onClick={() => setSelectedUser(u)} icon="✏️">Edit</Button>,
+        ]
+      })}
+      emptyMessage="Hakuna users"
+    />
+  </Card>
+)}
+
 
       {/* 4. ACTIVE */}
       {!loading && tab === 'active' && (
@@ -1269,33 +1351,94 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         </Card>
       )}
 
-      {/* 10. SCHEDULER */}
-      {!loading && tab === 'scheduler' && (
-        <Card>
-          <CardHeader title={`Scheduler (${(d?.schedulers || []).length})`} action={<Button size="sm" onClick={openAddScheduler} icon="➕">Add Schedule</Button>} />
-          <div style={{ padding: '8px 16px', background: '#f0fdf4', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#166534' }}>
-            ⏰ Bonyeza scheduler kuona na kuhariri script yake kamili
+    {/* 10. SCHEDULER */}
+{!loading && tab === 'scheduler' && (
+  <Card>
+    <CardHeader
+      title={`Scheduler (${(d?.schedulers || []).length})`}
+      action={<Button size="sm" onClick={openAddScheduler} icon="➕">Add Schedule</Button>}
+    />
+    <div style={{ padding: '8px 16px', background: '#f0fdf4', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#166534' }}>
+      ⏰ Bonyeza scheduler kuona na kuhariri script yake kamili
+    </div>
+    <Table
+      headers={['Name', 'Start Date', 'Start Time', 'Interval', 'Run Count', 'Next Run', 'Status', '']}
+      rows={(d?.schedulers || []).map((s: any) => [
+
+        // Name — clickable, na comment chini
+        <div style={{ cursor: 'pointer', minWidth: 80 }} onClick={() => setSelectedScheduler(s)}>
+          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary)', textDecoration: 'underline dotted' }}>
+            {s.name}
           </div>
-          <Table headers={['Name', 'Interval', 'Run Count', 'Next Run', 'Status', '']}
-            rows={(d?.schedulers || []).map((s: any) => [
-              <div style={{ cursor: 'pointer' }} onClick={() => setSelectedScheduler(s)}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary)', textDecoration: 'underline dotted' }}>{s.name}</div>
-                {s.comment && <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{s.comment}</div>}
-              </div>,
-              s.interval ? <Badge text={s.interval} color="blue" /> : <span style={{ color: 'var(--gray-300)' }}>once</span>,
-              <span style={{ fontWeight: 600, color: (s['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)' }}>{s['run-count'] || '0'}</span>,
-              s['next-run'] || <span style={{ color: 'var(--gray-300)' }}>—</span>,
-              <Badge text={s.disabled === 'true' ? 'Disabled' : 'Running'} color={s.disabled === 'true' ? 'red' : 'green'} />,
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button size="sm" variant="ghost" onClick={() => openEditScheduler(s)} icon="✏️">Edit</Button>
-                <Button size="sm" variant={s.disabled === 'true' ? 'success' : 'warning'} onClick={() => handleToggleScheduler(s)}>
-                  {s.disabled === 'true' ? '▶' : '⏸'}
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => setConfirmDeleteScheduler(s['.id'])} icon="🗑">Del</Button>
-              </div>,
-            ])} emptyMessage="Hakuna schedulers" />
-        </Card>
-      )}
+          {s.comment && (
+            <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 1 }}>{s.comment}</div>
+          )}
+        </div>,
+
+        // Start Date
+        s['start-date']
+          ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)' }}>
+              {s['start-date']}
+            </span>
+          : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
+
+        // Start Time
+        s['start-time']
+          ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)' }}>
+              {s['start-time']}
+            </span>
+          : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
+
+        // Interval
+        s.interval && s.interval !== '00:00:00'
+          ? <Badge text={s.interval} color="blue" />
+          : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>once</span>,
+
+        // Run Count — green kama imefanya kazi
+        <span style={{
+          fontWeight: 700,
+          color: (s['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)',
+          fontSize: 13,
+        }}>
+          {s['run-count'] || '0'}
+        </span>,
+
+        // Next Run
+        s['next-run']
+          ? <span style={{ fontSize: 11, color: 'var(--gray-600)' }}>{s['next-run']}</span>
+          : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
+
+        // Status badge
+        <Badge
+          text={s.disabled === 'true' ? 'Disabled' : 'Running'}
+          color={s.disabled === 'true' ? 'red' : 'green'}
+        />,
+
+        // Actions
+        <div style={{ display: 'flex', gap: 4 }}>
+          <Button size="sm" variant="ghost" onClick={() => openEditScheduler(s)} icon="✏️">Edit</Button>
+          <Button
+            size="sm"
+            variant={s.disabled === 'true' ? 'success' : 'warning'}
+            onClick={() => handleToggleScheduler(s)}
+          >
+            {s.disabled === 'true' ? '▶' : '⏸'}
+          </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={() => setConfirmDeleteScheduler(s['.id'])}
+            icon="🗑"
+          >
+            Del
+          </Button>
+        </div>,
+      ])}
+      emptyMessage="Hakuna schedulers"
+    />
+  </Card>
+)}
+
 
       {/* ── DETAIL MODALS (with edit) ── */}
       {selectedProfile && (
