@@ -1146,7 +1146,6 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       headers={['Name', 'Profile', 'Limit Uptime', 'Uptime / Hali', 'Comment', 'Status', '']}
       rows={(d?.users || []).map((u: any) => {
         // ── Hesabu hali ya matumizi ya voucher ──────────────────
-        const limitUptime  = u['limit-uptime']  || ''   // e.g. "01:00:00" au "1d 00:00:00"
         const currentUptime = u.uptime || ''             // e.g. "00:23:41" — muda uliotumika
         const lastLogin    = u['last-logged-in'] || ''   // tarehe ya login ya mwisho
 
