@@ -23,7 +23,7 @@ const PRINT_STYLE = `
     }
     #voucher-print-area .voucher-grid {
       display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
+      grid-template-columns: repeat(3, 1fr) !important;
       gap: 4mm !important;
       width: 100% !important;
     }
@@ -261,7 +261,16 @@ export function VoucherManagementPage() {
         })
       } catch {}
       showAlrt('success', `✅ Voucher ${code} imeundwa + scheduler imewekwa!`)
-      setPrintVouchers([{ code, package_name: manualForm.profile, customer_phone: manualForm.customer_phone, duration: profileInfo.duration, speed: profileInfo.speed }])
+      // ── Tafuta bei kutoka allPackages ──
+      const pkg = allPackages.find((p: any) => p.mikrotik_profile === manualForm.profile || p.name === manualForm.profile)
+      setPrintVouchers([{
+        code,
+        package_name: manualForm.profile,
+        customer_phone: manualForm.customer_phone,
+        duration: profileInfo.duration,
+        speed: profileInfo.speed,
+        package_price: pkg?.price || 0,
+      }])
       setShowPrintModal(true)
       setManualForm({ router_id: manualForm.router_id, profile: manualForm.profile, customer_phone: '', custom_code: '' })
       fetchVouchers()
@@ -278,6 +287,9 @@ export function VoucherManagementPage() {
     const profileInfo = await getProfileInfo(batchForm.profile)
     const results: any[] = []
     let failed = 0
+    // ── Tafuta bei kutoka allPackages ──
+    const pkg = allPackages.find((p: any) => p.mikrotik_profile === batchForm.profile || p.name === batchForm.profile)
+    const pkgPrice = pkg?.price || 0
     try {
       for (let i = 0; i < qty; i++) {
         const code = makeCode()
@@ -286,7 +298,7 @@ export function VoucherManagementPage() {
             username: code, password: code, profile: batchForm.profile,
             comment: `Batch|${new Date().toLocaleDateString('sw-TZ')}`,
           })
-          results.push({ code, package_name: batchForm.profile, customer_phone: '', duration: profileInfo.duration, speed: profileInfo.speed })
+          results.push({ code, package_name: batchForm.profile, customer_phone: '', duration: profileInfo.duration, speed: profileInfo.speed, package_price: pkgPrice })
         } catch { failed++ }
       }
       setBatchResult(results)
@@ -316,14 +328,8 @@ export function VoucherManagementPage() {
       const priceFontSize = priceDisplay.length > 6 ? 11 : priceDisplay.length > 4 ? 14 : 17
 
       return `
-        <div style="background:#f0f4ff;border-radius:12px;overflow:hidden;border:1px solid #e0e8ff;position:relative;page-break-inside:avoid;break-inside:avoid;font-family:Arial,sans-serif;">
-          <!-- Left strip -->
-          <div style="position:absolute;left:0;top:0;bottom:0;width:50px;background:linear-gradient(180deg,${themeObj.bg} 0%,#0d1a5c 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:3px solid #c9a227;">
-            <div style="transform:rotate(-90deg);white-space:nowrap;color:#fff;font-weight:900;font-size:${priceFontSize}px;letter-spacing:${priceFontSize > 14 ? 2 : 0.5}px;text-shadow:0 1px 4px rgba(0,0,0,0.4);max-width:110px;">TZS ${priceDisplay}</div>
-            <div style="transform:rotate(-90deg);color:#c9a227;font-weight:700;font-size:7px;letter-spacing:3px;margin-top:4px;">PRICE</div>
-          </div>
-          <!-- Main content -->
-          <div style="margin-left:50px;padding:10px 10px 10px 12px;">
+        <div style="background:#f0f4ff;border-radius:12px;overflow:hidden;border:1px solid #e0e8ff;page-break-inside:avoid;break-inside:avoid;font-family:Arial,sans-serif;box-sizing:border-box;">
+          <div style="padding:10px 12px;">
             <!-- Header -->
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;">
               <div>
@@ -332,8 +338,14 @@ export function VoucherManagementPage() {
                 <div style="font-size:7px;color:#888;font-style:italic;margin-top:1px;">Stay Connected. Stay Powered.</div>
                 <div style="font-size:7px;color:#c9a227;margin-top:2px;letter-spacing:2px;">── ── ── ──</div>
               </div>
-              <div style="background:${themeObj.bg};border-radius:7px;padding:6px 7px;border:2px solid #c9a227;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="18" r="1.5" fill="white"/></svg>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                ${price > 0 ? `<div style="background:linear-gradient(135deg,${themeObj.bg} 0%,#0d1a5c 100%);border-radius:7px;padding:4px 8px;border:2px solid #c9a227;text-align:center;">
+                  <div style="font-size:6px;color:#c9a227;font-weight:700;letter-spacing:2px;margin-bottom:1px;">PRICE</div>
+                  <div style="font-size:${priceFontSize}px;font-weight:900;color:#fff;white-space:nowrap;letter-spacing:1px;">TZS ${priceDisplay}</div>
+                </div>` : ''}
+                <div style="background:${themeObj.bg};border-radius:7px;padding:6px 7px;border:2px solid #c9a227;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="18" r="1.5" fill="white"/></svg>
+                </div>
               </div>
             </div>
             <!-- UPTIME + SPEED -->
@@ -372,7 +384,6 @@ export function VoucherManagementPage() {
                 <div style="font-size:6px;color:#c9a227;letter-spacing:1px;">── For Choosing Us ──</div>
               </div>
             </div>
-          </div>
         </div>
       `
     }).join('')
@@ -388,7 +399,7 @@ export function VoucherManagementPage() {
           body { background: white; font-family: Arial, sans-serif; }
           .grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 5mm;
             padding: 5mm;
           }
@@ -660,7 +671,7 @@ export function VoucherManagementPage() {
 
               {/* Preview kwenye modal — grid ya 2 columns */}
               <div id="voucher-print-area" style={{ flex: 1, overflowY: 'auto', padding: '1rem', background: '#f9fafb' }}>
-                <div className="voucher-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                <div className="voucher-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                   {printVouchers.map((v, i) => (
                     <VoucherPrintCard key={i} voucher={v} business_name={business_name} theme={printThemeObj} />
                   ))}

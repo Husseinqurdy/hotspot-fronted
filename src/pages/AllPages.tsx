@@ -30,19 +30,12 @@ const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
         placeholder="1"
         value={form.duration_value || ''}
         onChange={(e: any) => setForm({ ...form, duration_value: e.target.value })}
-        style={{
-          flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)',
-          borderRadius: 8, fontSize: 14, outline: 'none',
-        }}
+        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none' }}
       />
       <select
         value={form.duration_unit || 'hours'}
         onChange={(e: any) => setForm({ ...form, duration_unit: e.target.value })}
-        style={{
-          flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)',
-          borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff',
-          color: 'var(--gray-800)', cursor: 'pointer',
-        }}
+        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer' }}
       >
         <option value="hours">⏰ Masaa</option>
         <option value="days">📅 Siku</option>
@@ -57,165 +50,83 @@ const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
     )}
   </div>
 )
-////// VOUCHER PRINT CARD /////////
 
-function VoucherPrintCard({ voucher, business_name, theme }: {
-  voucher: any; business_name: string; theme: any
-}) {
+function VoucherPrintCard({ voucher, business_name, theme }: { voucher: any; business_name: string; theme: any }) {
   const price = Number(voucher.package_price || voucher.price || 0)
-
-  const priceDisplay = price > 0
-    ? price >= 10000
-      ? `${(price / 1000).toFixed(0)}K`
-      : price.toLocaleString()
-    : '—'
-
-  const uptime = voucher.duration
-    || voucher.duration_display
-    || voucher.uptime
-    || '—'
-
-  const speed = voucher.speed
-    || (voucher.speed_down && voucher.speed_up
-        ? `${voucher.speed_down}mb / ${voucher.speed_up}mb`
-        : null)
-    || '—'
-
+  const priceDisplay = price > 0 ? price >= 10000 ? `${(price / 1000).toFixed(0)}K` : price.toLocaleString() : '—'
+  const uptime = voucher.duration || voucher.duration_display || voucher.uptime || '—'
+  const speed = voucher.speed || (voucher.speed_down && voucher.speed_up ? `${voucher.speed_down}mb / ${voucher.speed_up}mb` : null) || '—'
   const packageName = voucher.package_name || voucher.package || '—'
   const priceFontSize = priceDisplay.length > 6 ? 11 : priceDisplay.length > 4 ? 14 : 17
 
   return (
-    <div style={{
-      width: 340, display: 'inline-block', margin: '6px', verticalAlign: 'top',
-      pageBreakInside: 'avoid', fontFamily: 'Arial, sans-serif',
-      background: '#f0f4ff', borderRadius: 16, overflow: 'hidden',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-      border: '1px solid #e0e8ff', position: 'relative',
-    }}>
-      <div style={{
-        position: 'absolute', left: 0, top: 0, bottom: 0, width: 56,
-        background: `linear-gradient(180deg, ${theme.bg} 0%, #0d1a5c 100%)`,
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', gap: 2,
-        borderRight: '3px solid #c9a227',
-      }}>
-        <div style={{
-          transform: 'rotate(-90deg)',
-          color: '#c9a227', fontWeight: 700, fontSize: 8,
-          letterSpacing: 3, marginBottom: 6,
-        }}>PRICE</div>
-        <div style={{
-          transform: 'rotate(-90deg)', whiteSpace: 'nowrap',
-          color: '#fff', fontWeight: 900,
-          fontSize: priceFontSize,
-          letterSpacing: priceFontSize > 14 ? 2 : 0.5,
-          textShadow: '0 1px 4px rgba(0,0,0,0.4)',
-          maxWidth: 120,
-        }}>
-          TZS {priceDisplay}
-        </div>
-      </div>
-
-      <div style={{ marginLeft: 56, padding: '12px 12px 12px 14px' }}>
+    <div style={{ display: 'inline-block', margin: '6px', verticalAlign: 'top', pageBreakInside: 'avoid', fontFamily: 'Arial, sans-serif', background: '#f0f4ff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', border: '1px solid #e0e8ff', width: '100%', boxSizing: 'border-box' as any }}>
+      <div style={{ padding: '12px 14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
           <div>
             <div style={{ fontSize: 9, color: '#c9a227', marginBottom: 2, letterSpacing: 2 }}>✦ ─── ✦ ─── ✦</div>
-            <div style={{ fontSize: 16, fontWeight: 900, color: theme.bg, letterSpacing: 1, lineHeight: 1.1 }}>
-              {business_name.toUpperCase()}
-            </div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: theme.bg, letterSpacing: 1, lineHeight: 1.1 }}>{business_name.toUpperCase()}</div>
             <div style={{ fontSize: 8, color: '#888', fontStyle: 'italic', marginTop: 1 }}>Stay Connected. Stay Powered.</div>
             <div style={{ fontSize: 8, color: '#c9a227', marginTop: 3, letterSpacing: 2 }}>── ── ── ──</div>
           </div>
-          <div style={{
-            background: theme.bg, borderRadius: 8, padding: '7px 9px',
-            border: '2px solid #c9a227', textAlign: 'center',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="12" cy="18" r="1.5" fill="white"/>
-            </svg>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            {/* Bei — inaonyeshwa hapa badala ya left strip */}
+            {price > 0 && (
+              <div style={{ background: `linear-gradient(135deg, ${theme.bg} 0%, #0d1a5c 100%)`, borderRadius: 8, padding: '5px 10px', border: '2px solid #c9a227', textAlign: 'center' }}>
+                <div style={{ fontSize: 7, color: '#c9a227', fontWeight: 700, letterSpacing: 2, marginBottom: 1 }}>PRICE</div>
+                <div style={{ fontSize: priceFontSize, fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', letterSpacing: 1 }}>TZS {priceDisplay}</div>
+              </div>
+            )}
+            <div style={{ background: theme.bg, borderRadius: 8, padding: '7px 9px', border: '2px solid #c9a227', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="18" r="1.5" fill="white"/></svg>
+            </div>
           </div>
         </div>
-
         <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
           <div style={{ flex: 1, background: '#fff', borderRadius: 9, padding: '7px 8px', border: '1px solid #e5eaf5' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
               <div style={{ width: 24, height: 24, background: theme.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                  <path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                  <path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                  <circle cx="12" cy="18" r="1.5" fill="white"/>
-                </svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><circle cx="12" cy="18" r="1.5" fill="white"/></svg>
               </div>
-              <div>
-                <div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>UPTIME</div>
-                <div style={{ fontSize: 7, color: '#888' }}>Reliability You Trust</div>
-              </div>
+              <div><div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>UPTIME</div><div style={{ fontSize: 7, color: '#888' }}>Reliability You Trust</div></div>
             </div>
             <div style={{ fontSize: uptime.length > 8 ? 10 : 12, fontWeight: 900, color: theme.bg }}>{uptime}</div>
           </div>
-
           <div style={{ flex: 1, background: '#fff', borderRadius: 9, padding: '7px 8px', border: '1px solid #e5eaf5' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
               <div style={{ width: 24, height: 24, background: theme.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C6.48 2 2 6.48 2 12C2 14.74 3.08 17.22 4.85 19H19.15C20.92 17.22 22 14.74 22 12C22 6.48 17.52 2 12 2Z" stroke="white" strokeWidth="2"/>
-                  <path d="M12 12L16 8" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                  <circle cx="12" cy="12" r="1.5" fill="white"/>
-                </svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12C2 14.74 3.08 17.22 4.85 19H19.15C20.92 17.22 22 14.74 22 12C22 6.48 17.52 2 12 2Z" stroke="white" strokeWidth="2"/><path d="M12 12L16 8" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="white"/></svg>
               </div>
-              <div>
-                <div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>SPEED</div>
-                <div style={{ fontSize: 7, color: '#888' }}>High Speed Internet</div>
-              </div>
+              <div><div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>SPEED</div><div style={{ fontSize: 7, color: '#888' }}>High Speed Internet</div></div>
             </div>
             <div style={{ fontSize: speed.length > 10 ? 9 : 11, fontWeight: 900, color: theme.bg }}>{speed}</div>
           </div>
         </div>
-
         <div style={{ marginBottom: 8, padding: '5px 8px', background: '#fff', borderRadius: 7, border: '1px solid #e5eaf5' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-              <path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/>
-              <path d="M12 3V21" stroke={theme.bg} strokeWidth="2"/>
-              <path d="M3 8L12 13L21 8" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/>
-            </svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/><path d="M12 3V21" stroke={theme.bg} strokeWidth="2"/><path d="M3 8L12 13L21 8" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/></svg>
             <span style={{ fontSize: 9, fontWeight: 700, color: '#555', letterSpacing: 1 }}>PACKAGE</span>
             <span style={{ fontSize: 10, fontWeight: 700, color: theme.bg, marginLeft: 'auto' }}>{packageName}</span>
           </div>
           {voucher.customer_phone && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <path d="M6.6 10.8C7.8 13.2 9.8 15.2 12.2 16.4L14.2 14.4C14.5 14.1 14.9 14 15.3 14.2C16.5 14.6 17.8 14.8 19.1 14.8C19.7 14.8 20.1 15.2 20.1 15.8V19.1C20.1 19.7 19.7 20.1 19.1 20.1C10.2 20.1 3 12.9 3 4C3 3.4 3.4 3 4 3H7.3C7.9 3 8.3 3.4 8.3 4C8.3 5.3 8.5 6.6 8.9 7.8C9 8.2 8.9 8.6 8.6 8.9L6.6 10.8Z" stroke={theme.bg} strokeWidth="1.5"/>
-              </svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M6.6 10.8C7.8 13.2 9.8 15.2 12.2 16.4L14.2 14.4C14.5 14.1 14.9 14 15.3 14.2C16.5 14.6 17.8 14.8 19.1 14.8C19.7 14.8 20.1 15.2 20.1 15.8V19.1C20.1 19.7 19.7 20.1 19.1 20.1C10.2 20.1 3 12.9 3 4C3 3.4 3.4 3 4 3H7.3C7.9 3 8.3 3.4 8.3 4C8.3 5.3 8.5 6.6 8.9 7.8C9 8.2 8.9 8.6 8.6 8.9L6.6 10.8Z" stroke={theme.bg} strokeWidth="1.5"/></svg>
               <span style={{ fontSize: 9, color: '#666' }}>{voucher.customer_phone}</span>
             </div>
           )}
         </div>
-
         <div style={{ borderTop: '1.5px dashed #c9a227', margin: '6px 0' }} />
-
         <div style={{ background: '#fff', border: '2px solid #c9a227', borderRadius: 10, padding: '7px 10px', textAlign: 'center', marginBottom: 7, boxShadow: '0 2px 8px rgba(201,162,39,0.15)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 2 }}>
             <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 10 }}>——</span>
-            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: 5, color: theme.bg, fontFamily: 'Courier New, monospace' }}>
-              {voucher.code}
-            </span>
+            <span style={{ fontSize: 24, fontWeight: 900, letterSpacing: 5, color: theme.bg, fontFamily: 'Courier New, monospace' }}>{voucher.code}</span>
             <span style={{ color: '#c9a227', fontWeight: 700, fontSize: 10 }}>——</span>
           </div>
           <div style={{ fontSize: 8, fontWeight: 700, color: '#888', letterSpacing: 3 }}>VOUCHER CODE</div>
         </div>
-
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div style={{ fontSize: 8, color: '#666', fontStyle: 'italic', maxWidth: '55%', lineHeight: 1.5 }}>
-            <span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>
-            {' '}Enjoy fast, reliable and{' '}
-            <span style={{ color: theme.bg, fontWeight: 700 }}>uninterrupted</span>{' '}internet.{' '}
-            <span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>
+            <span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>{' '}Enjoy fast, reliable and{' '}<span style={{ color: theme.bg, fontWeight: 700 }}>uninterrupted</span>{' '}internet.{' '}<span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 13, fontWeight: 900, color: theme.bg, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Thank You!</div>
@@ -307,85 +218,51 @@ export function AdminClients() {
   const [saving, setSaving] = useState(false)
   const [balanceAmount, setBalanceAmount] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [form, setForm] = useState({
-    business_name: '', username: '', password: '',
-    email: '', phone: '', commission_rate: '10'
-  })
+  const [form, setForm] = useState({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' })
 
-  const fetch = () => {
-    setLoading(true)
-    api.get('/clients/').then(r => { setClients(r.data.results || r.data); setLoading(false) })
-  }
+  const fetch = () => { setLoading(true); api.get('/clients/').then(r => { setClients(r.data.results || r.data); setLoading(false) }) }
   useEffect(() => { fetch() }, [])
 
   const handleCreate = async () => {
     if (!form.business_name || !form.username || !form.password) { show('error', 'Jaza sehemu zote'); return }
     setSaving(true)
-    try {
-      await api.post('/clients/', form)
-      show('success', `${form.business_name} ameundwa!`)
-      setShowCreate(false)
-      setForm({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' })
-      fetch()
-    } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
+    try { await api.post('/clients/', form); show('success', `${form.business_name} ameundwa!`); setShowCreate(false); setForm({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' }); fetch() }
+    catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
     finally { setSaving(false) }
   }
 
   const handleBalance = async () => {
     if (!selected || !balanceAmount) return
-    try {
-      const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount })
-      show('success', r.data.message)
-      setShowBalance(false)
-      setBalanceAmount('')
-      fetch()
-    } catch { show('error', t('error')) }
+    try { const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount }); show('success', r.data.message); setShowBalance(false); setBalanceAmount(''); fetch() }
+    catch { show('error', t('error')) }
   }
 
   const handlePassword = async () => {
     if (!selected || !newPassword) return
-    try {
-      await api.post(`/clients/${selected.id}/change-password/`, { new_password: newPassword })
-      show('success', 'Password imebadilishwa')
-      setShowPassword(false)
-      setNewPassword('')
-    } catch { show('error', t('error')) }
+    try { await api.post(`/clients/${selected.id}/change-password/`, { new_password: newPassword }); show('success', 'Password imebadilishwa'); setShowPassword(false); setNewPassword('') }
+    catch { show('error', t('error')) }
   }
 
   const handleToggle = async (c: any, action: 'activate' | 'deactivate') => {
-    try {
-      const r = await api.post(`/clients/${c.id}/${action}/`)
-      show('success', r.data.message)
-      fetch()
-    } catch { show('error', t('error')) }
+    try { const r = await api.post(`/clients/${c.id}/${action}/`); show('success', r.data.message); fetch() }
+    catch { show('error', t('error')) }
   }
 
   const handleDelete = async () => {
     if (!selected) return
-    try {
-      await api.delete(`/clients/${selected.id}/`)
-      show('success', 'Imefutwa')
-      setShowDelete(false)
-      setSelected(null)
-      fetch()
-    } catch { show('error', t('error')) }
+    try { await api.delete(`/clients/${selected.id}/`); show('success', 'Imefutwa'); setShowDelete(false); setSelected(null); fetch() }
+    catch { show('error', t('error')) }
   }
 
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title={t('clients')} subtitle={`${clients.length} wateja`}
-          action={<Button onClick={() => setShowCreate(true)} icon="➕">{t('add_client')}</Button>} />
+        <PageHeader title={t('clients')} subtitle={`${clients.length} wateja`} action={<Button onClick={() => setShowCreate(true)} icon="➕">{t('add_client')}</Button>} />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-
         <Card>
-          <Table loading={loading}
-            headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), t('status'), '']}
+          <Table loading={loading} headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), t('status'), '']}
             rows={clients.map(c => [
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{c.business_name}</div>
-                <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{c.username} {c.email ? `· ${c.email}` : ''}</div>
-              </div>,
+              <div><div style={{ fontWeight: 600, fontSize: 13 }}>{c.business_name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{c.username} {c.email ? `· ${c.email}` : ''}</div></div>,
               <span style={{ fontFamily: 'monospace', fontWeight: 800, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 5, fontSize: 13, letterSpacing: '0.1em' }}>{c.identifier}</span>,
               `${c.commission_rate}%`,
               <span style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>TZS {Number(c.balance).toLocaleString()}</span>,
@@ -394,80 +271,58 @@ export function AdminClients() {
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowBalance(true) }} icon="💰">{t('add_balance')}</Button>
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPassword(true) }} icon="🔑">{t('change_password')}</Button>
                 <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPermissions(true) }} icon="🔐">MikroTik</Button>
-                <Button size="sm" variant={c.is_active ? 'warning' : 'success'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')}>
-                  {c.is_active ? `⏸ ${t('deactivate')}` : `▶ ${t('activate')}`}
-                </Button>
+                <Button size="sm" variant={c.is_active ? 'warning' : 'success'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')}>{c.is_active ? `⏸ ${t('deactivate')}` : `▶ ${t('activate')}`}</Button>
                 <Button size="sm" variant="danger" onClick={() => { setSelected(c); setShowDelete(true) }} icon="🗑">{t('delete')}</Button>
               </div>,
             ])}
             emptyMessage="Hakuna wateja"
           />
         </Card>
-
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('add_client')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Input label={`${t('business_name')} *`} placeholder="Mama Fatuma Hotspot"
-              value={form.business_name} onChange={(e: any) => setForm({ ...form, business_name: e.target.value })} />
+            <Input label={`${t('business_name')} *`} placeholder="Mama Fatuma Hotspot" value={form.business_name} onChange={(e: any) => setForm({ ...form, business_name: e.target.value })} />
             <FormRow>
-              <Input label={`${t('username')} *`} placeholder="mfatuma"
-                value={form.username} onChange={(e: any) => setForm({ ...form, username: e.target.value })} />
-              <Input label={`${t('password')} *`} type="password" placeholder="••••••"
-                value={form.password} onChange={(e: any) => setForm({ ...form, password: e.target.value })} />
+              <Input label={`${t('username')} *`} placeholder="mfatuma" value={form.username} onChange={(e: any) => setForm({ ...form, username: e.target.value })} />
+              <Input label={`${t('password')} *`} type="password" placeholder="••••••" value={form.password} onChange={(e: any) => setForm({ ...form, password: e.target.value })} />
             </FormRow>
             <FormRow>
-              <Input label={t('phone')} placeholder="0712345678"
-                value={form.phone} onChange={(e: any) => setForm({ ...form, phone: e.target.value })} />
-              <Input label={t('email')} type="email" placeholder="email@example.com"
-                value={form.email} onChange={(e: any) => setForm({ ...form, email: e.target.value })} />
+              <Input label={t('phone')} placeholder="0712345678" value={form.phone} onChange={(e: any) => setForm({ ...form, phone: e.target.value })} />
+              <Input label={t('email')} type="email" placeholder="email@example.com" value={form.email} onChange={(e: any) => setForm({ ...form, email: e.target.value })} />
             </FormRow>
-            <Input label={t('commission_rate')} type="number" placeholder="10"
-              value={form.commission_rate} onChange={(e: any) => setForm({ ...form, commission_rate: e.target.value })} />
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>
-              ℹ️ Nambari ya utambulisho (ID) itatolewa automatically kwa mpangilio (1, 2, 3...)
-            </div>
+            <Input label={t('commission_rate')} type="number" placeholder="10" value={form.commission_rate} onChange={(e: any) => setForm({ ...form, commission_rate: e.target.value })} />
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>ℹ️ Nambari ya utambulisho (ID) itatolewa automatically kwa mpangilio (1, 2, 3...)</div>
             <FormActions>
               <Button variant="ghost" onClick={() => setShowCreate(false)}>{t('cancel')}</Button>
               <Button onClick={handleCreate} disabled={saving}>{saving ? t('loading') : t('create_client')}</Button>
             </FormActions>
           </div>
         </Modal>
-
         <Modal open={showBalance} onClose={() => setShowBalance(false)} title={`${t('add_balance')} — ${selected?.business_name}`} width={380}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: 'var(--gray-50)', borderRadius: 9, padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 13, color: 'var(--gray-500)' }}>{t('current_balance')}</span>
               <span style={{ fontSize: 16, fontWeight: 800, color: '#059669' }}>TZS {Number(selected?.balance || 0).toLocaleString()}</span>
             </div>
-            <Input label={`${t('amount')} (TZS)`} type="number" placeholder="50000"
-              value={balanceAmount} onChange={(e: any) => setBalanceAmount(e.target.value)} />
+            <Input label={`${t('amount')} (TZS)`} type="number" placeholder="50000" value={balanceAmount} onChange={(e: any) => setBalanceAmount(e.target.value)} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowBalance(false)}>{t('cancel')}</Button>
               <Button variant="success" onClick={handleBalance} icon="💰">{t('add_balance')}</Button>
             </FormActions>
           </div>
         </Modal>
-
         <Modal open={showPassword} onClose={() => setShowPassword(false)} title={`${t('change_password')} — ${selected?.business_name}`} width={380}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <Input label={t('new_password')} type="password" placeholder="••••••••"
-              value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
+            <Input label={t('new_password')} type="password" placeholder="••••••••" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowPassword(false)}>{t('cancel')}</Button>
               <Button onClick={handlePassword} icon="🔑">{t('save')}</Button>
             </FormActions>
           </div>
         </Modal>
-
         {showPermissions && selected && (
-          <MikroTikPermissionsModal
-            client={selected}
-            onClose={() => { setShowPermissions(false); setSelected(null) }}
-            onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa ✓`); fetch() }}
-          />
+          <MikroTikPermissionsModal client={selected} onClose={() => { setShowPermissions(false); setSelected(null) }} onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa ✓`); fetch() }} />
         )}
-
-        <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete}
-          title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
+        <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete} title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
       </div>
     </Layout>
   )
@@ -697,7 +552,6 @@ export function ClientDashboard() {
             <p style={{ fontSize: 'clamp(20px,4vw,26px)', fontWeight: 800, color: '#fff' }}>TZS {Number(data?.client?.balance || 0).toLocaleString()}</p>
           </div>
         </div>
-
         {(data?.lipa_numbers?.length > 0) ? (
           <div style={{ background: '#fff', border: '1px solid var(--gray-100)', borderRadius: 14, padding: '1rem', marginBottom: '1.25rem', boxShadow: 'var(--card-shadow)' }}>
             <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '0.5rem' }}>{t('lipa_namba')}</h3>
@@ -714,7 +568,6 @@ export function ClientDashboard() {
         ) : !loading && (
           <div style={{ background: 'var(--warning-light)', borderRadius: 9, padding: '0.75rem', marginBottom: '1.25rem', fontSize: 13, color: '#92400e' }}>⚠️ {t('no_devices')}</div>
         )}
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
           <StatCard title={t('online_routers')} value={loading ? '—' : `${s?.online_routers}/${s?.total_routers}`} icon="📡" color="#10b981" />
           <StatCard title={t('packages')} value={loading ? '—' : s?.total_packages || 0} icon="📦" color="#f59e0b" />
@@ -722,7 +575,6 @@ export function ClientDashboard() {
           <StatCard title={`${t('vouchers')} Leo`} value={loading ? '—' : s?.today_vouchers || 0} icon="🎫" color="#8b5cf6" />
           <StatCard title={t('today_revenue')} value={loading ? '—' : `TZS ${Number(s?.today_revenue || 0).toLocaleString()}`} icon="💰" color="#06b6d4" />
         </div>
-
         <Card>
           <CardHeader title={t('recent_vouchers')} />
           <div>
@@ -785,9 +637,7 @@ export function ClientRouters() {
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
         <PageHeader title={t('routers')} subtitle="Simamia MikroTik routers zako" action={<Button onClick={openCreate} icon="➕">{t('add_router')}</Button>} />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>
-          🔒 {t('vpn_hint')}
-        </div>
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>🔒 {t('vpn_hint')}</div>
         <Card>
           <Table loading={loading} headers={[t('router_name'), 'VPN Host', 'Port', t('status'), t('last_seen'), '']}
             rows={routers.map(r => [
@@ -838,13 +688,7 @@ export function ClientPackages() {
   const [showDelete, setShowDelete] = useState<any>(null)
   const [syncingAll, setSyncingAll] = useState(false)
   const [syncingPkg, setSyncingPkg] = useState<number | null>(null)
-  const [form, setForm] = useState({
-    name: '', price: '',
-    duration_value: '1',
-    duration_unit: 'hours',
-    speed_up: '2', speed_down: '2',
-    mikrotik_profile: '', shared_users: '1'
-  })
+  const [form, setForm] = useState({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
 
   const fetchPackages = () => api.get('/packages/').then(r => setPackages(r.data.results || r.data))
   useEffect(() => { fetchPackages() }, [])
@@ -857,9 +701,7 @@ export function ClientPackages() {
       fetchPackages()
     } catch (e: any) {
       show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router')
-    } finally {
-      setSyncingPkg(null)
-    }
+    } finally { setSyncingPkg(null) }
   }
 
   const handleSyncAll = async () => {
@@ -870,9 +712,7 @@ export function ClientPackages() {
       fetchPackages()
     } catch (e: any) {
       show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router')
-    } finally {
-      setSyncingAll(false)
-    }
+    } finally { setSyncingAll(false) }
   }
 
   const openCreate = () => {
@@ -884,27 +724,19 @@ export function ClientPackages() {
   const openEdit = (pkg: any) => {
     setEditPkg(pkg)
     setForm({
-      name: pkg.name,
-      price: String(pkg.price),
+      name: pkg.name, price: String(pkg.price),
       duration_value: String(pkg.duration_value || Math.round(pkg.duration_minutes / 60)),
       duration_unit: pkg.duration_unit || 'hours',
-      speed_up: pkg.speed_up,
-      speed_down: pkg.speed_down,
-      mikrotik_profile: pkg.mikrotik_profile,
-      shared_users: String(pkg.shared_users),
+      speed_up: pkg.speed_up, speed_down: pkg.speed_down,
+      mikrotik_profile: pkg.mikrotik_profile, shared_users: String(pkg.shared_users),
     })
     setShowModal(true)
   }
 
   const handleSave = async () => {
     try {
-      if (editPkg) {
-        await api.patch(`/packages/${editPkg.id}/`, form)
-        show('success', `${form.name} imesasishwa!`)
-      } else {
-        await api.post('/packages/', { ...form, client: clientInfo?.id })
-        show('success', `${form.name} imeundwa!`)
-      }
+      if (editPkg) { await api.patch(`/packages/${editPkg.id}/`, form); show('success', `${form.name} imesasishwa!`) }
+      else { await api.post('/packages/', { ...form, client: clientInfo?.id }); show('success', `${form.name} imeundwa!`) }
       setShowModal(false)
       setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
       fetchPackages()
@@ -916,12 +748,8 @@ export function ClientPackages() {
 
   const handleDelete = async () => {
     if (!showDelete) return
-    try {
-      await api.delete(`/packages/${showDelete.id}/`)
-      show('success', `${showDelete.name} imefutwa!`)
-      setShowDelete(null)
-      fetchPackages()
-    } catch { show('error', t('error')) }
+    try { await api.delete(`/packages/${showDelete.id}/`); show('success', `${showDelete.name} imefutwa!`); setShowDelete(null); fetchPackages() }
+    catch { show('error', t('error')) }
   }
 
   const identifier = clientInfo?.identifier
@@ -934,63 +762,43 @@ export function ClientPackages() {
           subtitle="Unda na simamia vifurushi vyako"
           action={
             <div style={{ display: 'flex', gap: 8 }}>
-              <Button
-                variant="ghost"
-                onClick={handleSyncAll}
-                disabled={syncingAll}
-                icon={syncingAll ? undefined : '🔄'}
-              >
+              <Button variant="ghost" onClick={handleSyncAll} disabled={syncingAll} icon={syncingAll ? undefined : '🔄'}>
                 {syncingAll ? '⏳ Inasync...' : 'Sync All'}
               </Button>
               <Button onClick={openCreate} icon="➕">{t('add_package')}</Button>
             </div>
           }
         />
-
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-
         {identifier && (
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#166534' }}>
             💡 Bei inayoonekana kwenye kadi ni bei ya msingi. Wateja wako watalipa <strong>bei + {identifier}</strong>.
             Mfano: TZS 500 → wateja watalipa <strong>TZS {500 + identifier}</strong>.
           </div>
         )}
-
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '1rem' }}>
           {packages.map(pkg => (
             <div key={pkg.id} style={{ background: '#fff', borderRadius: 14, padding: '1.1rem', border: '1px solid var(--gray-100)', boxShadow: 'var(--card-shadow)', borderTop: '3px solid var(--primary)', transition: 'transform 0.15s' }}
               onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'}
               onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}>
-
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 14, fontWeight: 700 }}>{pkg.name}</span>
                 <Badge text={pkg.is_active ? t('active') : 'Off'} color={pkg.is_active ? 'green' : 'gray'} />
               </div>
-
               <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--primary)', marginBottom: 6, letterSpacing: '-0.5px' }}>
                 TZS {Number(pkg.price).toLocaleString()}
               </div>
-
               {identifier && (
                 <div style={{ marginBottom: 10, background: '#fef9c3', border: '1px solid #fde047', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: '#854d0e', fontWeight: 600 }}>
                   💳 Wateja: TZS {(Number(pkg.price) + identifier).toLocaleString()}
                 </div>
               )}
-
               {[{ i: '⏱', v: pkg.duration_display }, { i: '⬇️', v: `${pkg.speed_down}Mbps` }, { i: '⬆️', v: `${pkg.speed_up}Mbps` }, { i: '👥', v: `${pkg.shared_users} users` }].map((x, j) => (
                 <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--gray-600)', marginBottom: 3 }}><span>{x.i}</span>{x.v}</div>
               ))}
-
               <div style={{ marginTop: 8, fontSize: 11, color: 'var(--gray-400)', fontFamily: 'monospace', marginBottom: 10 }}>{pkg.mikrotik_profile}</div>
-
               <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10, flexWrap: 'wrap' }}>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleSyncPkg(pkg.id)}
-                  disabled={syncingPkg === pkg.id}
-                  style={{ flex: 1 }}
-                >
+                <Button size="sm" variant="ghost" onClick={() => handleSyncPkg(pkg.id)} disabled={syncingPkg === pkg.id} style={{ flex: 1 }}>
                   {syncingPkg === pkg.id ? '⏳' : '🔄'} Sync
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => openEdit(pkg)} icon="✏️" style={{ flex: 1 }}>{t('edit')}</Button>
@@ -998,14 +806,12 @@ export function ClientPackages() {
               </div>
             </div>
           ))}
-
           {packages.length === 0 && (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: 'var(--gray-400)', background: '#fff', borderRadius: 14, border: '2px dashed var(--gray-200)' }}>
               <div style={{ fontSize: 36, marginBottom: 8 }}>📦</div>{t('no_packages')}
             </div>
           )}
         </div>
-
         <Modal open={showModal} onClose={() => setShowModal(false)} title={editPkg ? `Hariri: ${editPkg.name}` : t('add_package')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('package_name')} *`} placeholder="Saa 1, Siku 1..." value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
@@ -1030,15 +836,7 @@ export function ClientPackages() {
             </FormActions>
           </div>
         </Modal>
-
-        <ConfirmDialog
-          open={!!showDelete}
-          onClose={() => setShowDelete(null)}
-          onConfirm={handleDelete}
-          title="Futa Package"
-          message={`Futa package "${showDelete?.name}"? Hatua hii haiwezi kurudishwa!`}
-          danger
-        />
+        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Package" message={`Futa package "${showDelete?.name}"? Hatua hii haiwezi kurudishwa!`} danger />
       </div>
     </Layout>
   )
