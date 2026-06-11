@@ -217,15 +217,13 @@ export function VoucherManagementPage() {
       const pkgs = res.data.results || res.data
       const pkg = pkgs.find((p: any) => p.mikrotik_profile === profileName)
       if (pkg) {
-        const timeout = pkg.duration_unit === 'days' ? `${pkg.duration_value * 24}h` : `${pkg.duration_value}h`
         return {
           duration: pkg.duration_display || `${pkg.duration_value} ${pkg.duration_unit}`,
           speed: `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
-          session_timeout: timeout,
         }
       }
     } catch {}
-    return { duration: '—', speed: '—', session_timeout: '1h' }
+    return { duration: '—', speed: '—' }
   }
 
   const handleManualRouterChange = async (routerId: string) => {
@@ -248,16 +246,15 @@ export function VoucherManagementPage() {
     try {
       const code = manualForm.custom_code || makeCode()
       const profileInfo = await getProfileInfo(manualForm.profile)
+
+      // Unda hotspot user tu — scheduler itaundwa na on-login script
+      // ya profile pale mtumiaji atakapoingiza voucher kwenye hotspot
       await api.post(`/mikrotik/${manualForm.router_id}/hotspot/users/`, {
         username: code, password: code, profile: manualForm.profile,
         comment: `Manual|${manualForm.customer_phone || 'N/A'}`,
       })
-      try {
-        await api.post(`/mikrotik/${manualForm.router_id}/voucher/schedule/`, {
-          username: code, session_timeout: profileInfo.session_timeout, profile: manualForm.profile,
-        })
-      } catch {}
-      showAlrt('success', `✅ Voucher ${code} imeundwa + scheduler imewekwa!`)
+
+      showAlrt('success', `✅ Voucher ${code} imeundwa!`)
       const pkg = allPackages.find((p: any) => p.mikrotik_profile === manualForm.profile || p.name === manualForm.profile)
       setPrintVouchers([{
         code,
@@ -289,6 +286,8 @@ export function VoucherManagementPage() {
       for (let i = 0; i < qty; i++) {
         const code = makeCode()
         try {
+          // Unda hotspot user tu — scheduler itaundwa na on-login script
+          // ya profile pale mtumiaji atakapoingiza voucher kwenye hotspot
           await api.post(`/mikrotik/${batchForm.router_id}/hotspot/users/`, {
             username: code, password: code, profile: batchForm.profile,
             comment: `Batch|${new Date().toLocaleDateString('sw-TZ')}`,
@@ -306,9 +305,6 @@ export function VoucherManagementPage() {
     finally { setSaving(false) }
   }
 
-  // ════════════════════════════════════════════════════════
-  // PRINT — HTML kamili yenye 3-column grid inayofanya kazi
-  // ════════════════════════════════════════════════════════
   const handlePrint = () => {
     const themeObj = printThemeObj
     const biz = business_name
@@ -390,26 +386,9 @@ export function VoucherManagementPage() {
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: white; font-family: Arial, sans-serif; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4mm;
-      padding: 4mm;
-      width: 100%;
-    }
-
-    .voucher {
-      background: #f0f4ff;
-      border-radius: 10px;
-      border: 1px solid #e0e8ff;
-      overflow: hidden;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; padding: 4mm; width: 100%; }
+    .voucher { background: #f0f4ff; border-radius: 10px; border: 1px solid #e0e8ff; overflow: hidden; page-break-inside: avoid; break-inside: avoid; }
     .v-inner { padding: 8px 10px; }
-
     .v-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
     .v-left { flex: 1; }
     .v-stars { font-size: 7px; color: #c9a227; margin-bottom: 2px; letter-spacing: 2px; }
@@ -417,72 +396,46 @@ export function VoucherManagementPage() {
     .v-tagline { font-size: 6px; color: #888; font-style: italic; margin-top: 1px; }
     .v-divider { font-size: 6px; color: #c9a227; margin-top: 2px; letter-spacing: 2px; }
     .v-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; }
-
     .v-price-box { border-radius: 6px; padding: 3px 7px; border: 2px solid #c9a227; text-align: center; }
     .v-price-label { font-size: 6px; color: #c9a227; font-weight: 700; letter-spacing: 2px; }
     .v-price-val { font-weight: 900; color: #fff; white-space: nowrap; letter-spacing: 1px; }
     .v-wifi { border-radius: 6px; padding: 5px 6px; border: 2px solid #c9a227; display: flex; align-items: center; justify-content: center; }
-
     .v-stats { display: flex; gap: 4px; margin-bottom: 5px; }
     .v-stat { flex: 1; background: #fff; border-radius: 6px; padding: 4px 5px; border: 1px solid #e5eaf5; }
     .v-stat-label { font-size: 6px; font-weight: 700; color: #333; letter-spacing: 0.5px; margin-bottom: 2px; }
     .v-stat-val { font-size: 10px; font-weight: 900; }
-
     .v-pkg { display: flex; align-items: center; justify-content: space-between; padding: 3px 5px; background: #fff; border-radius: 5px; border: 1px solid #e5eaf5; margin-bottom: 4px; }
     .v-pkg-label { font-size: 7px; font-weight: 700; color: #555; letter-spacing: 1px; }
     .v-pkg-val { font-size: 8px; font-weight: 700; }
     .v-phone { font-size: 7px; color: #666; margin-bottom: 4px; padding: 2px 5px; }
-
     .v-dash { border-top: 1.5px dashed #c9a227; margin: 4px 0; }
-
     .v-code-box { background: #fff; border: 2px solid #c9a227; border-radius: 7px; padding: 4px 6px; text-align: center; margin-bottom: 4px; }
     .v-code { font-size: 17px; font-weight: 900; letter-spacing: 4px; font-family: 'Courier New', monospace; }
     .v-code-label { font-size: 6px; font-weight: 700; color: #888; letter-spacing: 3px; margin-top: 1px; }
-
     .v-footer { display: flex; justify-content: space-between; align-items: flex-end; }
     .v-quote { font-size: 6px; color: #666; font-style: italic; max-width: 55%; line-height: 1.4; }
     .v-qq { color: #c9a227; font-size: 9px; font-weight: 900; }
     .v-thanks { text-align: right; }
     .v-ty { font-size: 10px; font-weight: 900; font-style: italic; font-family: Georgia, serif; }
     .v-choosing { font-size: 5px; color: #c9a227; letter-spacing: 1px; }
-
-    @page {
-      size: A4 portrait;
-      margin: 4mm;
-    }
-
+    @page { size: A4 portrait; margin: 4mm; }
     @media print {
       body { margin: 0; }
-      .grid {
-        padding: 0;
-        gap: 3mm;
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        width: 100% !important;
-      }
-      .voucher {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-      }
+      .grid { padding: 0; gap: 3mm; display: grid !important; grid-template-columns: repeat(3, 1fr) !important; width: 100% !important; }
+      .voucher { page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>
 <body>
   <div class="grid">${vouchersHtml}</div>
   <script>
-    window.onload = function() {
-      setTimeout(function() { window.print(); }, 300);
-    };
+    window.onload = function() { setTimeout(function() { window.print(); }, 300); };
   <\/script>
 </body>
 </html>`
 
     const win = window.open('', '_blank')
-    if (win) {
-      win.document.open()
-      win.document.write(html)
-      win.document.close()
-    }
+    if (win) { win.document.open(); win.document.write(html); win.document.close() }
   }
 
   const toggleSelect = (id: number) => {
@@ -729,8 +682,6 @@ export function VoucherManagementPage() {
                   <button onClick={() => setShowPrintModal(false)} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
                 </div>
               </div>
-
-              {/* Preview — 3 columns */}
               <div id="voucher-print-area" style={{ flex: 1, overflowY: 'auto', padding: '1rem', background: '#f9fafb' }}>
                 <div className="voucher-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                   {printVouchers.map((v, i) => (
@@ -738,7 +689,6 @@ export function VoucherManagementPage() {
                   ))}
                 </div>
               </div>
-
               <div style={{ padding: '0.875rem', borderTop: '1px solid var(--gray-100)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                 <Button variant="ghost" onClick={() => setShowPrintModal(false)}>Funga</Button>
                 <Button variant="success" onClick={handlePrint} icon="🖨️">Chapisha Sasa</Button>
