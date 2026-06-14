@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import api from '../lib/api'
 import Layout from '../components/Layout'
@@ -37,8 +37,8 @@ const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
         onChange={(e: any) => setForm({ ...form, duration_unit: e.target.value })}
         style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer' }}
       >
-        <option value="hours">⏰ Masaa</option>
-        <option value="days">📅 Siku</option>
+        <option value="hours">Masaa</option>
+        <option value="days">Siku</option>
       </select>
     </div>
     {(form.duration_value && form.duration_unit) && (
@@ -70,7 +70,6 @@ function VoucherPrintCard({ voucher, business_name, theme }: { voucher: any; bus
             <div style={{ fontSize: 8, color: '#c9a227', marginTop: 3, letterSpacing: 2 }}>── ── ── ──</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-            {/* Bei — inaonyeshwa hapa badala ya left strip */}
             {price > 0 && (
               <div style={{ background: `linear-gradient(135deg, ${theme.bg} 0%, #0d1a5c 100%)`, borderRadius: 8, padding: '5px 10px', border: '2px solid #c9a227', textAlign: 'center' }}>
                 <div style={{ fontSize: 7, color: '#c9a227', fontWeight: 700, letterSpacing: 2, marginBottom: 1 }}>PRICE</div>
@@ -148,7 +147,7 @@ export function AdminDashboard() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title={t('dashboard')} subtitle={t('summary')} action={<span style={{ fontSize: 12, color: 'var(--gray-500)', background: '#fff', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--gray-200)' }}>📅 {new Date().toLocaleDateString('sw-TZ', { day: 'numeric', month: 'long', year: 'numeric' })}</span>} />
+        <PageHeader title={t('dashboard')} subtitle={t('summary')} action={<span style={{ fontSize: 12, color: 'var(--gray-500)', background: '#fff', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--gray-200)' }}>{new Date().toLocaleDateString('sw-TZ', { day: 'numeric', month: 'long', year: 'numeric' })}</span>} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
           <StatCard title={t('total_clients')} value={loading ? '—' : s?.total_clients || 0} icon="👥" color="#6366f1" />
           <StatCard title={t('online_routers')} value={loading ? '—' : `${s?.online_routers || 0}/${s?.total_routers || 0}`} icon="📡" color="#10b981" />
@@ -290,7 +289,7 @@ export function AdminClients() {
               <Input label={t('email')} type="email" placeholder="email@example.com" value={form.email} onChange={(e: any) => setForm({ ...form, email: e.target.value })} />
             </FormRow>
             <Input label={t('commission_rate')} type="number" placeholder="10" value={form.commission_rate} onChange={(e: any) => setForm({ ...form, commission_rate: e.target.value })} />
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>ℹ️ Nambari ya utambulisho (ID) itatolewa automatically kwa mpangilio (1, 2, 3...)</div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>Nambari ya utambulisho (ID) itatolewa automatically kwa mpangilio (1, 2, 3...)</div>
             <FormActions>
               <Button variant="ghost" onClick={() => setShowCreate(false)}>{t('cancel')}</Button>
               <Button onClick={handleCreate} disabled={saving}>{saving ? t('loading') : t('create_client')}</Button>
@@ -320,7 +319,7 @@ export function AdminClients() {
           </div>
         </Modal>
         {showPermissions && selected && (
-          <MikroTikPermissionsModal client={selected} onClose={() => { setShowPermissions(false); setSelected(null) }} onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa ✓`); fetch() }} />
+          <MikroTikPermissionsModal client={selected} onClose={() => { setShowPermissions(false); setSelected(null) }} onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa`); fetch() }} />
         )}
         <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete} title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
       </div>
@@ -360,7 +359,7 @@ export function AdminRouters() {
                 <Badge text={r.is_online ? t('online') : t('offline')} color={r.is_online ? 'green' : 'red'} />
               </div>,
               r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never'),
-              <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : `🔗 Test`}</Button>,
+              <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : `Test`}</Button>,
             ])}
             emptyMessage="Hakuna routers"
           />
@@ -482,7 +481,7 @@ export function AdminDevices() {
         <PageHeader title={t('devices')} subtitle="GSM Devices — lipa namba zinasimamia hapa" action={<Button onClick={openCreate} icon="➕">{t('add_device')}</Button>} />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
         <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>
-          💡 Ukibadilisha lipa namba hapa, clients wote wataona mabadiliko automatically.
+          Ukibadilisha lipa namba hapa, clients wote wataona mabadiliko automatically.
         </div>
         <Card>
           <Table loading={loading} headers={[t('device_name'), t('network'), t('lipa_number'), 'SIM', 'ID', t('last_seen'), t('status'), '']}
@@ -514,7 +513,7 @@ export function AdminDevices() {
             </FormRow>
             <Input label={`${t('device_id')} *`} placeholder="VODA_001" value={form.device_id} onChange={(e: any) => setForm({ ...form, device_id: e.target.value })} />
             <Input label={t('description')} placeholder="Device ya Dar es Salaam" value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} />
-            <div style={{ background: 'var(--warning-light)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#92400e' }}>⚠️ {t('device_id_hint')}</div>
+            <div style={{ background: 'var(--warning-light)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#92400e' }}>{t('device_id_hint')}</div>
             <FormActions><Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button><Button onClick={handleSave} disabled={saving}>{saving ? t('loading') : t('save_device')}</Button></FormActions>
           </div>
         </Modal>
@@ -523,75 +522,323 @@ export function AdminDevices() {
   )
 }
 
-// ── CLIENT DASHBOARD ──────────────────────────────────────
+// ── CLIENT DASHBOARD — POLISHED ───────────────────────────
+function useCountUp(target: number, duration = 900, active = true) {
+  const [value, setValue] = useState(0)
+  useEffect(() => {
+    if (!active || target === 0) { setValue(target); return }
+    let start: number | null = null
+    const step = (ts: number) => {
+      if (!start) start = ts
+      const progress = Math.min((ts - start) / duration, 1)
+      setValue(Math.floor((1 - Math.pow(1 - progress, 3)) * target))
+      if (progress < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }, [target, active, duration])
+  return value
+}
+
+function useFadeIn(delay = 0) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.opacity = '0'
+    el.style.transform = 'translateY(14px)'
+    const t = setTimeout(() => {
+      el.style.transition = 'opacity 0.45s ease, transform 0.45s ease'
+      el.style.opacity = '1'
+      el.style.transform = 'translateY(0)'
+    }, delay)
+    return () => clearTimeout(t)
+  }, [delay])
+  return ref
+}
+
+const DashIcon = {
+  Router: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="7" rx="2" />
+      <path d="M7 11V8a5 5 0 0 1 10 0v3" />
+      <circle cx="8.5" cy="14.5" r="1" fill="currentColor" />
+      <circle cx="12" cy="14.5" r="1" fill="currentColor" />
+      <circle cx="15.5" cy="14.5" r="1" fill="currentColor" />
+    </svg>
+  ),
+  Package: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" /><polyline points="3.29 7 12 12 20.71 7" /><line x1="12" y1="22" x2="12" y2="12" />
+    </svg>
+  ),
+  Payment: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+    </svg>
+  ),
+  Voucher: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3" />
+      <path d="M2 15v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3" />
+      <path d="M20 9a2 2 0 0 0 0 6" /><path d="M4 9a2 2 0 0 1 0 6" />
+    </svg>
+  ),
+  Revenue: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
+    </svg>
+  ),
+  Check: () => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+}
+
+function DashStatCard({ title, value, icon, accent, delay = 0, loaded = false, subtitle }: { title: string; value: string | number; icon: React.ReactNode; accent: string; delay?: number; loaded?: boolean; subtitle?: string }) {
+  const ref = useFadeIn(delay)
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div ref={ref} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      style={{
+        background: '#fff', borderRadius: 14,
+        border: `1px solid ${hovered ? accent + '55' : '#e5e7eb'}`,
+        padding: '1.1rem 1.25rem',
+        transition: 'border-color 0.25s, box-shadow 0.25s, transform 0.25s',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: hovered ? `0 8px 24px ${accent}22` : '0 1px 4px rgba(0,0,0,0.05)',
+        position: 'relative', overflow: 'hidden', cursor: 'default',
+      }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: accent, opacity: hovered ? 1 : 0.35, transition: 'opacity 0.25s', borderRadius: '14px 14px 0 0' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 8px' }}>{title}</p>
+          {!loaded
+            ? <div style={{ height: 26, width: '55%', background: '#f3f4f6', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+            : <p style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>{value}</p>
+          }
+          {subtitle && loaded && <p style={{ fontSize: 12, color: '#9ca3af', margin: '5px 0 0', fontWeight: 500 }}>{subtitle}</p>}
+        </div>
+        <div style={{ width: 38, height: 38, borderRadius: 10, background: accent + '18', color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 12 }}>
+          {icon}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DashChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10, padding: '8px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+      <p style={{ fontSize: 12, color: '#6b7280', margin: '0 0 3px' }}>{label}</p>
+      <p style={{ fontSize: 15, fontWeight: 800, color: '#6366f1', margin: 0, fontVariantNumeric: 'tabular-nums' }}>{payload[0].value} vouchers</p>
+    </div>
+  )
+}
+
+const DASH_CHART = [
+  { h: '08:00', v: 2 }, { h: '09:00', v: 5 }, { h: '10:00', v: 8 },
+  { h: '11:00', v: 6 }, { h: '12:00', v: 12 }, { h: '13:00', v: 9 },
+  { h: '14:00', v: 15 }, { h: '15:00', v: 11 }, { h: '16:00', v: 7 },
+]
+
 export function ClientDashboard() {
   const { t } = useLang()
   const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  useEffect(() => { api.get('/dashboard/client/').then(r => { setData(r.data); setLoading(false) }) }, [])
+  const [loaded, setLoaded] = useState(false)
+  const headerRef = useFadeIn(0)
+  const bannerRef = useFadeIn(80)
+
+  useEffect(() => {
+    api.get('/dashboard/client/').then(r => { setData(r.data); setLoaded(true) })
+  }, [])
+
   const s = data?.stats
-  const identifier = data?.client?.identifier
+  const identifier = data?.client?.identifier || ''
+  const balance = Number(data?.client?.balance || 0)
+
+  const onlineRouters = useCountUp(s?.online_routers ?? 0, 800, loaded)
+  const totalRouters  = useCountUp(s?.total_routers  ?? 0, 800, loaded)
+  const totalPackages = useCountUp(s?.total_packages ?? 0, 700, loaded)
+  const todayPayments = useCountUp(s?.today_payments ?? 0, 750, loaded)
+  const todayVouchers = useCountUp(s?.today_vouchers ?? 0, 750, loaded)
+  const todayRevenue  = useCountUp(s?.today_revenue  ?? 0, 1000, loaded)
+
+  const recent = (data?.recent_vouchers || []).slice(0, 6)
+  const statusMap: Record<string, { label: string; color: string; bg: string }> = {
+    active:  { label: 'Inatumika', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+    used:    { label: 'Imetumika', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
+    expired: { label: 'Imeisha',   color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+  }
+
   return (
     <Layout>
-      <div style={{ padding: P, maxWidth: 1100, margin: '0 auto' }}>
-        <PageHeader title={`${t('welcome_back')}, ${data?.client?.business_name || '...'} 👋`} subtitle={t('summary')} />
-        <div style={{ background: 'linear-gradient(135deg,#1e1b4b,#312e81)', borderRadius: 14, padding: '1.1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ color: '#fff' }}>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 3 }}>{t('reference')}</p>
-            <p style={{ fontSize: 20, fontFamily: 'monospace', fontWeight: 800, color: '#a5b4fc', letterSpacing: '0.15em' }}>{identifier || '...'}</p>
-            {identifier && (
-              <div style={{ marginTop: 8, background: 'rgba(255,255,255,0.07)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.7 }}>
-                <p style={{ margin: 0, fontWeight: 600, color: '#c7d2fe', marginBottom: 2 }}>📌 Jinsi wateja wako wanavyolipa:</p>
-                <p style={{ margin: 0 }}>Waambie walipe <strong>bei ya package + {identifier}</strong> kwenda Lipa Namba.</p>
-                <p style={{ margin: 0 }}>Mfano: Package TZS 500 → lipa <strong style={{ color: '#fbbf24' }}>TZS {500 + identifier}</strong> ✅</p>
+      <style>{`
+        @keyframes cdShimmer { 0%,100%{opacity:.5} 50%{opacity:1} }
+        @keyframes cdFadeSlide { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+
+      <div style={{ padding: '2rem', maxWidth: 1100 }}>
+
+        {/* Header */}
+        <div ref={headerRef} style={{ marginBottom: '1.75rem' }}>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+            {loaded ? `Habari, ${data?.client?.business_name}` : 'Inapakia...'}
+          </h1>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Muhtasari wa shughuli za biashara yako leo</p>
+        </div>
+
+        {/* Banner */}
+        <div ref={bannerRef} style={{
+          background: 'linear-gradient(135deg, #13103a 0%, #1e1b4b 60%, #1a1040 100%)',
+          borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem',
+          border: '1px solid rgba(99,102,241,0.2)', position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99,102,241,0.12) 1px, transparent 0)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(165,180,252,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Maagizo ya Malipo</span>
+                <div style={{ height: 1, flex: 1, background: 'rgba(99,102,241,0.25)' }} />
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.5rem', marginBottom: 16 }}>
+                <div>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Lipa Namba</p>
+                  <p style={{ fontSize: 20, fontWeight: 800, color: '#a5b4fc', margin: 0, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>0523</p>
+                </div>
+                <div style={{ width: 1, background: 'rgba(255,255,255,0.1)', alignSelf: 'stretch' }} />
+                <div>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Nambari Yako</p>
+                  {!loaded
+                    ? <div style={{ height: 30, width: 80, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                    : <p style={{ fontSize: 26, fontWeight: 900, margin: 0, fontFamily: 'monospace', letterSpacing: '0.12em', color: '#a5b4fc', background: 'rgba(165,180,252,0.12)', padding: '2px 12px', borderRadius: 8, display: 'inline-block' }}>{identifier}</p>
+                  }
+                </div>
+              </div>
+              <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: '12px 14px', border: '1px solid rgba(99,102,241,0.15)' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Jinsi wateja wanavyolipa</p>
+                {[
+                  'Mteja achague package — kila moja ina bei maalum.',
+                  `Bei tayari imejumuisha nambari yako (${loaded ? identifier : '…'}) — alipe kiasi kamili bila mabadiliko.`,
+                  null,
+                  'Mfumo utatuma voucher kwa mteja moja kwa moja kupitia SMS.',
+                ].map((step, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, marginBottom: i < 3 ? 7 : 0 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                    <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55 }}>
+                      {i === 2 ? (
+                        loaded
+                          ? <>Mfano: Package TZS 500 → mteja alipe <strong style={{ color: '#fbbf24' }}>TZS 500{identifier}</strong> kwenda Lipa Namba <strong style={{ color: '#a5b4fc' }}>0523</strong>.</>
+                          : 'Mfano: Package TZS 500 → mteja alipe TZS 500[NAMBARI] kwenda 0523.'
+                      ) : i === 3 ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {step}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}>
+                            <DashIcon.Check /> Otomatiki
+                          </span>
+                        </span>
+                      ) : step}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '1.1rem 1.4rem', border: '1px solid rgba(99,102,241,0.2)', minWidth: 160, textAlign: 'right', alignSelf: 'flex-start' }}>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Bakaa</p>
+              {!loaded
+                ? <div style={{ height: 34, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite', marginLeft: 'auto' }} />
+                : <p style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>TZS {balance.toLocaleString()}</p>
+              }
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>Salio la sasa</p>
+            </div>
+          </div>
+        </div>
+
+        {/* No devices warning */}
+        {loaded && !(data?.lipa_numbers?.length > 0) && (
+          <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8, animation: 'cdFadeSlide 0.4s ease' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {t('no_devices')}
+          </div>
+        )}
+
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <DashStatCard title="Routers" icon={<DashIcon.Router />} accent="#10b981" value={loaded ? `${onlineRouters} / ${totalRouters}` : '—'} subtitle="Zipo online" delay={100} loaded={loaded} />
+          <DashStatCard title="Vifurushi" icon={<DashIcon.Package />} accent="#f59e0b" value={loaded ? totalPackages : '—'} delay={160} loaded={loaded} />
+          <DashStatCard title="Malipo Leo" icon={<DashIcon.Payment />} accent="#6366f1" value={loaded ? todayPayments : '—'} delay={220} loaded={loaded} />
+          <DashStatCard title="Vouchers Leo" icon={<DashIcon.Voucher />} accent="#8b5cf6" value={loaded ? todayVouchers : '—'} delay={280} loaded={loaded} />
+          <DashStatCard title="Mapato Leo" icon={<DashIcon.Revenue />} accent="#06b6d4" value={loaded ? `TZS ${todayRevenue.toLocaleString()}` : '—'} delay={340} loaded={loaded} />
+        </div>
+
+        {/* Chart + Recent vouchers */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
+
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.4s both' }}>
+            <div style={{ padding: '1.1rem 1.4rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Vouchers za Leo</h3>
+              <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}>Kwa saa</span>
+            </div>
+            <div style={{ padding: '1.25rem' }}>
+              <ResponsiveContainer width="100%" height={190}>
+                <AreaChart data={DASH_CHART} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="h" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
+                  <Tooltip content={<DashChartTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }} />
+                  <Area type="monotone" dataKey="v" stroke="#8b5cf6" fill="url(#cdGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#8b5cf6' }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.5s both' }}>
+            <div style={{ padding: '1.1rem 1.4rem 0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Vouchers za Hivi Karibuni</h3>
+            </div>
+            {!loaded ? (
+              <div style={{ padding: '0.5rem 0' }}>
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ height: 13, width: 88, background: '#f3f4f6', borderRadius: 4, marginBottom: 7, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                      <div style={{ height: 11, width: 118, background: '#f3f4f6', borderRadius: 4, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                    </div>
+                    <div style={{ height: 22, width: 64, background: '#f3f4f6', borderRadius: 20, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                  </div>
+                ))}
+              </div>
+            ) : recent.length === 0 ? (
+              <div style={{ padding: '3rem 1rem', textAlign: 'center' }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', color: '#9ca3af' }}><DashIcon.Voucher /></div>
+                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Hakuna vouchers leo</p>
+              </div>
+            ) : (
+              <div style={{ padding: '0.5rem 0' }}>
+                {recent.map((v: any, i: number) => {
+                  const sm = statusMap[v.status] || statusMap.used
+                  return (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: i < recent.length - 1 ? '1px solid #f9fafb' : 'none', transition: 'background 0.15s' }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
+                      <div>
+                        <code style={{ fontWeight: 800, fontSize: 13.5, color: '#6366f1', letterSpacing: '0.06em' }}>{v.code}</code>
+                        <div style={{ fontSize: 11.5, color: '#9ca3af', marginTop: 2 }}>{v.customer_phone}<span style={{ margin: '0 5px', opacity: 0.4 }}>·</span>{v.package}</div>
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: sm.color, background: sm.bg, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>{sm.label}</span>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 3 }}>{t('my_balance')}</p>
-            <p style={{ fontSize: 'clamp(20px,4vw,26px)', fontWeight: 800, color: '#fff' }}>TZS {Number(data?.client?.balance || 0).toLocaleString()}</p>
-          </div>
         </div>
-        {(data?.lipa_numbers?.length > 0) ? (
-          <div style={{ background: '#fff', border: '1px solid var(--gray-100)', borderRadius: 14, padding: '1rem', marginBottom: '1.25rem', boxShadow: 'var(--card-shadow)' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: '0.5rem' }}>{t('lipa_namba')}</h3>
-            <p style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: '0.75rem' }}>{t('pay_instruction')}</p>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              {data.lipa_numbers.map((d: any, i: number) => (
-                <div key={i} style={{ background: 'var(--gray-50)', borderRadius: 9, padding: '10px 14px', border: '1px solid var(--gray-200)', minWidth: 140 }}>
-                  <div style={{ fontSize: 11, color: 'var(--gray-500)', marginBottom: 3 }}>{d.network_display}</div>
-                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: 'monospace', color: 'var(--primary)' }}>{d.lipa_number}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : !loading && (
-          <div style={{ background: 'var(--warning-light)', borderRadius: 9, padding: '0.75rem', marginBottom: '1.25rem', fontSize: 13, color: '#92400e' }}>⚠️ {t('no_devices')}</div>
-        )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          <StatCard title={t('online_routers')} value={loading ? '—' : `${s?.online_routers}/${s?.total_routers}`} icon="📡" color="#10b981" />
-          <StatCard title={t('packages')} value={loading ? '—' : s?.total_packages || 0} icon="📦" color="#f59e0b" />
-          <StatCard title={`${t('payments')} Leo`} value={loading ? '—' : s?.today_payments || 0} icon="💳" color="#6366f1" />
-          <StatCard title={`${t('vouchers')} Leo`} value={loading ? '—' : s?.today_vouchers || 0} icon="🎫" color="#8b5cf6" />
-          <StatCard title={t('today_revenue')} value={loading ? '—' : `TZS ${Number(s?.today_revenue || 0).toLocaleString()}`} icon="💰" color="#06b6d4" />
-        </div>
-        <Card>
-          <CardHeader title={t('recent_vouchers')} />
-          <div>
-            {loading ? <div style={{ padding: '2rem', textAlign: 'center' }}><Spinner /></div>
-              : (data?.recent_vouchers || []).length === 0
-                ? <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--gray-400)' }}><div style={{ fontSize: 28, marginBottom: 6 }}>🎫</div>{t('no_vouchers')}</div>
-                : (data?.recent_vouchers || []).map((v: any, i: number) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: '1px solid var(--gray-50)', flexWrap: 'wrap', gap: 8 }}>
-                    <div>
-                      <code style={{ fontWeight: 800, fontSize: 14, color: 'var(--primary)', letterSpacing: '0.05em' }}>{v.code}</code>
-                      <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 2 }}>{v.customer_phone} · {v.package}</div>
-                    </div>
-                    <Badge text={v.status === 'active' ? 'Active' : v.status === 'used' ? t('used') : t('expired')} color={vs[v.status] || 'gray'} />
-                  </div>
-                ))}
-          </div>
-        </Card>
       </div>
     </Layout>
   )
@@ -637,7 +884,7 @@ export function ClientRouters() {
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
         <PageHeader title={t('routers')} subtitle="Simamia MikroTik routers zako" action={<Button onClick={openCreate} icon="➕">{t('add_router')}</Button>} />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>🔒 {t('vpn_hint')}</div>
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>{t('vpn_hint')}</div>
         <Card>
           <Table loading={loading} headers={[t('router_name'), 'VPN Host', 'Port', t('status'), t('last_seen'), '']}
             rows={routers.map(r => [
@@ -650,7 +897,7 @@ export function ClientRouters() {
               </div>,
               r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never'),
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : '🔗 Test'}</Button>
+                <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : 'Test'}</Button>
                 <Button size="sm" variant="ghost" onClick={() => openEdit(r)} icon="✏️">{t('edit')}</Button>
                 <Button size="sm" variant="danger" onClick={() => setShowDelete(r)}>🗑</Button>
               </div>,
@@ -695,41 +942,23 @@ export function ClientPackages() {
 
   const handleSyncPkg = async (pkgId: number) => {
     setSyncingPkg(pkgId)
-    try {
-      const r = await api.post(`/packages/${pkgId}/sync-from-mikrotik/`)
-      show('success', r.data?.message || 'Package imesasishwa kutoka MikroTik ✓')
-      fetchPackages()
-    } catch (e: any) {
-      show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router')
-    } finally { setSyncingPkg(null) }
+    try { const r = await api.post(`/packages/${pkgId}/sync-from-mikrotik/`); show('success', r.data?.message || 'Package imesasishwa kutoka MikroTik'); fetchPackages() }
+    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router') }
+    finally { setSyncingPkg(null) }
   }
 
   const handleSyncAll = async () => {
     setSyncingAll(true)
-    try {
-      const r = await api.post('/packages/sync-all-from-mikrotik/')
-      show('success', r.data?.message || 'Packages zote zimesasishwa ✓')
-      fetchPackages()
-    } catch (e: any) {
-      show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router')
-    } finally { setSyncingAll(false) }
+    try { const r = await api.post('/packages/sync-all-from-mikrotik/'); show('success', r.data?.message || 'Packages zote zimesasishwa'); fetchPackages() }
+    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router') }
+    finally { setSyncingAll(false) }
   }
 
-  const openCreate = () => {
-    setEditPkg(null)
-    setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
-    setShowModal(true)
-  }
+  const openCreate = () => { setEditPkg(null); setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' }); setShowModal(true) }
 
   const openEdit = (pkg: any) => {
     setEditPkg(pkg)
-    setForm({
-      name: pkg.name, price: String(pkg.price),
-      duration_value: String(pkg.duration_value || Math.round(pkg.duration_minutes / 60)),
-      duration_unit: pkg.duration_unit || 'hours',
-      speed_up: pkg.speed_up, speed_down: pkg.speed_down,
-      mikrotik_profile: pkg.mikrotik_profile, shared_users: String(pkg.shared_users),
-    })
+    setForm({ name: pkg.name, price: String(pkg.price), duration_value: String(pkg.duration_value || Math.round(pkg.duration_minutes / 60)), duration_unit: pkg.duration_unit || 'hours', speed_up: pkg.speed_up, speed_down: pkg.speed_down, mikrotik_profile: pkg.mikrotik_profile, shared_users: String(pkg.shared_users) })
     setShowModal(true)
   }
 
@@ -757,23 +986,16 @@ export function ClientPackages() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader
-          title={t('packages')}
-          subtitle="Unda na simamia vifurushi vyako"
-          action={
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Button variant="ghost" onClick={handleSyncAll} disabled={syncingAll} icon={syncingAll ? undefined : '🔄'}>
-                {syncingAll ? '⏳ Inasync...' : 'Sync All'}
-              </Button>
-              <Button onClick={openCreate} icon="➕">{t('add_package')}</Button>
-            </div>
-          }
+        <PageHeader title={t('packages')} subtitle="Unda na simamia vifurushi vyako"
+          action={<div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="ghost" onClick={handleSyncAll} disabled={syncingAll} icon={syncingAll ? undefined : '🔄'}>{syncingAll ? 'Inasync...' : 'Sync All'}</Button>
+            <Button onClick={openCreate} icon="➕">{t('add_package')}</Button>
+          </div>}
         />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
         {identifier && (
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#166534' }}>
-            💡 Bei inayoonekana kwenye kadi ni bei ya msingi. Wateja wako watalipa <strong>bei + {identifier}</strong>.
-            Mfano: TZS 500 → wateja watalipa <strong>TZS {500 + identifier}</strong>.
+            Bei inayoonekana kwenye kadi ni bei ya msingi. Wateja wako watalipa <strong>bei + {identifier}</strong>. Mfano: TZS 500 → wateja watalipa <strong>TZS {500 + identifier}</strong>.
           </div>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '1rem' }}>
@@ -785,30 +1007,26 @@ export function ClientPackages() {
                 <span style={{ fontSize: 14, fontWeight: 700 }}>{pkg.name}</span>
                 <Badge text={pkg.is_active ? t('active') : 'Off'} color={pkg.is_active ? 'green' : 'gray'} />
               </div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--primary)', marginBottom: 6, letterSpacing: '-0.5px' }}>
-                TZS {Number(pkg.price).toLocaleString()}
-              </div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--primary)', marginBottom: 6, letterSpacing: '-0.5px' }}>TZS {Number(pkg.price).toLocaleString()}</div>
               {identifier && (
                 <div style={{ marginBottom: 10, background: '#fef9c3', border: '1px solid #fde047', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: '#854d0e', fontWeight: 600 }}>
-                  💳 Wateja: TZS {(Number(pkg.price) + identifier).toLocaleString()}
+                  Wateja: TZS {(Number(pkg.price) + identifier).toLocaleString()}
                 </div>
               )}
-              {[{ i: '⏱', v: pkg.duration_display }, { i: '⬇️', v: `${pkg.speed_down}Mbps` }, { i: '⬆️', v: `${pkg.speed_up}Mbps` }, { i: '👥', v: `${pkg.shared_users} users` }].map((x, j) => (
-                <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--gray-600)', marginBottom: 3 }}><span>{x.i}</span>{x.v}</div>
+              {[{ label: pkg.duration_display }, { label: `${pkg.speed_down}Mbps down` }, { label: `${pkg.speed_up}Mbps up` }, { label: `${pkg.shared_users} users` }].map((x, j) => (
+                <div key={j} style={{ fontSize: 12, color: 'var(--gray-600)', marginBottom: 3 }}>{x.label}</div>
               ))}
               <div style={{ marginTop: 8, fontSize: 11, color: 'var(--gray-400)', fontFamily: 'monospace', marginBottom: 10 }}>{pkg.mikrotik_profile}</div>
               <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10, flexWrap: 'wrap' }}>
-                <Button size="sm" variant="ghost" onClick={() => handleSyncPkg(pkg.id)} disabled={syncingPkg === pkg.id} style={{ flex: 1 }}>
-                  {syncingPkg === pkg.id ? '⏳' : '🔄'} Sync
-                </Button>
+                <Button size="sm" variant="ghost" onClick={() => handleSyncPkg(pkg.id)} disabled={syncingPkg === pkg.id} style={{ flex: 1 }}>{syncingPkg === pkg.id ? '...' : 'Sync'}</Button>
                 <Button size="sm" variant="ghost" onClick={() => openEdit(pkg)} icon="✏️" style={{ flex: 1 }}>{t('edit')}</Button>
-                <Button size="sm" variant="danger" onClick={() => setShowDelete(pkg)} style={{ flex: 1 }}>🗑 Futa</Button>
+                <Button size="sm" variant="danger" onClick={() => setShowDelete(pkg)} style={{ flex: 1 }}>Futa</Button>
               </div>
             </div>
           ))}
           {packages.length === 0 && (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: 'var(--gray-400)', background: '#fff', borderRadius: 14, border: '2px dashed var(--gray-200)' }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>📦</div>{t('no_packages')}
+              {t('no_packages')}
             </div>
           )}
         </div>
@@ -827,7 +1045,7 @@ export function ClientPackages() {
             <Input label={t('shared_users')} type="number" placeholder="1" value={form.shared_users} onChange={(e: any) => setForm({ ...form, shared_users: e.target.value })} />
             {form.price && identifier && (
               <div style={{ background: '#fef9c3', border: '1px solid #fde047', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#854d0e' }}>
-                💳 Wateja watalipa: <strong>TZS {(Number(form.price) + identifier).toLocaleString()}</strong>
+                Wateja watalipa: <strong>TZS {(Number(form.price) + identifier).toLocaleString()}</strong>
               </div>
             )}
             <FormActions>
@@ -836,7 +1054,7 @@ export function ClientPackages() {
             </FormActions>
           </div>
         </Modal>
-        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Package" message={`Futa package "${showDelete?.name}"? Hatua hii haiwezi kurudishwa!`} danger />
+        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Package" message={`Futa package "${showDelete?.name}"?`} danger />
       </div>
     </Layout>
   )
