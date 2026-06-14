@@ -730,7 +730,7 @@ export function ClientDashboard() {
                       {i === 2 ? (
                         loaded
                           ? <>Mfano: Package TZS 500 → mteja alipe <strong style={{ color: '#fbbf24' }}>TZS 500{identifier}</strong> kwenda Lipa Namba <strong style={{ color: '#a5b4fc' }}>0523</strong>.</>
-                          : 'Mfano: Package TZS 500 → mteja alipe TZS 500[NAMBARI] kwenda 0523.'
+                          : 'Mfano: Package TZS 500 → mteja alipe TZS 50[NAMBARI] kwenda 0523.'
                       ) : i === 3 ? (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           {step}
