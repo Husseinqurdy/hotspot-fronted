@@ -255,7 +255,7 @@ function InstructionBanner({ identifier, balance, loaded }: { identifier: string
               'Mteja achague package — kila moja ina bei maalum.',
               `Bei tayari imejumuisha nambari yako (${loaded ? identifier : '…'}) — alipe kiasi kamili bila mabadiliko.`,
               loaded
-                ? `Mfano: Package TZS 500 → mteja alipe TZS 500${identifier} kwenda Lipa Namba 0523.`
+                ? `Mfano: Package TZS 500 → mteja alipe TZS 50${identifier} kwenda Lipa Namba 0523.`
                 : 'Mfano: Package TZS 500 → mteja alipe TZS 50[NAMBARI] kwenda 0523.',
               'Mfumo utatuma voucher kwa mteja moja kwa moja kupitia SMS.',
             ].map((step, i) => (

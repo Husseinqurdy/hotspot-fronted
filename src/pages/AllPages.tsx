@@ -729,7 +729,7 @@ export function ClientDashboard() {
                     <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55 }}>
                       {i === 2 ? (
                         loaded
-                          ? <>Mfano: Package TZS 500 → mteja alipe <strong style={{ color: '#fbbf24' }}>TZS 500{identifier}</strong> kwenda Lipa Namba <strong style={{ color: '#a5b4fc' }}>0523</strong>.</>
+                          ? <>Mfano: Package TZS 500 → mteja alipe <strong style={{ color: '#fbbf24' }}>TZS 50{identifier}</strong> kwenda Lipa Namba <strong style={{ color: '#a5b4fc' }}>0523</strong>.</>
                           : 'Mfano: Package TZS 500 → mteja alipe TZS 50[NAMBARI] kwenda 0523.'
                       ) : i === 3 ? (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
