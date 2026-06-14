@@ -871,12 +871,6 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
   const [countdown, setCountdown] = useState(5)
 
-  // ── Users: search & bulk select ───────────────────────
-  const [userSearch, setUserSearch] = useState('')
-  const [selectedUserNames, setSelectedUserNames] = useState<Set<string>>(new Set())
-  const [confirmBulkDeleteUsers, setConfirmBulkDeleteUsers] = useState(false)
-  const [bulkDeleting, setBulkDeleting] = useState(false)
-
   if (visibleTabs.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--gray-400)' }}>
@@ -928,35 +922,6 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       await api.delete(`/mikrotik/${routerId}/hotspot/users/delete/`, { data: { username } })
       showAlrt('success', `User ${username} amefutwa ✓`); fetchTab('users')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
-  }
-
-  const toggleSelectUser = (name: string) => {
-    setSelectedUserNames(prev => {
-      const next = new Set(prev)
-      if (next.has(name)) next.delete(name)
-      else next.add(name)
-      return next
-    })
-  }
-
-  const handleBulkDeleteUsers = async () => {
-    setBulkDeleting(true)
-    const names = Array.from(selectedUserNames)
-    let success = 0, failed = 0
-    for (const username of names) {
-      try {
-        await api.delete(`/mikrotik/${routerId}/hotspot/users/delete/`, { data: { username } })
-        success++
-      } catch {
-        failed++
-      }
-    }
-    setBulkDeleting(false)
-    setConfirmBulkDeleteUsers(false)
-    setSelectedUserNames(new Set())
-    showAlrt(failed === 0 ? 'success' : 'error',
-      `Imefuta ${success} user(s)${failed ? `, imeshindwa kufuta ${failed}` : ''} ✓`)
-    fetchTab('users')
   }
 
   const handleDisconnect = async (id: string) => {
@@ -1123,17 +1088,6 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     </span>
   )
 
-  // ── Users: filtered list (search) ─────────────────────
-  const filteredUsers = (d?.users || []).filter((u: any) => {
-    if (tab !== 'users') return true
-    if (!userSearch.trim()) return true
-    const q = userSearch.toLowerCase()
-    return (u.name || '').toLowerCase().includes(q)
-      || (u.comment || '').toLowerCase().includes(q)
-      || (u.profile || '').toLowerCase().includes(q)
-  })
-  const allFilteredSelected = filteredUsers.length > 0 && filteredUsers.every((u: any) => selectedUserNames.has(u.name))
-
   return (
     <div>
       {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
@@ -1182,170 +1136,111 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       )}
 
       {/* 3. USERS */}
-      {!loading && tab === 'users' && (
-        <Card>
-          <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon="➕">{t('add_user')}</Button>} />
+{!loading && tab === 'users' && (
+  <Card>
+    <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon="➕">{t('add_user')}</Button>} />
+    <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
+      💡 Bonyeza jina la user kuona na kuhariri maelezo yake
+    </div>
+    <Table
+      headers={['Name', 'Profile', 'Limit Uptime', 'Uptime / Hali', 'Comment', 'Status', '']}
+      rows={(d?.users || []).map((u: any) => {
+        // ── Hesabu hali ya matumizi ya voucher ──────────────────
+        const currentUptime = u.uptime || ''             // e.g. "00:23:41" — muda uliotumika
+        const lastLogin    = u['last-logged-in'] || ''   // tarehe ya login ya mwisho
 
-          {/* Search + bulk actions */}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '0 1rem 1rem', flexWrap: 'wrap' }}>
-            <input
-              value={userSearch}
-              onChange={e => setUserSearch(e.target.value)}
-              placeholder="🔍 Tafuta kwa username, comment au profile..."
-              style={{
-                flex: 1, minWidth: 200, padding: '8px 12px',
-                border: '1.5px solid var(--gray-200)', borderRadius: 8,
-                fontSize: 13, outline: 'none',
-              }}
-              onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
-              onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
-            />
-            {selectedUserNames.size > 0 && (
-              <>
-                <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600 }}>
-                  {selectedUserNames.size} zimechaguliwa
-                </span>
-                <Button size="sm" variant="danger" onClick={() => setConfirmBulkDeleteUsers(true)} icon="🗑">
-                  Futa zilizochaguliwa
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setSelectedUserNames(new Set())}>
-                  Ondoa uchaguzi
-                </Button>
-              </>
-            )}
-          </div>
+        // Je, user amewahi kuingia?
+        const hasStarted = currentUptime && currentUptime !== '00:00:00'
+        const neverUsed  = !currentUptime && !lastLogin
 
-          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
-            💡 Bonyeza jina la user kuona na kuhariri maelezo yake
-          </div>
+        // ── Badge ya hali ya matumizi ────────────────────────────
+        let usageBadge: any
+        if (neverUsed) {
+          usageBadge = (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+              background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
+            }}>
+              ⭕ Haijatumika
+            </span>
+          )
+        } else if (hasStarted) {
+          usageBadge = (
+            <div>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
+              }}>
+                ▶ {currentUptime}
+              </span>
+              {lastLogin && (
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
+                  Login: {lastLogin}
+                </div>
+              )}
+            </div>
+          )
+        } else {
+          // Ana last-logged-in lakini uptime = 0 — amewahi kuingia, sasa nje
+          usageBadge = (
+            <div>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
+                background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb',
+              }}>
+                ⏸ Nje
+              </span>
+              {lastLogin && (
+                <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
+                  Mwisho: {lastLogin}
+                </div>
+              )}
+            </div>
+          )
+        }
 
-          <Table
-            headers={[
-              <input
-                type="checkbox"
-                checked={allFilteredSelected}
-                onChange={() => {
-                  if (allFilteredSelected) {
-                    setSelectedUserNames(prev => {
-                      const next = new Set(prev)
-                      filteredUsers.forEach((u: any) => next.delete(u.name))
-                      return next
-                    })
-                  } else {
-                    setSelectedUserNames(prev => {
-                      const next = new Set(prev)
-                      filteredUsers.forEach((u: any) => next.add(u.name))
-                      return next
-                    })
-                  }
-                }}
-              />,
-              'Name', 'Profile', 'Limit Uptime', 'Uptime / Hali', 'Comment', 'Status', ''
-            ]}
-            rows={filteredUsers.map((u: any) => {
-              // ── Hesabu hali ya matumizi ya voucher ──────────────────
-              const currentUptime = u.uptime || ''             // e.g. "00:23:41" — muda uliotumika
-              const lastLogin    = u['last-logged-in'] || ''   // tarehe ya login ya mwisho
+        return [
+          // Name — clickable
+          <code
+            style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }}
+            onClick={() => setSelectedUser(u)}
+          >
+            {u.name}
+          </code>,
 
-              // Je, user amewahi kuingia?
-              const hasStarted = currentUptime && currentUptime !== '00:00:00'
-              const neverUsed  = !currentUptime && !lastLogin
+          // Profile
+          <Badge text={u.profile || 'default'} color="indigo" />,
 
-              // ── Badge ya hali ya matumizi ────────────────────────────
-              let usageBadge: any
-              if (neverUsed) {
-                usageBadge = (
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                    background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0',
-                  }}>
-                    ⭕ Haijatumika
-                  </span>
-                )
-              } else if (hasStarted) {
-                usageBadge = (
-                  <div>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                      background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a',
-                    }}>
-                      ▶ {currentUptime}
-                    </span>
-                    {lastLogin && (
-                      <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
-                        Login: {lastLogin}
-                      </div>
-                    )}
-                  </div>
-                )
-              } else {
-                // Ana last-logged-in lakini uptime = 0 — amewahi kuingia, sasa nje
-                usageBadge = (
-                  <div>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700,
-                      background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb',
-                    }}>
-                      ⏸ Nje
-                    </span>
-                    {lastLogin && (
-                      <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>
-                        Mwisho: {lastLogin}
-                      </div>
-                    )}
-                  </div>
-                )
-              }
+          // Limit Uptime — muda unaoruhusiwa
+          u['limit-uptime']
+            ? <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-700)', fontWeight: 600 }}>
+                {u['limit-uptime']}
+              </span>
+            : <span style={{ color: 'var(--gray-300)', fontSize: 12 }}>unlimited</span>,
 
-              return [
-                // Checkbox — select kwa bulk actions
-                <input
-                  type="checkbox"
-                  checked={selectedUserNames.has(u.name)}
-                  onChange={() => toggleSelectUser(u.name)}
-                />,
+          // Uptime / Hali — muda uliotumika au hali
+          usageBadge,
 
-                // Name — clickable
-                <code
-                  style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }}
-                  onClick={() => setSelectedUser(u)}
-                >
-                  {u.name}
-                </code>,
+          // Comment
+          <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
 
-                // Profile
-                <Badge text={u.profile || 'default'} color="indigo" />,
+          // Disabled status
+          <Badge
+            text={u.disabled === 'true' ? 'Disabled' : 'Active'}
+            color={u.disabled === 'true' ? 'red' : 'green'}
+          />,
 
-                // Limit Uptime — muda unaoruhusiwa
-                u['limit-uptime']
-                  ? <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-700)', fontWeight: 600 }}>
-                      {u['limit-uptime']}
-                    </span>
-                  : <span style={{ color: 'var(--gray-300)', fontSize: 12 }}>unlimited</span>,
-
-                // Uptime / Hali — muda uliotumika au hali
-                usageBadge,
-
-                // Comment
-                <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
-
-                // Disabled status
-                <Badge
-                  text={u.disabled === 'true' ? 'Disabled' : 'Active'}
-                  color={u.disabled === 'true' ? 'red' : 'green'}
-                />,
-
-                // Actions
-                <Button size="sm" variant="ghost" onClick={() => setSelectedUser(u)} icon="✏️">Edit</Button>,
-              ]
-            })}
-            emptyMessage={userSearch ? `Hakuna user inayofanana na "${userSearch}"` : "Hakuna users"}
-          />
-        </Card>
-      )}
+          // Actions
+          <Button size="sm" variant="ghost" onClick={() => setSelectedUser(u)} icon="✏️">Edit</Button>,
+        ]
+      })}
+      emptyMessage="Hakuna users"
+    />
+  </Card>
+)}
 
 
       {/* 4. ACTIVE */}
@@ -1747,14 +1642,6 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       <ConfirmDialog open={!!confirmDeleteCookie} onClose={() => setConfirmDeleteCookie(null)} onConfirm={() => confirmDeleteCookie && handleDeleteCookie(confirmDeleteCookie)} title="Remove Cookie" message="Futa cookie hii? Mtumiaji atalazimika kuingia tena." danger />
       <ConfirmDialog open={confirmClearCookies} onClose={() => setConfirmClearCookies(false)} onConfirm={handleClearAllCookies} title="Clear All Cookies" message="Futa cookies ZOTE? Watumiaji wote watalazimika kuingia tena." danger />
       <ConfirmDialog open={!!confirmDeleteScheduler} onClose={() => setConfirmDeleteScheduler(null)} onConfirm={() => confirmDeleteScheduler && handleDeleteScheduler(confirmDeleteScheduler)} title="Futa Scheduler" message="Futa scheduler hii? Script haitatekelezwa tena." danger />
-      <ConfirmDialog
-        open={confirmBulkDeleteUsers}
-        onClose={() => setConfirmBulkDeleteUsers(false)}
-        onConfirm={handleBulkDeleteUsers}
-        title="Futa Users Walizochaguliwa"
-        message={`Una uhakika unataka kufuta ${selectedUserNames.size} user(s)? Hatua hii haiwezi kurudishwa!${bulkDeleting ? ' Inafuta...' : ''}`}
-        danger
-      />
 
       <style>{`
         @keyframes modalIn { from { opacity:0; transform:scale(0.95) } to { opacity:1; transform:scale(1) } }
