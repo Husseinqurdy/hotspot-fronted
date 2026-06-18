@@ -56,6 +56,18 @@ const T: Record<Language, Record<string, string>> = {
     actions:'Vitendo', super_admin:'Super Admin', client:'Client', created_at:'Iliundwa',
     app_name:'NetSafi', app_tagline:'Mfumo wa Hotspot Tanzania', refresh:'Sasisha',
     manage:'Simamia',
+    zipo_online_sasa: 'Zipo online sasa',
+    gsm_devices: 'GSM Devices',
+    vouchers_this_week: 'Vouchers za Wiki Hii',
+    prefix: 'Prefix',
+    commission: 'Commission',
+    no_clients_yet: 'Hakuna wateja bado',
+    all_routers_subtitle: 'Routers za wateja wote',
+    all_payments_subtitle: 'Historia ya malipo ya wateja wote',
+    all_vouchers_subtitle: 'Vouchers za wateja wote',
+    total_commission: 'Commission Yote',
+    no_routers: 'Hakuna routers',
+
   },
   en: {
     login:'Login', logout:'Logout', username:'Username', password:'Password',
@@ -110,6 +122,17 @@ const T: Record<Language, Record<string, string>> = {
     actions:'Actions', super_admin:'Super Admin', client:'Client', created_at:'Created',
     app_name:'NetSafi', app_tagline:'Modern Hotspot Management Tanzania', refresh:'Refresh',
     manage:'Manage',
+    zipo_online_sasa: 'Currently online',
+    gsm_devices: 'GSM Devices',
+    vouchers_this_week: "This Week's Vouchers",
+    prefix: 'Prefix',
+    commission: 'Commission',
+    no_clients_yet: 'No clients yet',
+    all_routers_subtitle: 'All client routers',
+    all_payments_subtitle: 'All client payment history',
+    all_vouchers_subtitle: 'All client vouchers',
+    total_commission: 'Total Commission',
+    no_routers: 'No routers',
   }
 }
 

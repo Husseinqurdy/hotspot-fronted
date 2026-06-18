@@ -32,16 +32,16 @@ export default function AdminDashboard() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
           <StatCard title={t('total_clients')} value={loading ? '—' : s?.total_clients || 0} icon="👥" color="#6366f1" />
-          <StatCard title={t('online_routers')} value={loading ? '—' : `${s?.online_routers||0}/${s?.total_routers||0}`} subtitle="Zipo online sasa" icon="📡" color="#10b981" />
+          <StatCard title={t('online_routers')} value={loading ? '—' : `${s?.online_routers||0}/${s?.total_routers||0}`} subtitle={t('zipo_online_sasa')} icon="📡" color="#10b981" />
           <StatCard title={t('today_revenue')} value={loading ? '—' : `TZS ${Number(s?.today_revenue||0).toLocaleString()}`} icon="💰" color="#f59e0b" />
           <StatCard title={t('today_commission')} value={loading ? '—' : `TZS ${Number(s?.today_commission||0).toLocaleString()}`} icon="💎" color="#8b5cf6" />
           <StatCard title={t('vouchers_today')} value={loading ? '—' : s?.total_vouchers_today || 0} icon="🎫" color="#06b6d4" />
-          <StatCard title={t('active_devices')} value={loading ? '—' : `${s?.active_devices||0}/${s?.total_devices||0}`} subtitle="GSM Devices" icon="📱" color="#10b981" />
+          <StatCard title={t('active_devices')} value={loading ? '—' : `${s?.active_devices||0}/${s?.total_devices||0}`} subtitle={t('gsm_devices')} icon="📱" color="#10b981" />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
           <Card>
-            <CardHeader title="Vouchers za Wiki Hii / This Week's Vouchers" />
+            <CardHeader title={t('vouchers_this_week')} />
             <div style={{ padding: '1.25rem' }}>
               <ResponsiveContainer width="100%" height={200}>
                 <AreaChart data={MOCK}>
@@ -62,12 +62,12 @@ export default function AdminDashboard() {
                 { label: 'Django API', ok: true },
                 { label: 'Celery Worker', ok: true },
                 { label: 'Redis', ok: true },
-                { label: 'Africa\'s Talking', ok: true },
+                { label: "Africa's Talking", ok: true },
                 { label: `GSM Devices (${s?.active_devices||0})`, ok: (s?.active_devices||0) > 0 },
               ].map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 14, color: 'var(--gray-600)', fontWeight: 500 }}>{item.label}</span>
-                  <Badge text={item.ok ? 'Online' : 'Offline'} color={item.ok ? 'green' : 'red'} />
+                  <Badge text={item.ok ? t('online') : t('offline')} color={item.ok ? 'green' : 'red'} />
                 </div>
               ))}
             </div>
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
 
         <Card>
           <CardHeader title={t('clients')} action={<span style={{ fontSize: 13, color: 'var(--gray-400)' }}>{data?.clients?.length || 0}</span>} />
-          <Table loading={loading} headers={['Biashara', 'Prefix', 'Commission', t('balance'), 'Malipo', t('status')]}
+          <Table loading={loading} headers={[t('business_name'), t('prefix'), t('commission'), t('balance'), t('payments'), t('status')]}
             rows={(data?.clients || []).map((c: any) => [
               <div><div style={{ fontWeight: 600 }}>{c.business_name}</div></div>,
               <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: 14, background: '#e0e7ff', color: '#3730a3', padding: '3px 10px', borderRadius: 6, letterSpacing: '0.1em' }}>{c.reference_prefix}</span>,
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
               c.total_payments,
               <Badge text={c.is_active ? t('active') : t('inactive')} color={c.is_active ? 'green' : 'red'} />,
             ])}
-            emptyMessage="Hakuna wateja bado"
+            emptyMessage={t('no_clients_yet')}
           />
         </Card>
       </div>
