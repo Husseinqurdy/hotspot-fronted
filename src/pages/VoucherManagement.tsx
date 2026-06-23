@@ -308,66 +308,77 @@ export function VoucherManagementPage() {
   const handlePrint = () => {
     const themeObj = printThemeObj
     const biz = business_name
+    const PER_PAGE = 32
 
-    const vouchersHtml = printVouchers.map(v => {
+    const makeVoucherHtml = (v: any) => {
       const price = Number(v.package_price || v.price || 0)
       const priceDisplay = price > 0 ? (price >= 10000 ? `${(price / 1000).toFixed(0)}K` : price.toLocaleString()) : '—'
       const uptime = v.duration || v.duration_display || v.uptime || '—'
       const speed = v.speed || (v.speed_down && v.speed_up ? `${v.speed_down}mb / ${v.speed_up}mb` : '—') || '—'
       const packageName = v.package_name || v.package || '—'
-      const priceFontSize = priceDisplay.length > 6 ? 11 : priceDisplay.length > 4 ? 13 : 15
-
+      const priceFontSize = priceDisplay.length > 6 ? 10 : priceDisplay.length > 4 ? 12 : 14
       return `<div class="voucher">
         <div class="v-inner">
-          <div class="v-header">
-            <div class="v-left">
-              <div class="v-bizname">${biz.toUpperCase()}</div>
-              <div class="v-tagline">Stay Connected. Stay Powered.</div>
-            </div>
-            <div class="v-right">
-              ${price > 0 ? `<div class="v-price-box" style="background:linear-gradient(135deg,${themeObj.bg} 0%,#0d1a5c 100%);">
-                <div class="v-price-label">PRICE</div>
-                <div class="v-price-val" style="font-size:${priceFontSize}px;">TZS ${priceDisplay}</div>
-              </div>` : ''}
-              <div class="v-wifi" style="background:${themeObj.bg};">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                  <path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                  <path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                  <circle cx="12" cy="18" r="1.5" fill="white"/>
-                </svg>
+          <div>
+            <div class="v-header">
+              <div class="v-left">
+                <div class="v-bizname">${biz.toUpperCase()}</div>
+                <div class="v-tagline">Stay Connected. Stay Powered.</div>
+              </div>
+              <div class="v-right">
+                ${price > 0 ? `<div class="v-price-box" style="background:linear-gradient(135deg,${themeObj.bg} 0%,#0d1a5c 100%);">
+                  <div class="v-price-label">PRICE</div>
+                  <div class="v-price-val" style="font-size:${priceFontSize}px;">TZS ${priceDisplay}</div>
+                </div>` : ''}
+                <div class="v-wifi" style="background:${themeObj.bg};">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="12" cy="18" r="1.5" fill="white"/>
+                  </svg>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div class="v-stats">
-            <div class="v-stat">
-              <div class="v-stat-label">UPTIME</div>
-              <div class="v-stat-val" style="color:${themeObj.bg};">${uptime}</div>
+            <div class="v-stats">
+              <div class="v-stat">
+                <div class="v-stat-label">UPTIME</div>
+                <div class="v-stat-val" style="color:${themeObj.bg};">${uptime}</div>
+              </div>
+              <div class="v-stat">
+                <div class="v-stat-label">SPEED</div>
+                <div class="v-stat-val" style="color:${themeObj.bg};font-size:${speed.length > 10 ? '7px' : '9px'};">${speed}</div>
+              </div>
             </div>
-            <div class="v-stat">
-              <div class="v-stat-label">SPEED</div>
-              <div class="v-stat-val" style="color:${themeObj.bg};font-size:${speed.length > 10 ? '8px' : '10px'};">${speed}</div>
+            <div class="v-pkg">
+              <span class="v-pkg-label">PACKAGE</span>
+              <span class="v-pkg-val" style="color:${themeObj.bg};">${packageName}</span>
             </div>
           </div>
-
-          <div class="v-pkg">
-            <span class="v-pkg-label">PACKAGE</span>
-            <span class="v-pkg-val" style="color:${themeObj.bg};">${packageName}</span>
-          </div>
-
-          <div class="v-dash"></div>
-
-          <div class="v-code-box">
-            <div class="v-code" style="color:${themeObj.bg};">${v.code}</div>
-            <div class="v-code-label">VOUCHER CODE</div>
-          </div>
-
-          <div class="v-footer">
-            <div class="v-ty" style="color:${themeObj.bg};">Thank You!</div>
+          <div>
+            <div class="v-dash"></div>
+            <div class="v-code-box">
+              <div class="v-code" style="color:${themeObj.bg};">${v.code}</div>
+              <div class="v-code-label">VOUCHER CODE</div>
+            </div>
+            <div class="v-footer">
+              <div class="v-ty" style="color:${themeObj.bg};">Thank You!</div>
+            </div>
           </div>
         </div>
       </div>`
+    }
+
+    // Gawanya vouchers katika vikundi vya 32 (pages)
+    const chunks: any[][] = []
+    for (let i = 0; i < printVouchers.length; i += PER_PAGE) {
+      chunks.push(printVouchers.slice(i, i + PER_PAGE))
+    }
+
+    const pages = chunks.map((chunk, pageIdx) => {
+      const vHtml = chunk.map(makeVoucherHtml).join('')
+      const isLast = pageIdx === chunks.length - 1
+      return `<div class="page${isLast ? ' last-page' : ''}">${vHtml}</div>`
     }).join('')
 
     const html = `<!DOCTYPE html>
@@ -376,53 +387,85 @@ export function VoucherManagementPage() {
   <meta charset="utf-8">
   <title>Vouchers — ${biz}</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
     body { background: white; font-family: Arial, sans-serif; }
-    .grid {
+
+    .page {
+      width: 202mm;
+      height: 289mm;
+      padding: 2mm;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       grid-template-rows: repeat(8, 1fr);
-      gap: 2mm;
-      padding: 3mm;
-      width: 100%;
-      height: 291mm;
+      gap: 1.5mm;
+      page-break-after: always;
+      break-after: page;
+      overflow: hidden;
     }
-    .voucher { background: #f0f4ff; border-radius: 9px; border: 1px solid #e0e8ff; overflow: hidden; page-break-inside: avoid; break-inside: avoid; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
-    .v-inner { padding: 8px 9px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .v-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .last-page {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+
+    .voucher {
+      background: #f0f4ff;
+      border-radius: 7px;
+      border: 1px solid #d0d8ff;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+    .v-inner {
+      padding: 6px 7px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .v-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
     .v-left { flex: 1; min-width: 0; }
-    .v-bizname { font-size: 13px; font-weight: 900; letter-spacing: 0.5px; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .v-tagline { font-size: 6.5px; color: #888; font-style: italic; margin-top: 2px; }
-    .v-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; margin-left: 6px; }
-    .v-price-box { border-radius: 6px; padding: 3px 7px; border: 2px solid #c9a227; text-align: center; }
-    .v-price-label { font-size: 6px; color: #c9a227; font-weight: 700; letter-spacing: 1.5px; margin-bottom: 1px; }
+    .v-bizname { font-size: 11px; font-weight: 900; letter-spacing: 0.3px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .v-tagline { font-size: 5.5px; color: #888; font-style: italic; margin-top: 1px; }
+    .v-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; margin-left: 4px; }
+    .v-price-box { border-radius: 5px; padding: 2px 5px; border: 1.5px solid #c9a227; text-align: center; }
+    .v-price-label { font-size: 5px; color: #c9a227; font-weight: 700; letter-spacing: 1px; }
     .v-price-val { font-weight: 900; color: #fff; white-space: nowrap; }
-    .v-wifi { border-radius: 6px; padding: 5px 6px; border: 2px solid #c9a227; display: flex; align-items: center; justify-content: center; }
-    .v-stats { display: flex; gap: 4px; margin-bottom: 6px; }
-    .v-stat { flex: 1; background: #fff; border-radius: 6px; padding: 5px 6px; border: 1px solid #e5eaf5; }
-    .v-stat-label { font-size: 6.5px; font-weight: 700; color: #333; letter-spacing: 0.4px; margin-bottom: 2px; }
-    .v-stat-val { font-size: 11px; font-weight: 900; }
-    .v-pkg { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; background: #fff; border-radius: 5px; border: 1px solid #e5eaf5; margin-bottom: 5px; }
-    .v-pkg-label { font-size: 6.5px; font-weight: 700; color: #555; letter-spacing: 0.6px; }
-    .v-pkg-val { font-size: 8.5px; font-weight: 700; max-width: 58%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .v-dash { border-top: 1.2px dashed #c9a227; margin: 4px 0; }
-    .v-code-box { background: #fff; border: 2px solid #c9a227; border-radius: 6px; padding: 5px 6px; text-align: center; margin-bottom: 5px; }
-    .v-code { font-size: 18px; font-weight: 900; letter-spacing: 3px; font-family: 'Courier New', monospace; }
-    .v-code-label { font-size: 6px; font-weight: 700; color: #888; letter-spacing: 2px; margin-top: 2px; }
+    .v-wifi { border-radius: 5px; padding: 3px 4px; border: 1.5px solid #c9a227; display: flex; align-items: center; justify-content: center; }
+    .v-stats { display: flex; gap: 3px; margin-bottom: 3px; }
+    .v-stat { flex: 1; background: #fff; border-radius: 4px; padding: 3px 4px; border: 1px solid #e5eaf5; }
+    .v-stat-label { font-size: 5.5px; font-weight: 700; color: #333; letter-spacing: 0.2px; margin-bottom: 1px; }
+    .v-stat-val { font-size: 9px; font-weight: 900; }
+    .v-pkg { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; background: #fff; border-radius: 4px; border: 1px solid #e5eaf5; }
+    .v-pkg-label { font-size: 5.5px; font-weight: 700; color: #555; letter-spacing: 0.3px; }
+    .v-pkg-val { font-size: 7px; font-weight: 700; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .v-dash { border-top: 1px dashed #c9a227; margin: 3px 0; }
+    .v-code-box { background: #fff; border: 1.5px solid #c9a227; border-radius: 5px; padding: 3px 4px; text-align: center; margin-bottom: 2px; }
+    .v-code { font-size: 15px; font-weight: 900; letter-spacing: 2px; font-family: 'Courier New', monospace; }
+    .v-code-label { font-size: 5px; font-weight: 700; color: #888; letter-spacing: 1.5px; margin-top: 1px; }
     .v-footer { text-align: center; }
-    .v-ty { font-size: 9px; font-weight: 900; font-style: italic; font-family: Georgia, serif; }
-    @page { size: A4 portrait; margin: 3mm; }
+    .v-ty { font-size: 7px; font-weight: 900; font-style: italic; font-family: Georgia, serif; }
+
+    @page { size: A4 portrait; margin: 4mm; }
     @media print {
       body { margin: 0; }
-      .grid { padding: 0; gap: 2mm; height: 285mm; display: grid !important; grid-template-columns: repeat(4, 1fr) !important; grid-template-rows: repeat(8, 1fr) !important; width: 100% !important; }
-      .voucher { page-break-inside: avoid !important; break-inside: avoid !important; }
+      .page {
+        width: 202mm !important;
+        height: 285mm !important;
+        padding: 1mm !important;
+        gap: 1.5mm !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        overflow: hidden !important;
+      }
+      .last-page { page-break-after: avoid !important; break-after: avoid !important; }
     }
   </style>
 </head>
 <body>
-  <div class="grid">${vouchersHtml}</div>
+  ${pages}
   <script>
-    window.onload = function() { setTimeout(function() { window.print(); }, 300); };
+    window.onload = function() { setTimeout(function() { window.print(); }, 400); };
   <\/script>
 </body>
 </html>`
