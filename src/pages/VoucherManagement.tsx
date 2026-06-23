@@ -247,8 +247,6 @@ export function VoucherManagementPage() {
       const code = manualForm.custom_code || makeCode()
       const profileInfo = await getProfileInfo(manualForm.profile)
 
-      // Unda hotspot user tu — scheduler itaundwa na on-login script
-      // ya profile pale mtumiaji atakapoingiza voucher kwenye hotspot
       await api.post(`/mikrotik/${manualForm.router_id}/hotspot/users/`, {
         username: code, password: code, profile: manualForm.profile,
         comment: `Manual|${manualForm.customer_phone || 'N/A'}`,
@@ -286,8 +284,6 @@ export function VoucherManagementPage() {
       for (let i = 0; i < qty; i++) {
         const code = makeCode()
         try {
-          // Unda hotspot user tu — scheduler itaundwa na on-login script
-          // ya profile pale mtumiaji atakapoingiza voucher kwenye hotspot
           await api.post(`/mikrotik/${batchForm.router_id}/hotspot/users/`, {
             username: code, password: code, profile: batchForm.profile,
             comment: `Batch|${new Date().toLocaleDateString('sw-TZ')}`,
@@ -369,7 +365,7 @@ export function VoucherManagementPage() {
       </div>`
     }
 
-    // Gawanya vouchers katika vikundi vya 32 (pages)
+    // Gawanya vouchers katika vikundi vya PER_PAGE
     const chunks: any[][] = []
     for (let i = 0; i < printVouchers.length; i += PER_PAGE) {
       chunks.push(printVouchers.slice(i, i + PER_PAGE))
@@ -392,15 +388,13 @@ export function VoucherManagementPage() {
 
     .page {
       width: 202mm;
-      height: 289mm;
-      padding: 2mm;
+      padding: 3mm;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(8, 1fr);
-      gap: 1.5mm;
+      grid-auto-rows: minmax(34mm, auto);
+      gap: 2mm;
       page-break-after: always;
       break-after: page;
-      overflow: hidden;
     }
     .last-page {
       page-break-after: avoid;
@@ -411,10 +405,12 @@ export function VoucherManagementPage() {
       background: #f0f4ff;
       border-radius: 7px;
       border: 1px solid #d0d8ff;
-      overflow: hidden;
+      overflow: visible;
       box-shadow: 0 1px 2px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .v-inner {
       padding: 6px 7px;
@@ -441,7 +437,15 @@ export function VoucherManagementPage() {
     .v-pkg-val { font-size: 7px; font-weight: 700; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .v-dash { border-top: 1px dashed #c9a227; margin: 3px 0; }
     .v-code-box { background: #fff; border: 1.5px solid #c9a227; border-radius: 5px; padding: 3px 4px; text-align: center; margin-bottom: 2px; }
-    .v-code { font-size: 15px; font-weight: 900; letter-spacing: 2px; font-family: 'Courier New', monospace; }
+    .v-code {
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+      white-space: normal;
+      line-height: 1.3;
+    }
     .v-code-label { font-size: 5px; font-weight: 700; color: #888; letter-spacing: 1.5px; margin-top: 1px; }
     .v-footer { text-align: center; }
     .v-ty { font-size: 7px; font-weight: 900; font-style: italic; font-family: Georgia, serif; }
@@ -451,14 +455,18 @@ export function VoucherManagementPage() {
       body { margin: 0; }
       .page {
         width: 202mm !important;
-        height: 285mm !important;
-        padding: 1mm !important;
-        gap: 1.5mm !important;
+        padding: 3mm !important;
+        gap: 2mm !important;
+        grid-auto-rows: minmax(34mm, auto) !important;
         page-break-after: always !important;
         break-after: page !important;
-        overflow: hidden !important;
       }
       .last-page { page-break-after: avoid !important; break-after: avoid !important; }
+      .voucher {
+        overflow: visible !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
     }
   </style>
 </head>
