@@ -15,8 +15,9 @@ type Tab =
   | 'walled_garden_ip'
   | 'cookies'
   | 'scheduler'
+  | 'terminal'
 
-const ENDPOINTS: Record<Tab, string> = {
+const ENDPOINTS: Record<Exclude<Tab, 'terminal'>, string> = {
   servers:          'hotspot/servers/',
   server_profiles:  'hotspot/profiles/',
   users:            'hotspot/users/',
@@ -40,6 +41,7 @@ const ALL_TABS = [
   { key: 'walled_garden_ip', label: 'Walled Garden IP',  icon: '🌍' },
   { key: 'cookies',          label: 'Cookies',           icon: '🍪' },
   { key: 'scheduler',        label: 'Scheduler',         icon: '⏰' },
+  { key: 'terminal',         label: 'Terminal',          icon: '🖥️' },
 ] as const
 
 function DetailRow({ label, value, mono = false, full = false }: {
@@ -148,6 +150,305 @@ function EditModeToggle({ editing, onToggle }: { editing: boolean; onToggle: () 
       style={{ padding: '4px 10px', borderRadius: 7, border: `1.5px solid ${editing ? 'var(--primary)' : 'var(--gray-200)'}`, background: editing ? 'var(--primary-light)' : '#fff', color: editing ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}>
       {editing ? '👁 View' : '✏️ Edit'}
     </button>
+  )
+}
+
+// ════════════════════════════════════════════════════════
+// TERMINAL COMPONENT
+// ════════════════════════════════════════════════════════
+interface TerminalLine {
+  type: 'input' | 'output' | 'error' | 'info'
+  text: string
+  timestamp: string
+}
+
+const QUICK_COMMANDS: { category: string; icon: string; commands: { label: string; cmd: string; params: Record<string, string> }[] }[] = [
+  {
+    category: 'System',
+    icon: '⚙️',
+    commands: [
+      { label: '🕐 Angalia Saa na Timezone', cmd: '/system/clock/print', params: {} },
+      { label: '🌍 Weka Timezone Nairobi', cmd: '/system/clock/set', params: { 'time-zone-name': 'Africa/Nairobi' } },
+      { label: '📋 System Resources', cmd: '/system/resource/print', params: {} },
+      { label: '🔖 Router Identity', cmd: '/system/identity/print', params: {} },
+      { label: '📦 RouterOS Version', cmd: '/system/routerboard/print', params: {} },
+    ]
+  },
+  {
+    category: 'Hotspot',
+    icon: '📡',
+    commands: [
+      { label: '👥 Hotspot Users (count)', cmd: '/ip/hotspot/user/print', params: {} },
+      { label: '✅ Active Sessions', cmd: '/ip/hotspot/active/print', params: {} },
+      { label: '📅 Schedulers Zote', cmd: '/system/scheduler/print', params: {} },
+      { label: '🖥 Hotspot Servers', cmd: '/ip/hotspot/print', params: {} },
+    ]
+  },
+  {
+    category: 'Network',
+    icon: '🌐',
+    commands: [
+      { label: '🌐 IP Addresses', cmd: '/ip/address/print', params: {} },
+      { label: '📡 Interfaces', cmd: '/interface/print', params: {} },
+      { label: '🔒 DNS Settings', cmd: '/ip/dns/print', params: {} },
+      { label: '🛣️ Routes', cmd: '/ip/route/print', params: {} },
+    ]
+  },
+]
+
+function MikroTikTerminal({ routerId }: { routerId: number }) {
+  const [lines, setLines] = useState<TerminalLine[]>([
+    { type: 'info', text: '🖥️  MikroTik Terminal — tayari kutumia', timestamp: new Date().toLocaleTimeString('sw-TZ') },
+    { type: 'info', text: 'Tumia quick commands au andika command mwenyewe hapa chini.', timestamp: '' },
+    { type: 'info', text: '─────────────────────────────────────────────────────', timestamp: '' },
+  ])
+  const [input, setInput] = useState('')
+  const [running, setRunning] = useState(false)
+  const [activeCategory, setActiveCategory] = useState('System')
+  const [history, setHistory] = useState<string[]>([])
+  const [historyIdx, setHistoryIdx] = useState(-1)
+  const terminalRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const now = () => new Date().toLocaleTimeString('sw-TZ')
+
+  const scrollBottom = () => {
+    setTimeout(() => {
+      if (terminalRef.current) terminalRef.current.scrollTop = terminalRef.current.scrollHeight
+    }, 50)
+  }
+
+  const addLine = (line: TerminalLine) => {
+    setLines(prev => [...prev, line])
+    scrollBottom()
+  }
+
+  const addLines = (newLines: TerminalLine[]) => {
+    setLines(prev => [...prev, ...newLines])
+    scrollBottom()
+  }
+
+  const formatResult = (result: any): string => {
+    if (!result) return '(hakuna matokeo)'
+    if (typeof result === 'string') return result
+    if (Array.isArray(result)) {
+      if (result.length === 0) return '(orodha tupu)'
+      return result.map((item: any, i: number) => {
+        if (typeof item === 'object') {
+          const rows = Object.entries(item)
+            .filter(([k]) => !k.startsWith('.'))
+            .map(([k, v]) => `  ${k.padEnd(24)}: ${v}`)
+            .join('\n')
+          return `[${i}]\n${rows}`
+        }
+        return String(item)
+      }).join('\n\n')
+    }
+    if (typeof result === 'object') {
+      return Object.entries(result)
+        .map(([k, v]) => `  ${k.padEnd(24)}: ${v}`)
+        .join('\n')
+    }
+    return String(result)
+  }
+
+  const runCommand = async (cmd: string, params: Record<string, string> = {}) => {
+    if (running) return
+    const ts = now()
+    addLine({ type: 'input', text: `> ${cmd}${Object.keys(params).length ? ' ' + JSON.stringify(params) : ''}`, timestamp: ts })
+    setRunning(true)
+    try {
+      const res = await api.post(`/mikrotik/${routerId}/terminal/`, { command: cmd, params })
+      const data = res.data
+      if (data.success) {
+        const formatted = formatResult(data.result)
+        const outputLines: TerminalLine[] = formatted.split('\n').map((line: string, i: number) => ({
+          type: 'output' as const,
+          text: line,
+          timestamp: i === 0 ? now() : '',
+        }))
+        if (data.count > 0) {
+          outputLines.unshift({ type: 'info' as const, text: `✓ Matokeo: ${data.count} item(s)`, timestamp: '' })
+        }
+        addLines(outputLines)
+      } else {
+        addLine({ type: 'error', text: `✗ ${data.error || 'Command imeshindwa'}`, timestamp: now() })
+      }
+    } catch (e: any) {
+      const msg = e.response?.data?.error || e.message || 'Hitilafu ya muunganiko'
+      addLine({ type: 'error', text: `✗ ${msg}`, timestamp: now() })
+    } finally {
+      setRunning(false)
+      addLine({ type: 'info', text: '─────────────────────────────────────────────────────', timestamp: '' })
+      inputRef.current?.focus()
+    }
+  }
+
+  const handleSubmit = () => {
+    const cmd = input.trim()
+    if (!cmd) return
+    // Hifadhi history
+    setHistory(prev => [cmd, ...prev.slice(0, 49)])
+    setHistoryIdx(-1)
+    setInput('')
+    // Convert slash format: /ip/hotspot/print → /ip/hotspot/print
+    runCommand(cmd)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') { handleSubmit(); return }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      const idx = Math.min(historyIdx + 1, history.length - 1)
+      setHistoryIdx(idx)
+      setInput(history[idx] || '')
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      const idx = Math.max(historyIdx - 1, -1)
+      setHistoryIdx(idx)
+      setInput(idx === -1 ? '' : history[idx])
+    }
+    if (e.key === 'l' && e.ctrlKey) {
+      e.preventDefault()
+      setLines([{ type: 'info', text: '🖥️  Terminal imefutwa.', timestamp: now() }])
+    }
+  }
+
+  const clearTerminal = () => {
+    setLines([{ type: 'info', text: '🖥️  Terminal imesafishwa. Tayari kutumia.', timestamp: now() }])
+  }
+
+  const lineColor = (type: TerminalLine['type']) => {
+    if (type === 'input') return '#60a5fa'
+    if (type === 'error') return '#f87171'
+    if (type === 'info') return '#6b7280'
+    return '#86efac'
+  }
+
+  const currentCategory = QUICK_COMMANDS.find(c => c.category === activeCategory)
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1rem', alignItems: 'start' }}>
+      {/* Quick Commands Sidebar */}
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--gray-100)', overflow: 'hidden' }}>
+        <div style={{ padding: '10px 14px', background: 'var(--primary-light)', borderBottom: '1px solid var(--gray-100)' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>⚡ Quick Commands</div>
+        </div>
+        {/* Category tabs */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--gray-100)' }}>
+          {QUICK_COMMANDS.map(cat => (
+            <button key={cat.category} onClick={() => setActiveCategory(cat.category)}
+              style={{ flex: 1, padding: '7px 4px', border: 'none', background: activeCategory === cat.category ? 'var(--primary-light)' : '#fff', color: activeCategory === cat.category ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 10, fontWeight: 700, cursor: 'pointer', borderBottom: activeCategory === cat.category ? '2px solid var(--primary)' : '2px solid transparent' }}>
+              {cat.icon}
+              <div style={{ marginTop: 2 }}>{cat.category}</div>
+            </button>
+          ))}
+        </div>
+        {/* Commands list */}
+        <div style={{ padding: '6px 0' }}>
+          {currentCategory?.commands.map((cmd, i) => (
+            <button key={i} onClick={() => runCommand(cmd.cmd, cmd.params)} disabled={running}
+              style={{ width: '100%', textAlign: 'left', padding: '8px 14px', border: 'none', background: 'none', fontSize: 12, color: running ? 'var(--gray-300)' : 'var(--gray-700)', cursor: running ? 'not-allowed' : 'pointer', lineHeight: 1.4, transition: 'background 0.1s' }}
+              onMouseEnter={e => { if (!running) (e.currentTarget as HTMLElement).style.background = '#f0f4ff' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none' }}>
+              {cmd.label}
+            </button>
+          ))}
+        </div>
+        {/* Help */}
+        <div style={{ padding: '10px 14px', borderTop: '1px solid var(--gray-100)', background: '#fafafa' }}>
+          <div style={{ fontSize: 10, color: 'var(--gray-400)', lineHeight: 1.6 }}>
+            <strong style={{ color: 'var(--gray-500)' }}>Keyboard:</strong><br />
+            ↑↓ — history<br />
+            Enter — run<br />
+            Ctrl+L — clear
+          </div>
+        </div>
+      </div>
+
+      {/* Terminal Screen */}
+      <div style={{ background: '#0f172a', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+        {/* Title bar */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: '#1e293b', borderBottom: '1px solid #334155' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 5 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+            </div>
+            <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>MikroTik Terminal</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {running && (
+              <span style={{ fontSize: 11, color: '#60a5fa', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#60a5fa', display: 'inline-block', animation: 'livepulse 0.8s infinite' }} />
+                Inatekeleza...
+              </span>
+            )}
+            <button onClick={clearTerminal}
+              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #334155', background: 'none', color: '#94a3b8', fontSize: 11, cursor: 'pointer' }}>
+              🗑 Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Output area */}
+        <div ref={terminalRef}
+          style={{ height: 380, overflowY: 'auto', padding: '12px 16px', fontFamily: "'Courier New', monospace", fontSize: 13, lineHeight: 1.7, cursor: 'text' }}
+          onClick={() => inputRef.current?.focus()}>
+          {lines.map((line, i) => (
+            <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              {line.timestamp && (
+                <span style={{ fontSize: 10, color: '#334155', flexShrink: 0, marginTop: 3 }}>{line.timestamp}</span>
+              )}
+              {!line.timestamp && <span style={{ fontSize: 10, color: 'transparent', flexShrink: 0, marginTop: 3 }}>00:00:00</span>}
+              <span style={{ color: lineColor(line.type), whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{line.text}</span>
+            </div>
+          ))}
+          {running && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#60a5fa', marginTop: 4 }}>
+              <span style={{ animation: 'pulse 1s infinite' }}>▌</span>
+              <span style={{ fontSize: 12 }}>Inasubiri jibu kutoka MikroTik...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Input area */}
+        <div style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', background: '#1e293b', borderTop: '1px solid #334155', gap: 10 }}>
+          <span style={{ color: '#22c55e', fontFamily: 'monospace', fontSize: 14, flexShrink: 0 }}>$</span>
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={running}
+            placeholder="Andika command... (mfano: /ip/address/print)"
+            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#f1f5f9', fontFamily: "'Courier New', monospace", fontSize: 13, caretColor: '#60a5fa' }}
+            autoFocus
+          />
+          <button onClick={handleSubmit} disabled={running || !input.trim()}
+            style={{ padding: '5px 14px', borderRadius: 7, border: 'none', background: running || !input.trim() ? '#334155' : '#3b82f6', color: running || !input.trim() ? '#64748b' : '#fff', fontSize: 12, fontWeight: 700, cursor: running || !input.trim() ? 'not-allowed' : 'pointer', fontFamily: 'monospace', transition: 'background 0.15s' }}>
+            Run ↵
+          </button>
+        </div>
+
+        {/* Footer hint */}
+        <div style={{ padding: '5px 16px 8px', background: '#0f172a', display: 'flex', gap: 16 }}>
+          {[
+            { k: '/system/clock/print', l: 'clock' },
+            { k: '/ip/address/print', l: 'ip' },
+            { k: '/interface/print', l: 'interfaces' },
+            { k: '/system/resource/print', l: 'resources' },
+          ].map(hint => (
+            <button key={hint.k} onClick={() => { setInput(hint.k); inputRef.current?.focus() }}
+              style={{ background: 'none', border: 'none', color: '#475569', fontSize: 11, cursor: 'pointer', fontFamily: 'monospace', padding: 0, textDecoration: 'underline dotted' }}>
+              {hint.l}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -622,9 +923,10 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const showAlrt = (type: any, msg: string) => { setAlert({ type, msg }); setTimeout(() => setAlert(null), 5000) }
 
   const fetchTab = async (currentTab: Tab, silent = false) => {
+    if (currentTab === 'terminal') return  // Terminal haina fetch
     if (!silent) setLoading(true)
     try {
-      const res = await api.get(`/mikrotik/${routerId}/${ENDPOINTS[currentTab]}`)
+      const res = await api.get(`/mikrotik/${routerId}/${ENDPOINTS[currentTab as Exclude<Tab, 'terminal'>]}`)
       setData((prev: any) => ({ ...prev, [currentTab]: res.data }))
     } catch (e: any) {
       if (!silent) showAlrt('error', e.response?.data?.error || 'Hitilafu ya muunganiko')
@@ -632,6 +934,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   }
 
   useEffect(() => {
+    if (tab === 'terminal') return  // Terminal haitumii auto-fetch
     fetchTab(tab)
     if (intervalRef.current) clearInterval(intervalRef.current)
     if (tab === 'active' || tab === 'hosts') {
@@ -868,10 +1171,23 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
         <Tabs tabs={visibleTabs as any} active={tab} onChange={(k) => setTab(k as Tab)} />
-        <Button size="sm" variant="ghost" onClick={() => fetchTab(tab)} icon="🔄">{t('refresh')}</Button>
+        {tab !== 'terminal' && (
+          <Button size="sm" variant="ghost" onClick={() => fetchTab(tab)} icon="🔄">{t('refresh')}</Button>
+        )}
       </div>
 
-      {loading && <div style={{ textAlign: 'center', padding: '3rem' }}><Spinner size={32} /></div>}
+      {/* ── TERMINAL ── */}
+      {tab === 'terminal' && (
+        <div>
+          <div style={{ marginBottom: '1rem', padding: '10px 14px', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe', fontSize: 13, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
+            🖥️ <strong>MikroTik Terminal</strong> — Tekeleza commands moja kwa moja kwenye router yako.
+            Commands zinatumwa salama kupitia API.
+          </div>
+          <MikroTikTerminal routerId={routerId} />
+        </div>
+      )}
+
+      {loading && tab !== 'terminal' && <div style={{ textAlign: 'center', padding: '3rem' }}><Spinner size={32} /></div>}
 
       {/* 1. SERVERS */}
       {!loading && tab === 'servers' && (
@@ -910,7 +1226,6 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         <Card>
           <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon="➕">{t('add_user')}</Button>} />
 
-          {/* Search + bulk actions */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '0 1rem 1rem', flexWrap: 'wrap' }}>
             <input
               value={userSearch}
@@ -935,7 +1250,6 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             )}
           </div>
 
-          {/* Select All row — nje ya Table headers */}
           {filteredUsers.length > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 16px 8px', borderBottom: '1px solid var(--gray-100)' }}>
               <input
@@ -1374,6 +1688,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       <style>{`
         @keyframes modalIn { from { opacity:0; transform:scale(0.95) } to { opacity:1; transform:scale(1) } }
         @keyframes livepulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+        @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
       `}</style>
     </div>
   )
@@ -1391,6 +1706,7 @@ const FEATURE_LABELS: Record<string, { label: string; icon: string; desc: string
   walled_garden_ip: { label: 'Walled Garden IP', icon: '🌍',  desc: 'IPs bila login (HTTPS)' },
   cookies:          { label: 'Cookies',          icon: '🍪',  desc: 'Simamia login cookies' },
   scheduler:        { label: 'Scheduler',        icon: '⏰',  desc: 'Scripts za wakati maalum' },
+  terminal:         { label: 'Terminal',         icon: '🖥️',  desc: 'Run commands moja kwa moja' },
 }
 
 function RouterCard({ router, onSelect }: { router: any; onSelect: () => void }) {
