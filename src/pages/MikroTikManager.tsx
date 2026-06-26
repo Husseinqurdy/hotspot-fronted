@@ -162,7 +162,7 @@ interface TerminalLine {
   timestamp: string
 }
 
-const QUICK_COMMANDS = [
+const QUICK_COMMANDS: { category: string; icon: string; commands: { label: string; cmd: string; params: Record<string, string> }[] }[] = [
   {
     category: 'System',
     icon: '⚙️',
@@ -262,7 +262,7 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
       const data = res.data
       if (data.success) {
         const formatted = formatResult(data.result)
-        const outputLines = formatted.split('\n').map((line: string, i: number) => ({
+        const outputLines: TerminalLine[] = formatted.split('\n').map((line: string, i: number) => ({
           type: 'output' as const,
           text: line,
           timestamp: i === 0 ? now() : '',
