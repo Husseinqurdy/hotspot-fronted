@@ -285,14 +285,25 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
   }
 
   const handleSubmit = () => {
-    const cmd = input.trim()
-    if (!cmd) return
-    // Hifadhi history
-    setHistory(prev => [cmd, ...prev.slice(0, 49)])
+    const raw = input.trim()
+    if (!raw) return
+    setHistory(prev => [raw, ...prev.slice(0, 49)])
     setHistoryIdx(-1)
     setInput('')
-    // Convert slash format: /ip/hotspot/print → /ip/hotspot/print
-    runCommand(cmd)
+
+    // Gawanya command na params — mfano: /system/clock/set {"time-zone-autodetect":"true"}
+    const jsonMatch = raw.match(/^(\S+)\s+(\{.+\})$/)
+    if (jsonMatch) {
+      try {
+        const cmd = jsonMatch[1]
+        const params = JSON.parse(jsonMatch[2]) as Record<string, string>
+        runCommand(cmd, params)
+        return
+      } catch {
+        // JSON si sahihi — endelea na command nzima
+      }
+    }
+    runCommand(raw)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
