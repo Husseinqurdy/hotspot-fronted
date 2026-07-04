@@ -869,55 +869,342 @@ export function ClientRouters() {
   const [testing, setTesting] = useState<number | null>(null)
   const [showDelete, setShowDelete] = useState<any>(null)
   const [form, setForm] = useState({ name: '', host: '', api_port: '8728', api_username: 'admin', api_password: '', hotspot_interface: 'bridge' })
-  const fetch = () => { setLoading(true); api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) }) }
-  useEffect(() => { fetch() }, [])
-  const openCreate = () => { setEditRouter(null); setForm({ name: '', host: '', api_port: '8728', api_username: 'admin', api_password: '', hotspot_interface: 'bridge' }); setShowModal(true) }
-  const openEdit = (r: any) => { setEditRouter(r); setForm({ name: r.name, host: r.host, api_port: String(r.api_port), api_username: r.api_username, api_password: '', hotspot_interface: r.hotspot_interface }); setShowModal(true) }
+
+  const fetchRouters = () => {
+    setLoading(true)
+    api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) })
+  }
+  useEffect(() => { fetchRouters() }, [])
+
+  const openCreate = () => {
+    setEditRouter(null)
+    setForm({ name: '', host: '', api_port: '8728', api_username: 'admin', api_password: '', hotspot_interface: 'bridge' })
+    setShowModal(true)
+  }
+  const openEdit = (r: any) => {
+    setEditRouter(r)
+    setForm({ name: r.name, host: r.host, api_port: String(r.api_port), api_username: r.api_username, api_password: '', hotspot_interface: r.hotspot_interface })
+    setShowModal(true)
+  }
   const handleSave = async () => {
     try {
       if (editRouter) await api.patch(`/routers/${editRouter.id}/`, form)
       else await api.post('/routers/', { ...form, client: clientInfo?.id })
       show('success', editRouter ? 'Imesasishwa!' : `${form.name} imeongezwa!`)
-      setShowModal(false); fetch()
+      setShowModal(false)
+      fetchRouters()
     } catch { show('error', t('error')) }
   }
   const handleDelete = async () => {
     if (!showDelete) return
-    try { await api.delete(`/routers/${showDelete.id}/`); show('success', 'Imefutwa'); setShowDelete(null); fetch() }
+    try { await api.delete(`/routers/${showDelete.id}/`); show('success', 'Imefutwa'); setShowDelete(null); fetchRouters() }
     catch { show('error', t('error')) }
   }
   const testConn = async (id: number) => {
     setTesting(id)
-    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message); fetch() }
+    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message); fetchRouters() }
     catch { show('error', t('router_offline')) }
     finally { setTesting(null) }
   }
+
+  // SVG icons ndogo kwa actions — zinaonekana vizuri kwenye buttons ndogo
+  const IcoTest = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+    </svg>
+  )
+  const IcoEdit = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  )
+  const IcoDelete = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6M14 11v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>
+  )
+  const IcoSpin = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: 'crSpin 0.8s linear infinite' }}>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+    </svg>
+  )
+
+  // Tooltip wrapper rahisi — pure CSS, hakuna library
+  const Tip = ({ label, children, side = 'top' }: { label: string; children: React.ReactNode; side?: 'top' | 'bottom' }) => (
+    <span style={{ position: 'relative', display: 'inline-flex' }} className="cr-tip-wrap">
+      {children}
+      <span className="cr-tip" style={{
+        position: 'absolute',
+        [side === 'top' ? 'bottom' : 'top']: 'calc(100% + 6px)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        whiteSpace: 'nowrap',
+        background: '#1e293b',
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: 600,
+        padding: '4px 9px',
+        borderRadius: 6,
+        pointerEvents: 'none',
+        zIndex: 50,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+        opacity: 0,
+        transition: 'opacity 0.15s, transform 0.15s',
+      }}>
+        {label}
+        <span style={{
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          ...(side === 'top'
+            ? { top: '100%', borderTop: '5px solid #1e293b', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }
+            : { bottom: '100%', borderBottom: '5px solid #1e293b', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }),
+          width: 0,
+          height: 0,
+        }} />
+      </span>
+    </span>
+  )
+
+  // Kadi moja ya router — mobile view
+  const RouterCard = ({ r }: { r: any }) => {
+    const isOnline = r.is_online
+    const isTesting = testing === r.id
+    return (
+      <div className="cr-card" style={{
+        background: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 14,
+        padding: '14px 16px',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        animation: 'crFadeUp 0.3s ease both',
+      }}>
+        {/* Header ya kadi */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            {/* Status dot + router icon */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: isOnline ? '#ecfdf5' : '#fef2f2',
+                color: isOnline ? '#10b981' : '#ef4444',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Icons.Router />
+              </div>
+              <div style={{
+                position: 'absolute', bottom: -2, right: -2,
+                width: 10, height: 10, borderRadius: '50%',
+                background: isTesting ? '#f59e0b' : isOnline ? '#10b981' : '#ef4444',
+                border: '2px solid #fff',
+                boxShadow: isOnline && !isTesting ? '0 0 0 3px rgba(16,185,129,0.2)' : 'none',
+                animation: isOnline && !isTesting ? 'crPulse 2s ease-in-out infinite' : 'none',
+              }} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+              <code style={{ fontSize: 11, color: '#6b7280' }}>{r.host}:{r.api_port}</code>
+            </div>
+          </div>
+          {/* Status badge */}
+          <span style={{
+            fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, flexShrink: 0,
+            background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2',
+            color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b',
+          }}>
+            {isTesting ? 'Inajaribu...' : isOnline ? t('online') : t('offline')}
+          </span>
+        </div>
+
+        {/* Last seen */}
+        <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 12 }}>
+          {t('last_seen')}: {r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 6, borderTop: '1px solid #f3f4f6', paddingTop: 10 }}>
+          <Tip label="Pima Muunganisho">
+            <button className="cr-action-btn cr-action-test" onClick={() => testConn(r.id)} disabled={isTesting} aria-label="Pima">
+              {isTesting ? <IcoSpin /> : <IcoTest />}
+            </button>
+          </Tip>
+          <Tip label="Hariri Router">
+            <button className="cr-action-btn cr-action-edit" onClick={() => openEdit(r)} aria-label="Hariri">
+              <IcoEdit />
+            </button>
+          </Tip>
+          <Tip label="Futa Router">
+            <button className="cr-action-btn cr-action-delete" onClick={() => setShowDelete(r)} aria-label="Futa">
+              <IcoDelete />
+            </button>
+          </Tip>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Layout>
+      <style>{`
+        @keyframes crFadeUp   { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes crPulse    { 0%,100% { box-shadow:0 0 0 0 rgba(16,185,129,0.4) } 60% { box-shadow:0 0 0 5px rgba(16,185,129,0) } }
+        @keyframes crSpin     { to { transform:rotate(360deg) } }
+
+        /* Tooltip hover */
+        .cr-tip-wrap:hover .cr-tip,
+        .cr-tip-wrap:focus-within .cr-tip {
+          opacity: 1 !important;
+          transform: translateX(-50%) translateY(-2px) !important;
+        }
+
+        /* Action button base */
+        .cr-action-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 34px; height: 34px; border-radius: 9px; border: none;
+          cursor: pointer; transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+          background: #f8fafc; color: #64748b;
+        }
+        .cr-action-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+        .cr-action-btn:active { transform: scale(0.93); }
+        .cr-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .cr-action-btn:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
+
+        .cr-action-test:hover  { background: #ecfdf5; color: #10b981; }
+        .cr-action-edit:hover  { background: #eff6ff; color: #3b82f6; }
+        .cr-action-delete:hover{ background: #fef2f2; color: #ef4444; }
+
+        /* Card hover */
+        .cr-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.09); transform: translateY(-2px); }
+
+        /* Table row hover */
+        .cr-tr:hover { background: #f8fafc; }
+        .cr-tr { transition: background 0.12s; }
+        .cr-tr td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+        .cr-tr:last-child td { border-bottom: none; }
+
+        /* Responsive grid kwa cards */
+        .cr-cards-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 12px;
+        }
+
+        /* Desktop table — inaonekana md+ */
+        .cr-table-wrap { display: block; }
+        .cr-cards-wrap  { display: none; }
+
+        @media (max-width: 700px) {
+          .cr-table-wrap { display: none !important; }
+          .cr-cards-wrap  { display: block !important; }
+        }
+      `}</style>
+
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader title={t('routers')} subtitle={t('manage_routers_subtitle')} action={<Button onClick={openCreate} icon="➕">{t('add_router')}</Button>} />
+        <PageHeader
+          title={t('routers')}
+          subtitle={t('manage_routers_subtitle')}
+          action={
+            <Button onClick={openCreate} icon="➕">{t('add_router')}</Button>
+          }
+        />
+
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>{t('vpn_hint')}</div>
-        <Card>
-          <Table loading={loading} headers={[t('router_name'), 'VPN Host', 'Port', t('status'), t('last_seen'), '']}
-            rows={routers.map(r => [
-              <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name}</div>,
-              <code style={{ fontSize: 11, color: 'var(--gray-500)' }}>{r.host}</code>,
-              r.api_port,
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: r.is_online ? '#10b981' : '#ef4444', boxShadow: r.is_online ? '0 0 0 3px #d1fae5' : 'none' }} />
-                <Badge text={r.is_online ? t('online') : t('offline')} color={r.is_online ? 'green' : 'red'} />
-              </div>,
-              r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never'),
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : 'Test'}</Button>
-                <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>{t('edit')}</Button>
-                <Button size="sm" variant="danger" onClick={() => setShowDelete(r)}>{t('delete')}</Button>
-              </div>,
-            ])}
-            emptyMessage={t('no_routers')}
-          />
-        </Card>
+
+        {/* Hint VPN */}
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af', animation: 'crFadeUp 0.3s ease' }}>
+          {t('vpn_hint')}
+        </div>
+
+        {/* ─── DESKTOP: Table ─── */}
+        <div className="cr-table-wrap">
+          <Card>
+            {loading ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}>
+                <IcoSpin />
+                <div style={{ marginTop: 8, fontSize: 13 }}>Inapakia...</div>
+              </div>
+            ) : routers.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                    {[t('router_name'), 'VPN Host', 'Port', t('status'), t('last_seen'), ''].map((h, i) => (
+                      <th key={i} style={{ padding: '10px 16px', textAlign: i === 5 ? 'right' : 'left', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {routers.map((r, idx) => {
+                    const isOnline = r.is_online
+                    const isTesting = testing === r.id
+                    return (
+                      <tr key={r.id} className="cr-tr" style={{ animationDelay: `${idx * 40}ms`, animation: 'crFadeUp 0.3s ease both' }}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ position: 'relative' }}>
+                              <div style={{ width: 34, height: 34, borderRadius: 9, background: isOnline ? '#ecfdf5' : '#fef2f2', color: isOnline ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Icons.Router />
+                              </div>
+                              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 9, height: 9, borderRadius: '50%', background: isTesting ? '#f59e0b' : isOnline ? '#10b981' : '#ef4444', border: '2px solid #fff', animation: isOnline && !isTesting ? 'crPulse 2s ease-in-out infinite' : 'none' }} />
+                            </div>
+                            <span style={{ fontWeight: 600, color: '#111827' }}>{r.name}</span>
+                          </div>
+                        </td>
+                        <td><code style={{ fontSize: 12, color: '#6b7280', background: '#f8fafc', padding: '2px 7px', borderRadius: 5 }}>{r.host}</code></td>
+                        <td style={{ color: '#6b7280' }}>{r.api_port}</td>
+                        <td>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2', color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b' }}>
+                            {isTesting ? 'Inajaribu...' : isOnline ? t('online') : t('offline')}
+                          </span>
+                        </td>
+                        <td style={{ color: '#9ca3af', fontSize: 12 }}>{r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                            <Tip label="Pima Muunganisho">
+                              <button className="cr-action-btn cr-action-test" onClick={() => testConn(r.id)} disabled={isTesting} aria-label="Pima">
+                                {isTesting ? <IcoSpin /> : <IcoTest />}
+                              </button>
+                            </Tip>
+                            <Tip label="Hariri Router">
+                              <button className="cr-action-btn cr-action-edit" onClick={() => openEdit(r)} aria-label="Hariri">
+                                <IcoEdit />
+                              </button>
+                            </Tip>
+                            <Tip label="Futa Router">
+                              <button className="cr-action-btn cr-action-delete" onClick={() => setShowDelete(r)} aria-label="Futa">
+                                <IcoDelete />
+                              </button>
+                            </Tip>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            )}
+          </Card>
+        </div>
+
+        {/* ─── MOBILE: Cards ─── */}
+        <div className="cr-cards-wrap">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>Inapakia...</div>
+          ) : routers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</div>
+          ) : (
+            <div className="cr-cards-grid">
+              {routers.map(r => <RouterCard key={r.id} r={r} />)}
+            </div>
+          )}
+        </div>
+
+        {/* ─── MODAL: Add / Edit ─── */}
         <Modal open={showModal} onClose={() => setShowModal(false)} title={editRouter ? `${t('edit_router')}: ${editRouter.name}` : t('add_router')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('router_name')} *`} placeholder="Router ya Ofisi" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
@@ -934,7 +1221,16 @@ export function ClientRouters() {
             </FormActions>
           </div>
         </Modal>
-        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={t('delete_router')} message={`Futa router "${showDelete?.name}"?`} danger />
+
+        {/* ─── CONFIRM DELETE ─── */}
+        <ConfirmDialog
+          open={!!showDelete}
+          onClose={() => setShowDelete(null)}
+          onConfirm={handleDelete}
+          title={t('delete_router')}
+          message={`Futa router "${showDelete?.name}"?`}
+          danger
+        />
       </div>
     </Layout>
   )
