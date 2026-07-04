@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
-export function StatCard({ title, value, subtitle, icon, color }: { title: string; value: string|number; subtitle?: string; icon: string; color: string }) {
+
+export function StatCard({ title, value, subtitle, icon, color }: { title: string; value: string|number; subtitle?: string; icon: string | React.ReactNode; color: string }) {
   return (
     <div style={{ background:'#fff', borderRadius:14, padding:'1.1rem', boxShadow:'var(--card-shadow)', border:'1px solid var(--gray-100)', minWidth:0 }}>
       <div style={{ width:40, height:40, background:`${color}18`, borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, marginBottom:10 }}>{icon}</div>

@@ -20,32 +20,41 @@ const nc: Record<string, any> = { vodacom: 'green', tigo: 'blue', airtel: 'red',
 const sc: Record<string, any> = { completed: 'green', failed: 'red', processing: 'yellow', pending: 'gray' }
 const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
 
+// ── SVG ICONS ─────────────────────────────────────────────
+const Icons = {
+  Router: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="7" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/><circle cx="8.5" cy="14.5" r="1" fill="currentColor"/><circle cx="12" cy="14.5" r="1" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1" fill="currentColor"/></svg>,
+  Package: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>,
+  Payment: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
+  Voucher: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3"/><path d="M2 15v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3"/><path d="M20 9a2 2 0 0 0 0 6"/><path d="M4 9a2 2 0 0 1 0 6"/></svg>,
+  Revenue: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+  Check: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  Wifi: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>,
+  Phone: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l1.09-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
+  Money: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  Alert: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  Users: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  Online: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  Diamond: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>,
+  Clock: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  Device: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
+}
+
 const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
     <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>Muda wa Package *</label>
     <div style={{ display: 'flex', gap: 8 }}>
-      <input
-        type="number"
-        min="1"
-        placeholder="1"
-        value={form.duration_value || ''}
+      <input type="number" min="1" placeholder="1" value={form.duration_value || ''}
         onChange={(e: any) => setForm({ ...form, duration_value: e.target.value })}
-        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none' }}
-      />
-      <select
-        value={form.duration_unit || 'hours'}
-        onChange={(e: any) => setForm({ ...form, duration_unit: e.target.value })}
-        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer' }}
-      >
+        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
+      <select value={form.duration_unit || 'hours'} onChange={(e: any) => setForm({ ...form, duration_unit: e.target.value })}
+        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer' }}>
         <option value="hours">Masaa</option>
         <option value="days">Siku</option>
       </select>
     </div>
     {(form.duration_value && form.duration_unit) && (
       <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>
-        = {form.duration_unit === 'hours'
-          ? `${form.duration_value * 60} dakika`
-          : `${form.duration_value * 1440} dakika (${form.duration_value * 24} masaa)`}
+        = {form.duration_unit === 'hours' ? `${form.duration_value * 60} dakika` : `${form.duration_value * 1440} dakika (${form.duration_value * 24} masaa)`}
       </span>
     )}
   </div>
@@ -58,7 +67,6 @@ function VoucherPrintCard({ voucher, business_name, theme }: { voucher: any; bus
   const speed = voucher.speed || (voucher.speed_down && voucher.speed_up ? `${voucher.speed_down}mb / ${voucher.speed_up}mb` : null) || '—'
   const packageName = voucher.package_name || voucher.package || '—'
   const priceFontSize = priceDisplay.length > 6 ? 11 : priceDisplay.length > 4 ? 14 : 17
-
   return (
     <div style={{ display: 'inline-block', margin: '6px', verticalAlign: 'top', pageBreakInside: 'avoid', fontFamily: 'Arial, sans-serif', background: '#f0f4ff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.18)', border: '1px solid #e0e8ff', width: '100%', boxSizing: 'border-box' as any }}>
       <div style={{ padding: '12px 14px' }}>
@@ -83,35 +91,21 @@ function VoucherPrintCard({ voucher, business_name, theme }: { voucher: any; bus
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
           <div style={{ flex: 1, background: '#fff', borderRadius: 9, padding: '7px 8px', border: '1px solid #e5eaf5' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-              <div style={{ width: 24, height: 24, background: theme.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M1.5 8.5C5.5 4.5 10.5 2.5 12 2.5C13.5 2.5 18.5 4.5 22.5 8.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M4.5 11.5C7.5 8.5 10 7 12 7C14 7 16.5 8.5 19.5 11.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><path d="M7.5 14.5C9.5 12.5 11 11.5 12 11.5C13 11.5 14.5 12.5 16.5 14.5" stroke="white" strokeWidth="2.5" strokeLinecap="round"/><circle cx="12" cy="18" r="1.5" fill="white"/></svg>
-              </div>
-              <div><div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>UPTIME</div><div style={{ fontSize: 7, color: '#888' }}>Reliability You Trust</div></div>
-            </div>
+            <div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5, marginBottom: 3 }}>UPTIME</div>
             <div style={{ fontSize: uptime.length > 8 ? 10 : 12, fontWeight: 900, color: theme.bg }}>{uptime}</div>
           </div>
           <div style={{ flex: 1, background: '#fff', borderRadius: 9, padding: '7px 8px', border: '1px solid #e5eaf5' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-              <div style={{ width: 24, height: 24, background: theme.bg, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12C2 14.74 3.08 17.22 4.85 19H19.15C20.92 17.22 22 14.74 22 12C22 6.48 17.52 2 12 2Z" stroke="white" strokeWidth="2"/><path d="M12 12L16 8" stroke="white" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="12" r="1.5" fill="white"/></svg>
-              </div>
-              <div><div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5 }}>SPEED</div><div style={{ fontSize: 7, color: '#888' }}>High Speed Internet</div></div>
-            </div>
+            <div style={{ fontSize: 8, fontWeight: 700, color: '#333', letterSpacing: 0.5, marginBottom: 3 }}>SPEED</div>
             <div style={{ fontSize: speed.length > 10 ? 9 : 11, fontWeight: 900, color: theme.bg }}>{speed}</div>
           </div>
         </div>
         <div style={{ marginBottom: 8, padding: '5px 8px', background: '#fff', borderRadius: 7, border: '1px solid #e5eaf5' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M21 8L12 3L3 8V16L12 21L21 16V8Z" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/><path d="M12 3V21" stroke={theme.bg} strokeWidth="2"/><path d="M3 8L12 13L21 8" stroke={theme.bg} strokeWidth="2" strokeLinejoin="round"/></svg>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 9, fontWeight: 700, color: '#555', letterSpacing: 1 }}>PACKAGE</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: theme.bg, marginLeft: 'auto' }}>{packageName}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: theme.bg }}>{packageName}</span>
           </div>
           {voucher.customer_phone && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 3 }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}><path d="M6.6 10.8C7.8 13.2 9.8 15.2 12.2 16.4L14.2 14.4C14.5 14.1 14.9 14 15.3 14.2C16.5 14.6 17.8 14.8 19.1 14.8C19.7 14.8 20.1 15.2 20.1 15.8V19.1C20.1 19.7 19.7 20.1 19.1 20.1C10.2 20.1 3 12.9 3 4C3 3.4 3.4 3 4 3H7.3C7.9 3 8.3 3.4 8.3 4C8.3 5.3 8.5 6.6 8.9 7.8C9 8.2 8.9 8.6 8.6 8.9L6.6 10.8Z" stroke={theme.bg} strokeWidth="1.5"/></svg>
-              <span style={{ fontSize: 9, color: '#666' }}>{voucher.customer_phone}</span>
-            </div>
+            <div style={{ fontSize: 9, color: '#666', marginTop: 3 }}>{voucher.customer_phone}</div>
           )}
         </div>
         <div style={{ borderTop: '1.5px dashed #c9a227', margin: '6px 0' }} />
@@ -125,7 +119,7 @@ function VoucherPrintCard({ voucher, business_name, theme }: { voucher: any; bus
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div style={{ fontSize: 8, color: '#666', fontStyle: 'italic', maxWidth: '55%', lineHeight: 1.5 }}>
-            <span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>{' '}Enjoy fast, reliable and{' '}<span style={{ color: theme.bg, fontWeight: 700 }}>uninterrupted</span>{' '}internet.{' '}<span style={{ color: '#c9a227', fontSize: 12, fontWeight: 900 }}>"</span>
+            Enjoy fast, reliable and <span style={{ color: theme.bg, fontWeight: 700 }}>uninterrupted</span> internet.
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 13, fontWeight: 900, color: theme.bg, fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>Thank You!</div>
@@ -149,24 +143,24 @@ export function AdminDashboard() {
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
         <PageHeader title={t('dashboard')} subtitle={t('summary')} action={<span style={{ fontSize: 12, color: 'var(--gray-500)', background: '#fff', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--gray-200)' }}>{new Date().toLocaleDateString('sw-TZ', { day: 'numeric', month: 'long', year: 'numeric' })}</span>} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          <StatCard title={t('total_clients')} value={loading ? '—' : s?.total_clients || 0} icon="👥" color="#6366f1" />
-          <StatCard title={t('online_routers')} value={loading ? '—' : `${s?.online_routers || 0}/${s?.total_routers || 0}`} icon="📡" color="#10b981" />
-          <StatCard title={t('today_revenue')} value={loading ? '—' : `TZS ${Number(s?.today_revenue || 0).toLocaleString()}`} icon="💰" color="#f59e0b" />
-          <StatCard title={t('today_commission')} value={loading ? '—' : `TZS ${Number(s?.today_commission || 0).toLocaleString()}`} icon="💎" color="#8b5cf6" />
-          <StatCard title={t('vouchers_today')} value={loading ? '—' : s?.total_vouchers_today || 0} icon="🎫" color="#06b6d4" />
-          <StatCard title={t('pending_jobs')} value={loading ? '—' : s?.pending_jobs || 0} icon="⏳" color="#f59e0b" />
+          <StatCard title={t('total_clients')} value={loading ? '—' : s?.total_clients || 0} icon={<Icons.Users />} color="#6366f1" />
+          <StatCard title={t('online_routers')} value={loading ? '—' : `${s?.online_routers || 0}/${s?.total_routers || 0}`} icon={<Icons.Online />} color="#10b981" />
+          <StatCard title={t('today_revenue')} value={loading ? '—' : `TZS ${Number(s?.today_revenue || 0).toLocaleString()}`} icon={<Icons.Money />} color="#f59e0b" />
+          <StatCard title={t('today_commission')} value={loading ? '—' : `TZS ${Number(s?.today_commission || 0).toLocaleString()}`} icon={<Icons.Diamond />} color="#8b5cf6" />
+          <StatCard title={t('vouchers_today')} value={loading ? '—' : s?.total_vouchers_today || 0} icon={<Icons.Voucher />} color="#06b6d4" />
+          <StatCard title={t('pending_jobs')} value={loading ? '—' : s?.pending_jobs || 0} icon={<Icons.Clock />} color="#f59e0b" />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
           <Card style={{ gridColumn: 'span 2' }}>
-            <CardHeader title={t('vouchers_today')} />
+            <CardHeader title={t('vouchers_this_week')} />
             <div style={{ padding: '1rem' }}>
               <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={WEEK}>
-                  <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} /><stop offset="95%" stopColor="#6366f1" stopOpacity={0} /></linearGradient></defs>
-                  <XAxis dataKey="d" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
-                  <Area type="monotone" dataKey="v" stroke="#6366f1" fill="url(#ag)" strokeWidth={2} name="Vouchers" />
+                  <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/><stop offset="95%" stopColor="#6366f1" stopOpacity={0}/></linearGradient></defs>
+                  <XAxis dataKey="d" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
+                  <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}/>
+                  <Area type="monotone" dataKey="v" stroke="#6366f1" fill="url(#ag)" strokeWidth={2} name="Vouchers"/>
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -174,7 +168,13 @@ export function AdminDashboard() {
           <Card>
             <CardHeader title={t('system_status')} />
             <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[{ label: 'Django API', ok: true }, { label: 'Celery Worker', ok: true }, { label: 'Redis', ok: true }, { label: `GSM Devices (${s?.active_devices || 0})`, ok: (s?.active_devices || 0) > 0 }, { label: `VPN Routers (${s?.online_routers || 0})`, ok: (s?.online_routers || 0) > 0 }].map((item, i) => (
+              {[
+                { label: 'Django API', ok: true },
+                { label: 'Celery Worker', ok: true },
+                { label: 'Redis', ok: true },
+                { label: `GSM Devices (${s?.active_devices || 0})`, ok: (s?.active_devices || 0) > 0 },
+                { label: `VPN Routers (${s?.online_routers || 0})`, ok: (s?.online_routers || 0) > 0 },
+              ].map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: 13, color: 'var(--gray-600)', fontWeight: 500 }}>{item.label}</span>
                   <Badge text={item.ok ? 'OK' : 'Issue'} color={item.ok ? 'green' : 'red'} />
@@ -185,7 +185,7 @@ export function AdminDashboard() {
         </div>
         <Card>
           <CardHeader title={t('clients')} action={<Badge text={`${data?.clients?.length || 0}`} color="indigo" />} />
-          <Table loading={loading} headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), 'Malipo', t('status')]}
+          <Table loading={loading} headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), t('payments'), t('status')]}
             rows={(data?.clients || []).map((c: any) => [
               <div><div style={{ fontWeight: 600, fontSize: 13 }}>{c.business_name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{c.username}</div></div>,
               <span style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: 13, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 5, letterSpacing: '0.1em' }}>{c.identifier}</span>,
@@ -194,7 +194,7 @@ export function AdminDashboard() {
               c.total_payments,
               <Badge text={c.is_active ? t('active') : t('inactive')} color={c.is_active ? 'green' : 'red'} />,
             ])}
-            emptyMessage="Hakuna wateja"
+            emptyMessage={t('no_clients_yet')}
           />
         </Card>
       </div>
@@ -267,14 +267,14 @@ export function AdminClients() {
               <span style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>TZS {Number(c.balance).toLocaleString()}</span>,
               <Badge text={c.is_active ? t('active') : t('inactive')} color={c.is_active ? 'green' : 'red'} />,
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowBalance(true) }} icon="💰">{t('add_balance')}</Button>
-                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPassword(true) }} icon="🔑">{t('change_password')}</Button>
-                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPermissions(true) }} icon="🔐">MikroTik</Button>
-                <Button size="sm" variant={c.is_active ? 'warning' : 'success'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')}>{c.is_active ? `⏸ ${t('deactivate')}` : `▶ ${t('activate')}`}</Button>
-                <Button size="sm" variant="danger" onClick={() => { setSelected(c); setShowDelete(true) }} icon="🗑">{t('delete')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowBalance(true) }}>{t('add_balance')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPassword(true) }}>{t('change_password')}</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPermissions(true) }}>MikroTik</Button>
+                <Button size="sm" variant={c.is_active ? 'warning' : 'success'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')}>{c.is_active ? t('deactivate') : t('activate')}</Button>
+                <Button size="sm" variant="danger" onClick={() => { setSelected(c); setShowDelete(true) }}>{t('delete')}</Button>
               </div>,
             ])}
-            emptyMessage="Hakuna wateja"
+            emptyMessage={t('no_clients_yet')}
           />
         </Card>
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('add_client')}>
@@ -289,7 +289,7 @@ export function AdminClients() {
               <Input label={t('email')} type="email" placeholder="email@example.com" value={form.email} onChange={(e: any) => setForm({ ...form, email: e.target.value })} />
             </FormRow>
             <Input label={t('commission_rate')} type="number" placeholder="10" value={form.commission_rate} onChange={(e: any) => setForm({ ...form, commission_rate: e.target.value })} />
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>Nambari ya utambulisho (ID) itatolewa automatically kwa mpangilio (1, 2, 3...)</div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#166534' }}>ID itatolewa automatically kwa mpangilio (1, 2, 3...)</div>
             <FormActions>
               <Button variant="ghost" onClick={() => setShowCreate(false)}>{t('cancel')}</Button>
               <Button onClick={handleCreate} disabled={saving}>{saving ? t('loading') : t('create_client')}</Button>
@@ -305,7 +305,7 @@ export function AdminClients() {
             <Input label={`${t('amount')} (TZS)`} type="number" placeholder="50000" value={balanceAmount} onChange={(e: any) => setBalanceAmount(e.target.value)} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowBalance(false)}>{t('cancel')}</Button>
-              <Button variant="success" onClick={handleBalance} icon="💰">{t('add_balance')}</Button>
+              <Button variant="success" onClick={handleBalance}>{t('add_balance')}</Button>
             </FormActions>
           </div>
         </Modal>
@@ -314,7 +314,7 @@ export function AdminClients() {
             <Input label={t('new_password')} type="password" placeholder="••••••••" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowPassword(false)}>{t('cancel')}</Button>
-              <Button onClick={handlePassword} icon="🔑">{t('save')}</Button>
+              <Button onClick={handlePassword}>{t('save')}</Button>
             </FormActions>
           </div>
         </Modal>
@@ -345,7 +345,7 @@ export function AdminRouters() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title={t('routers')} subtitle="Routers za wateja wote" />
+        <PageHeader title={t('routers')} subtitle={t('all_routers_subtitle')} />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
         <Card>
           <Table loading={loading} headers={[t('router_name'), t('client'), 'Host', 'Port', t('status'), t('last_seen'), '']}
@@ -359,9 +359,9 @@ export function AdminRouters() {
                 <Badge text={r.is_online ? t('online') : t('offline')} color={r.is_online ? 'green' : 'red'} />
               </div>,
               r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never'),
-              <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : `Test`}</Button>,
+              <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : 'Test'}</Button>,
             ])}
-            emptyMessage="Hakuna routers"
+            emptyMessage={t('no_routers')}
           />
         </Card>
       </div>
@@ -379,14 +379,14 @@ export function AdminPayments() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title={t('payments')} subtitle="Malipo yote" />
+        <PageHeader title={t('payments')} subtitle={t('all_payments_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          <StatCard title={t('total_payments')} value={summary?.total_payments || 0} icon="📊" color="#6366f1" />
-          <StatCard title="Jumla" value={`TZS ${Number(summary?.total_amount || 0).toLocaleString()}`} icon="💰" color="#10b981" />
-          <StatCard title="Commission" value={`TZS ${Number(summary?.total_commission || 0).toLocaleString()}`} icon="💎" color="#8b5cf6" />
+          <StatCard title={t('total_payments')} value={summary?.total_payments || 0} icon={<Icons.Payment />} color="#6366f1" />
+          <StatCard title={t('grand_total')} value={`TZS ${Number(summary?.total_amount || 0).toLocaleString()}`} icon={<Icons.Money />} color="#10b981" />
+          <StatCard title={t('total_commission')} value={`TZS ${Number(summary?.total_commission || 0).toLocaleString()}`} icon={<Icons.Diamond />} color="#8b5cf6" />
         </div>
         <Card>
-          <Table loading={loading} headers={[t('client'), t('phone_number'), 'Kiasi', 'Transaction ID', t('network'), t('status'), t('created_at')]}
+          <Table loading={loading} headers={[t('client'), t('phone_number'), t('amount'), 'Transaction ID', t('network'), t('status'), t('created_at')]}
             rows={payments.map(p => [
               p.client_name, p.phone_number,
               <strong style={{ fontSize: 13 }}>TZS {Number(p.amount).toLocaleString()}</strong>,
@@ -418,7 +418,7 @@ export function AdminVouchers() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title={t('vouchers')} subtitle="Vouchers za wateja wote" />
+        <PageHeader title={t('vouchers')} subtitle={t('all_vouchers_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[{ l: t('all'), v: stats?.total || 0, c: '#6366f1' }, { l: 'Active', v: stats?.active || 0, c: '#10b981' }, { l: t('used'), v: stats?.used || 0, c: '#6b7280' }, { l: t('expired'), v: stats?.expired || 0, c: '#ef4444' }].map((s, i) => (
             <div key={i} style={{ background: '#fff', border: '1px solid var(--gray-100)', borderRadius: 12, padding: '0.9rem', borderLeft: `4px solid ${s.c}` }}>
@@ -431,7 +431,7 @@ export function AdminVouchers() {
           {FILTERS.map(f => <button key={f.k} onClick={() => setFilter(f.k)} style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? 'var(--primary)' : 'var(--gray-200)', background: filter === f.k ? 'var(--primary-light)' : '#fff', color: filter === f.k ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{f.l}</button>)}
         </div>
         <Card>
-          <Table loading={loading} headers={[t('code'), t('client'), 'Package', 'Bei', t('customer_phone'), t('status'), t('created_at')]}
+          <Table loading={loading} headers={[t('code'), t('client'), t('packages'), t('price'), t('customer_phone'), t('status'), t('created_at')]}
             rows={vouchers.map(v => [
               <code style={{ fontWeight: 800, fontSize: 14, color: 'var(--primary)', letterSpacing: '0.08em' }}>{v.code}</code>,
               v.client_name, v.package_name,
@@ -494,8 +494,8 @@ export function AdminDevices() {
               d.last_seen ? new Date(d.last_seen).toLocaleString('sw-TZ') : t('never'),
               <Badge text={d.is_active ? t('active') : t('inactive')} color={d.is_active ? 'green' : 'red'} />,
               <div style={{ display: 'flex', gap: 5 }}>
-                <Button size="sm" variant="ghost" onClick={() => openEdit(d)} icon="✏️">{t('edit')}</Button>
-                <Button size="sm" variant="danger" onClick={() => handleDelete(d)}>🗑</Button>
+                <Button size="sm" variant="ghost" onClick={() => openEdit(d)}>{t('edit')}</Button>
+                <Button size="sm" variant="danger" onClick={() => handleDelete(d)}>{t('delete')}</Button>
               </div>,
             ])}
             emptyMessage={t('no_devices_admin')}
@@ -514,7 +514,10 @@ export function AdminDevices() {
             <Input label={`${t('device_id')} *`} placeholder="VODA_001" value={form.device_id} onChange={(e: any) => setForm({ ...form, device_id: e.target.value })} />
             <Input label={t('description')} placeholder="Device ya Dar es Salaam" value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} />
             <div style={{ background: 'var(--warning-light)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#92400e' }}>{t('device_id_hint')}</div>
-            <FormActions><Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button><Button onClick={handleSave} disabled={saving}>{saving ? t('loading') : t('save_device')}</Button></FormActions>
+            <FormActions>
+              <Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? t('loading') : t('save_device')}</Button>
+            </FormActions>
           </div>
         </Modal>
       </div>
@@ -522,7 +525,7 @@ export function AdminDevices() {
   )
 }
 
-// ── CLIENT DASHBOARD — POLISHED ───────────────────────────
+// ── CLIENT DASHBOARD ──────────────────────────────────────
 function useCountUp(target: number, duration = 900, active = true) {
   const [value, setValue] = useState(0)
   useEffect(() => {
@@ -556,72 +559,21 @@ function useFadeIn(delay = 0) {
   return ref
 }
 
-const DashIcon = {
-  Router: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="7" rx="2" />
-      <path d="M7 11V8a5 5 0 0 1 10 0v3" />
-      <circle cx="8.5" cy="14.5" r="1" fill="currentColor" />
-      <circle cx="12" cy="14.5" r="1" fill="currentColor" />
-      <circle cx="15.5" cy="14.5" r="1" fill="currentColor" />
-    </svg>
-  ),
-  Package: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" /><polyline points="3.29 7 12 12 20.71 7" /><line x1="12" y1="22" x2="12" y2="12" />
-    </svg>
-  ),
-  Payment: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
-    </svg>
-  ),
-  Voucher: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3" />
-      <path d="M2 15v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3" />
-      <path d="M20 9a2 2 0 0 0 0 6" /><path d="M4 9a2 2 0 0 1 0 6" />
-    </svg>
-  ),
-  Revenue: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
-    </svg>
-  ),
-  Check: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  ),
-}
-
 function DashStatCard({ title, value, icon, accent, delay = 0, loaded = false, subtitle }: { title: string; value: string | number; icon: React.ReactNode; accent: string; delay?: number; loaded?: boolean; subtitle?: string }) {
   const ref = useFadeIn(delay)
   const [hovered, setHovered] = useState(false)
   return (
     <div ref={ref} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-      style={{
-        background: '#fff', borderRadius: 14,
-        border: `1px solid ${hovered ? accent + '55' : '#e5e7eb'}`,
-        padding: '1.1rem 1.25rem',
-        transition: 'border-color 0.25s, box-shadow 0.25s, transform 0.25s',
-        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-        boxShadow: hovered ? `0 8px 24px ${accent}22` : '0 1px 4px rgba(0,0,0,0.05)',
-        position: 'relative', overflow: 'hidden', cursor: 'default',
-      }}>
+      style={{ background: '#fff', borderRadius: 14, border: `1px solid ${hovered ? accent + '55' : '#e5e7eb'}`, padding: '1.1rem 1.25rem', transition: 'border-color 0.25s, box-shadow 0.25s, transform 0.25s', transform: hovered ? 'translateY(-2px)' : 'translateY(0)', boxShadow: hovered ? `0 8px 24px ${accent}22` : '0 1px 4px rgba(0,0,0,0.05)', position: 'relative', overflow: 'hidden', cursor: 'default' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: accent, opacity: hovered ? 1 : 0.35, transition: 'opacity 0.25s', borderRadius: '14px 14px 0 0' }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0 0 8px' }}>{title}</p>
-          {!loaded
-            ? <div style={{ height: 26, width: '55%', background: '#f3f4f6', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
-            : <p style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>{value}</p>
-          }
+          {!loaded ? <div style={{ height: 26, width: '55%', background: '#f3f4f6', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+            : <p style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: 0, lineHeight: 1, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>{value}</p>}
           {subtitle && loaded && <p style={{ fontSize: 12, color: '#9ca3af', margin: '5px 0 0', fontWeight: 500 }}>{subtitle}</p>}
         </div>
-        <div style={{ width: 38, height: 38, borderRadius: 10, background: accent + '18', color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 12 }}>
-          {icon}
-        </div>
+        <div style={{ width: 38, height: 38, borderRadius: 10, background: accent + '18', color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 12 }}>{icon}</div>
       </div>
     </div>
   )
@@ -657,6 +609,9 @@ export function ClientDashboard() {
   const s = data?.stats
   const identifier = data?.client?.identifier || ''
   const balance = Number(data?.client?.balance || 0)
+  const lipaNumbers: any[] = data?.lipa_numbers || []
+  // Chagua lipa namba ya kwanza kuonyesha - kama ipo zaidi ya moja, onyesha zote
+  const primaryLipa = lipaNumbers[0]?.lipa_number || '—'
 
   const onlineRouters = useCountUp(s?.online_routers ?? 0, 800, loaded)
   const totalRouters  = useCountUp(s?.total_routers  ?? 0, 800, loaded)
@@ -667,9 +622,9 @@ export function ClientDashboard() {
 
   const recent = (data?.recent_vouchers || []).slice(0, 6)
   const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-    active:  { label: 'Inatumika', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-    used:    { label: 'Imetumika', color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
-    expired: { label: 'Imeisha',   color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
+    active:  { label: t('active'), color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+    used:    { label: t('used'), color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
+    expired: { label: t('expired'), color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   }
 
   return (
@@ -678,64 +633,76 @@ export function ClientDashboard() {
         @keyframes cdShimmer { 0%,100%{opacity:.5} 50%{opacity:1} }
         @keyframes cdFadeSlide { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
-
       <div style={{ padding: '2rem', maxWidth: 1100 }}>
 
         {/* Header */}
         <div ref={headerRef} style={{ marginBottom: '1.75rem' }}>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-            {loaded ? `Habari, ${data?.client?.business_name}` : 'Inapakia...'}
+            {loaded ? `${t('welcome_client')}, ${data?.client?.business_name}` : t('loading')}
           </h1>
-          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Muhtasari wa shughuli za biashara yako leo</p>
+          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{t('business_summary_today')}</p>
         </div>
 
         {/* Banner */}
-        <div ref={bannerRef} style={{
-          background: 'linear-gradient(135deg, #13103a 0%, #1e1b4b 60%, #1a1040 100%)',
-          borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem',
-          border: '1px solid rgba(99,102,241,0.2)', position: 'relative', overflow: 'hidden',
-        }}>
+        <div ref={bannerRef} style={{ background: 'linear-gradient(135deg, #13103a 0%, #1e1b4b 60%, #1a1040 100%)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid rgba(99,102,241,0.2)', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99,102,241,0.12) 1px, transparent 0)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
           <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
             <div style={{ flex: 1, minWidth: 280 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(165,180,252,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Maagizo ya Malipo</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(165,180,252,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('payment_instructions')}</span>
                 <div style={{ height: 1, flex: 1, background: 'rgba(99,102,241,0.25)' }} />
               </div>
+
+              {/* Lipa Numbers - dynamic from API */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.5rem', marginBottom: 16 }}>
-                <div>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Lipa Namba</p>
-                  <p style={{ fontSize: 20, fontWeight: 800, color: '#a5b4fc', margin: 0, fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>0523</p>
-                </div>
+                {!loaded ? (
+                  <div style={{ height: 40, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                ) : lipaNumbers.length === 0 ? (
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>{t('no_devices')}</div>
+                ) : lipaNumbers.map((ln: any, i: number) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {i > 0 && <div style={{ width: 1, background: 'rgba(255,255,255,0.1)', alignSelf: 'stretch' }} />}
+                    <div>
+                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        {ln.network_display || t('lipa_number')}
+                      </p>
+                      <p style={{ fontSize: 22, fontWeight: 900, color: '#a5b4fc', margin: 0, fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                        {ln.lipa_number}
+                      </p>
+                    </div>
+                  </div>
+                ))}
                 <div style={{ width: 1, background: 'rgba(255,255,255,0.1)', alignSelf: 'stretch' }} />
                 <div>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Nambari Yako</p>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t('your_number')}</p>
                   {!loaded
                     ? <div style={{ height: 30, width: 80, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
                     : <p style={{ fontSize: 26, fontWeight: 900, margin: 0, fontFamily: 'monospace', letterSpacing: '0.12em', color: '#a5b4fc', background: 'rgba(165,180,252,0.12)', padding: '2px 12px', borderRadius: 8, display: 'inline-block' }}>{identifier}</p>
                   }
                 </div>
               </div>
+
+              {/* Payment instructions */}
               <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: '12px 14px', border: '1px solid rgba(99,102,241,0.15)' }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Jinsi wateja wanavyolipa</p>
+                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('how_customers_pay')}</p>
                 {[
-                  'Mteja achague package — kila moja ina bei maalum.',
-                  `Bei tayari imejumuisha nambari yako (${loaded ? identifier : '…'}) — alipe kiasi kamili bila mabadiliko.`,
+                  t('pay_step_1'),
+                  `${t('pay_step_2')} (${loaded ? identifier : '…'})`,
                   null,
-                  'Mfumo utatuma voucher kwa mteja moja kwa moja kupitia SMS.',
+                  t('pay_step_4'),
                 ].map((step, i) => (
                   <div key={i} style={{ display: 'flex', gap: 10, marginBottom: i < 3 ? 7 : 0 }}>
                     <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                     <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55 }}>
                       {i === 2 ? (
-                        loaded
-                          ? <>Mfano: Package TZS 500 → mteja alipe <strong style={{ color: '#fbbf24' }}>TZS 50{identifier}</strong> kwenda Lipa Namba <strong style={{ color: '#a5b4fc' }}>0523</strong>.</>
-                          : 'Mfano: Package TZS 500 → mteja alipe TZS 50[NAMBARI] kwenda 0523.'
+                        loaded && lipaNumbers.length > 0
+                          ? <>{t('pay_step_3_prefix')} <strong style={{ color: '#fbbf24' }}>TZS 50{identifier}</strong> {t('pay_step_3_to')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</>
+                          : t('pay_step_3_placeholder')
                       ) : i === 3 ? (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           {step}
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}>
-                            <DashIcon.Check /> Otomatiki
+                            <Icons.Check /> {t('automatic')}
                           </span>
                         </span>
                       ) : step}
@@ -744,55 +711,51 @@ export function ClientDashboard() {
                 ))}
               </div>
             </div>
+
+            {/* Balance */}
             <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '1.1rem 1.4rem', border: '1px solid rgba(99,102,241,0.2)', minWidth: 160, textAlign: 'right', alignSelf: 'flex-start' }}>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Bakaa</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('balance')}</p>
               {!loaded
                 ? <div style={{ height: 34, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite', marginLeft: 'auto' }} />
                 : <p style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>TZS {balance.toLocaleString()}</p>
               }
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>Salio la sasa</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>{t('current_balance')}</p>
             </div>
           </div>
         </div>
 
         {/* No devices warning */}
-        {loaded && !(data?.lipa_numbers?.length > 0) && (
+        {loaded && lipaNumbers.length === 0 && (
           <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8, animation: 'cdFadeSlide 0.4s ease' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <Icons.Alert />
             {t('no_devices')}
           </div>
         )}
 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <DashStatCard title="Routers" icon={<DashIcon.Router />} accent="#10b981" value={loaded ? `${onlineRouters} / ${totalRouters}` : '—'} subtitle="Zipo online" delay={100} loaded={loaded} />
-          <DashStatCard title="Vifurushi" icon={<DashIcon.Package />} accent="#f59e0b" value={loaded ? totalPackages : '—'} delay={160} loaded={loaded} />
-          <DashStatCard title="Malipo Leo" icon={<DashIcon.Payment />} accent="#6366f1" value={loaded ? todayPayments : '—'} delay={220} loaded={loaded} />
-          <DashStatCard title="Vouchers Leo" icon={<DashIcon.Voucher />} accent="#8b5cf6" value={loaded ? todayVouchers : '—'} delay={280} loaded={loaded} />
-          <DashStatCard title="Mapato Leo" icon={<DashIcon.Revenue />} accent="#06b6d4" value={loaded ? `TZS ${todayRevenue.toLocaleString()}` : '—'} delay={340} loaded={loaded} />
+          <DashStatCard title={t('routers')} icon={<Icons.Router />} accent="#10b981" value={loaded ? `${onlineRouters} / ${totalRouters}` : '—'} subtitle={t('zipo_online_sasa')} delay={100} loaded={loaded} />
+          <DashStatCard title={t('packages')} icon={<Icons.Package />} accent="#f59e0b" value={loaded ? totalPackages : '—'} delay={160} loaded={loaded} />
+          <DashStatCard title={t('payments_today')} icon={<Icons.Payment />} accent="#6366f1" value={loaded ? todayPayments : '—'} delay={220} loaded={loaded} />
+          <DashStatCard title={t('vouchers_today')} icon={<Icons.Voucher />} accent="#8b5cf6" value={loaded ? todayVouchers : '—'} delay={280} loaded={loaded} />
+          <DashStatCard title={t('today_revenue')} icon={<Icons.Revenue />} accent="#06b6d4" value={loaded ? `TZS ${todayRevenue.toLocaleString()}` : '—'} delay={340} loaded={loaded} />
         </div>
 
-        {/* Chart + Recent vouchers */}
+        {/* Chart + Recent */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
-
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.4s both' }}>
             <div style={{ padding: '1.1rem 1.4rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Vouchers za Leo</h3>
-              <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}>Kwa saa</span>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{t('vouchers_today')}</h3>
+              <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}>{t('by_hour')}</span>
             </div>
             <div style={{ padding: '1.25rem' }}>
               <ResponsiveContainer width="100%" height={190}>
                 <AreaChart data={DASH_CHART} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="h" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} />
-                  <Tooltip content={<DashChartTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }} />
-                  <Area type="monotone" dataKey="v" stroke="#8b5cf6" fill="url(#cdGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#8b5cf6' }} />
+                  <defs><linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22}/><stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/></linearGradient></defs>
+                  <XAxis dataKey="h" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
+                  <Tooltip content={<DashChartTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}/>
+                  <Area type="monotone" dataKey="v" stroke="#8b5cf6" fill="url(#cdGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#8b5cf6' }}/>
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -800,7 +763,7 @@ export function ClientDashboard() {
 
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.5s both' }}>
             <div style={{ padding: '1.1rem 1.4rem 0.75rem', borderBottom: '1px solid #f3f4f6' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>Vouchers za Hivi Karibuni</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{t('recent_vouchers')}</h3>
             </div>
             {!loaded ? (
               <div style={{ padding: '0.5rem 0' }}>
@@ -816,8 +779,8 @@ export function ClientDashboard() {
               </div>
             ) : recent.length === 0 ? (
               <div style={{ padding: '3rem 1rem', textAlign: 'center' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', color: '#9ca3af' }}><DashIcon.Voucher /></div>
-                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Hakuna vouchers leo</p>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', color: '#9ca3af' }}><Icons.Voucher /></div>
+                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>{t('no_vouchers_today')}</p>
               </div>
             ) : (
               <div style={{ padding: '0.5rem 0' }}>
@@ -882,7 +845,7 @@ export function ClientRouters() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader title={t('routers')} subtitle="Simamia MikroTik routers zako" action={<Button onClick={openCreate} icon="➕">{t('add_router')}</Button>} />
+        <PageHeader title={t('routers')} subtitle={t('manage_routers_subtitle')} action={<Button onClick={openCreate} icon="➕">{t('add_router')}</Button>} />
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
         <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>{t('vpn_hint')}</div>
         <Card>
@@ -898,11 +861,11 @@ export function ClientRouters() {
               r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never'),
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : 'Test'}</Button>
-                <Button size="sm" variant="ghost" onClick={() => openEdit(r)} icon="✏️">{t('edit')}</Button>
-                <Button size="sm" variant="danger" onClick={() => setShowDelete(r)}>🗑</Button>
+                <Button size="sm" variant="ghost" onClick={() => openEdit(r)}>{t('edit')}</Button>
+                <Button size="sm" variant="danger" onClick={() => setShowDelete(r)}>{t('delete')}</Button>
               </div>,
             ])}
-            emptyMessage="Hakuna routers"
+            emptyMessage={t('no_routers')}
           />
         </Card>
         <Modal open={showModal} onClose={() => setShowModal(false)} title={editRouter ? `${t('edit_router')}: ${editRouter.name}` : t('add_router')}>
@@ -915,7 +878,10 @@ export function ClientRouters() {
             </FormRow>
             <Input label={`${t('api_password')} *`} type="password" placeholder="••••••" value={form.api_password} onChange={(e: any) => setForm({ ...form, api_password: e.target.value })} />
             <Input label={t('hotspot_interface')} placeholder="bridge" value={form.hotspot_interface} onChange={(e: any) => setForm({ ...form, hotspot_interface: e.target.value })} />
-            <FormActions><Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button><Button onClick={handleSave}>{t('save')}</Button></FormActions>
+            <FormActions>
+              <Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
+              <Button onClick={handleSave}>{t('save')}</Button>
+            </FormActions>
           </div>
         </Modal>
         <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={t('delete_router')} message={`Futa router "${showDelete?.name}"?`} danger />
@@ -942,20 +908,19 @@ export function ClientPackages() {
 
   const handleSyncPkg = async (pkgId: number) => {
     setSyncingPkg(pkgId)
-    try { const r = await api.post(`/packages/${pkgId}/sync-from-mikrotik/`); show('success', r.data?.message || 'Package imesasishwa kutoka MikroTik'); fetchPackages() }
-    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router') }
+    try { const r = await api.post(`/packages/${pkgId}/sync-from-mikrotik/`); show('success', r.data?.message || 'Imesasishwa'); fetchPackages() }
+    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa') }
     finally { setSyncingPkg(null) }
   }
 
   const handleSyncAll = async () => {
     setSyncingAll(true)
-    try { const r = await api.post('/packages/sync-all-from-mikrotik/'); show('success', r.data?.message || 'Packages zote zimesasishwa'); fetchPackages() }
-    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa — angalia router') }
+    try { const r = await api.post('/packages/sync-all-from-mikrotik/'); show('success', r.data?.message || 'Zote zimesasishwa'); fetchPackages() }
+    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa') }
     finally { setSyncingAll(false) }
   }
 
   const openCreate = () => { setEditPkg(null); setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' }); setShowModal(true) }
-
   const openEdit = (pkg: any) => {
     setEditPkg(pkg)
     setForm({ name: pkg.name, price: String(pkg.price), duration_value: String(pkg.duration_value || Math.round(pkg.duration_minutes / 60)), duration_unit: pkg.duration_unit || 'hours', speed_up: pkg.speed_up, speed_down: pkg.speed_down, mikrotik_profile: pkg.mikrotik_profile, shared_users: String(pkg.shared_users) })
@@ -966,9 +931,7 @@ export function ClientPackages() {
     try {
       if (editPkg) { await api.patch(`/packages/${editPkg.id}/`, form); show('success', `${form.name} imesasishwa!`) }
       else { await api.post('/packages/', { ...form, client: clientInfo?.id }); show('success', `${form.name} imeundwa!`) }
-      setShowModal(false)
-      setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
-      fetchPackages()
+      setShowModal(false); setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' }); fetchPackages()
     } catch (e: any) {
       const err = e.response?.data
       show('error', typeof err === 'object' ? Object.values(err).flat().join(', ') : t('error'))
@@ -986,9 +949,9 @@ export function ClientPackages() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader title={t('packages')} subtitle="Unda na simamia vifurushi vyako"
+        <PageHeader title={t('packages')} subtitle={t('manage_packages_subtitle')}
           action={<div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="ghost" onClick={handleSyncAll} disabled={syncingAll} icon={syncingAll ? undefined : '🔄'}>{syncingAll ? 'Inasync...' : 'Sync All'}</Button>
+            <Button variant="ghost" onClick={handleSyncAll} disabled={syncingAll}>{syncingAll ? t('syncing') : 'Sync All'}</Button>
             <Button onClick={openCreate} icon="➕">{t('add_package')}</Button>
           </div>}
         />
@@ -1010,7 +973,7 @@ export function ClientPackages() {
               <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--primary)', marginBottom: 6, letterSpacing: '-0.5px' }}>TZS {Number(pkg.price).toLocaleString()}</div>
               {identifier && (
                 <div style={{ marginBottom: 10, background: '#fef9c3', border: '1px solid #fde047', borderRadius: 6, padding: '3px 8px', fontSize: 11, color: '#854d0e', fontWeight: 600 }}>
-                  Wateja: TZS {(Number(pkg.price) + identifier).toLocaleString()}
+                  {t('customers')}: TZS {(Number(pkg.price) + identifier).toLocaleString()}
                 </div>
               )}
               {[{ label: pkg.duration_display }, { label: `${pkg.speed_down}Mbps down` }, { label: `${pkg.speed_up}Mbps up` }, { label: `${pkg.shared_users} users` }].map((x, j) => (
@@ -1019,8 +982,8 @@ export function ClientPackages() {
               <div style={{ marginTop: 8, fontSize: 11, color: 'var(--gray-400)', fontFamily: 'monospace', marginBottom: 10 }}>{pkg.mikrotik_profile}</div>
               <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10, flexWrap: 'wrap' }}>
                 <Button size="sm" variant="ghost" onClick={() => handleSyncPkg(pkg.id)} disabled={syncingPkg === pkg.id} style={{ flex: 1 }}>{syncingPkg === pkg.id ? '...' : 'Sync'}</Button>
-                <Button size="sm" variant="ghost" onClick={() => openEdit(pkg)} icon="✏️" style={{ flex: 1 }}>{t('edit')}</Button>
-                <Button size="sm" variant="danger" onClick={() => setShowDelete(pkg)} style={{ flex: 1 }}>Futa</Button>
+                <Button size="sm" variant="ghost" onClick={() => openEdit(pkg)} style={{ flex: 1 }}>{t('edit')}</Button>
+                <Button size="sm" variant="danger" onClick={() => setShowDelete(pkg)} style={{ flex: 1 }}>{t('delete')}</Button>
               </div>
             </div>
           ))}
@@ -1030,7 +993,7 @@ export function ClientPackages() {
             </div>
           )}
         </div>
-        <Modal open={showModal} onClose={() => setShowModal(false)} title={editPkg ? `Hariri: ${editPkg.name}` : t('add_package')}>
+        <Modal open={showModal} onClose={() => setShowModal(false)} title={editPkg ? `${t('edit')}: ${editPkg.name}` : t('add_package')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('package_name')} *`} placeholder="Saa 1, Siku 1..." value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
             <FormRow>
@@ -1045,7 +1008,7 @@ export function ClientPackages() {
             <Input label={t('shared_users')} type="number" placeholder="1" value={form.shared_users} onChange={(e: any) => setForm({ ...form, shared_users: e.target.value })} />
             {form.price && identifier && (
               <div style={{ background: '#fef9c3', border: '1px solid #fde047', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: '#854d0e' }}>
-                Wateja watalipa: <strong>TZS {(Number(form.price) + identifier).toLocaleString()}</strong>
+                {t('customers_pay')}: <strong>TZS {(Number(form.price) + identifier).toLocaleString()}</strong>
               </div>
             )}
             <FormActions>
@@ -1054,7 +1017,7 @@ export function ClientPackages() {
             </FormActions>
           </div>
         </Modal>
-        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Package" message={`Futa package "${showDelete?.name}"?`} danger />
+        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={t('delete')} message={`Futa package "${showDelete?.name}"?`} danger />
       </div>
     </Layout>
   )
@@ -1075,15 +1038,15 @@ export function ClientVouchers() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader title={t('vouchers')} subtitle="Historia ya vouchers zako" />
+        <PageHeader title={t('vouchers')} subtitle={t('vouchers_history_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          {[{ l: t('all'), v: stats?.total || 0, c: '#6366f1' }, { l: 'Active', v: stats?.active || 0, c: '#10b981' }, { l: t('used'), v: stats?.used || 0, c: '#6b7280' }, { l: t('expired'), v: stats?.expired || 0, c: '#ef4444' }].map((s, i) => <StatCard key={i} title={s.l} value={s.v} icon={['🎫', '✅', '✔', '⏰'][i]} color={s.c} />)}
+          {[{ l: t('all'), v: stats?.total || 0, c: '#6366f1' }, { l: 'Active', v: stats?.active || 0, c: '#10b981' }, { l: t('used'), v: stats?.used || 0, c: '#6b7280' }, { l: t('expired'), v: stats?.expired || 0, c: '#ef4444' }].map((s, i) => <StatCard key={i} title={s.l} value={s.v} icon={[<Icons.Voucher />, <Icons.Check />, <Icons.Check />, <Icons.Clock />][i]} color={s.c} />)}
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: '1rem', flexWrap: 'wrap' }}>
           {FILTERS.map(f => <button key={f.k} onClick={() => setFilter(f.k)} style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? 'var(--primary)' : 'var(--gray-200)', background: filter === f.k ? 'var(--primary-light)' : '#fff', color: filter === f.k ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{f.l}</button>)}
         </div>
         <Card>
-          <Table loading={loading} headers={[t('code'), 'Package', 'Bei', t('customer_phone'), t('status'), t('created_at')]}
+          <Table loading={loading} headers={[t('code'), t('packages'), t('price'), t('customer_phone'), t('status'), t('created_at')]}
             rows={vouchers.map(v => [
               <code style={{ fontWeight: 800, fontSize: 14, color: 'var(--primary)', letterSpacing: '0.08em' }}>{v.code}</code>,
               v.package_name, `TZS ${Number(v.package_price).toLocaleString()}`,
@@ -1109,14 +1072,14 @@ export function ClientPayments() {
   return (
     <Layout>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader title={t('payments')} subtitle="Historia ya malipo yako" />
+        <PageHeader title={t('payments')} subtitle={t('payments_history_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          <StatCard title={t('total_payments')} value={summary?.total_payments || 0} icon="📊" color="#6366f1" />
-          <StatCard title={t('my_revenue')} value={`TZS ${Number(summary?.total_client_share || 0).toLocaleString()}`} icon="💰" color="#10b981" />
-          <StatCard title={t('grand_total')} value={`TZS ${Number(summary?.total_amount || 0).toLocaleString()}`} icon="📈" color="#f59e0b" />
+          <StatCard title={t('total_payments')} value={summary?.total_payments || 0} icon={<Icons.Payment />} color="#6366f1" />
+          <StatCard title={t('my_revenue')} value={`TZS ${Number(summary?.total_client_share || 0).toLocaleString()}`} icon={<Icons.Money />} color="#10b981" />
+          <StatCard title={t('grand_total')} value={`TZS ${Number(summary?.total_amount || 0).toLocaleString()}`} icon={<Icons.Revenue />} color="#f59e0b" />
         </div>
         <Card>
-          <Table loading={loading} headers={[t('phone_number'), 'Kiasi', 'Transaction ID', t('network'), t('status'), t('created_at')]}
+          <Table loading={loading} headers={[t('phone_number'), t('amount'), 'Transaction ID', t('network'), t('status'), t('created_at')]}
             rows={payments.map(p => [
               p.phone_number,
               <strong style={{ fontSize: 13 }}>TZS {Number(p.amount).toLocaleString()}</strong>,
