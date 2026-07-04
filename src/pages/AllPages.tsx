@@ -595,12 +595,11 @@ const DASH_CHART = [
   { h: '14:00', v: 15 }, { h: '15:00', v: 11 }, { h: '16:00', v: 7 },
 ]
 
+// __CLIENT DASHBOARD _____________________________
 export function ClientDashboard() {
   const { t } = useLang()
   const [data, setData] = useState<any>(null)
   const [loaded, setLoaded] = useState(false)
-  const headerRef = useFadeIn(0)
-  const bannerRef = useFadeIn(80)
 
   useEffect(() => {
     api.get('/dashboard/client/').then(r => { setData(r.data); setLoaded(true) })
@@ -610,7 +609,6 @@ export function ClientDashboard() {
   const identifier = data?.client?.identifier || ''
   const balance = Number(data?.client?.balance || 0)
   const lipaNumbers: any[] = data?.lipa_numbers || []
-  // Chagua lipa namba ya kwanza kuonyesha - kama ipo zaidi ya moja, onyesha zote
   const primaryLipa = lipaNumbers[0]?.lipa_number || '—'
 
   const onlineRouters = useCountUp(s?.online_routers ?? 0, 800, loaded)
@@ -632,169 +630,221 @@ export function ClientDashboard() {
       <style>{`
         @keyframes cdShimmer { 0%,100%{opacity:.5} 50%{opacity:1} }
         @keyframes cdFadeSlide { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .dash-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .dash-bottom { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
+        .banner-inner { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+        .lipa-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin-bottom: 16px; }
+        .steps-box { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px 14px; border: 1px solid rgba(99,102,241,0.15); }
+        .balance-box { background: rgba(0,0,0,0.25); border-radius: 14px; padding: 1.1rem 1.4rem; border: 1px solid rgba(99,102,241,0.2); min-width: 160px; text-align: right; align-self: flex-start; }
+
+        @media (max-width: 768px) {
+          .dash-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .dash-grid > div:last-child { grid-column: span 2; }
+          .dash-bottom { grid-template-columns: 1fr !important; }
+          .banner-inner { flex-direction: column !important; }
+          .balance-box { width: 100% !important; text-align: left !important; min-width: unset !important; }
+          .lipa-row { flex-direction: column !important; gap: 0.5rem !important; }
+        }
+        @media (max-width: 480px) {
+          .dash-grid { grid-template-columns: 1fr 1fr !important; gap: 0.6rem !important; }
+        }
       `}</style>
-      <div style={{ padding: '2rem', maxWidth: 1100 }}>
+
+      <div style={{ padding: '1.25rem', maxWidth: 1100 }}>
 
         {/* Header */}
-        <div ref={headerRef} style={{ marginBottom: '1.75rem' }}>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
-            {loaded ? `${t('welcome_client')}, ${data?.client?.business_name}` : t('loading')}
+        <div style={{ marginBottom: '1.5rem', animation: 'cdFadeSlide 0.4s ease' }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
+            {loaded ? `${t('welcome_client')}, ${data?.client?.business_name}` : '...'}
           </h1>
-          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>{t('business_summary_today')}</p>
+          <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>{t('business_summary_today')}</p>
         </div>
 
         {/* Banner */}
-        <div ref={bannerRef} style={{ background: 'linear-gradient(135deg, #13103a 0%, #1e1b4b 60%, #1a1040 100%)', borderRadius: 16, padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid rgba(99,102,241,0.2)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: 'linear-gradient(135deg, #13103a 0%, #1e1b4b 60%, #1a1040 100%)', borderRadius: 16, padding: '1.25rem', marginBottom: '1.25rem', border: '1px solid rgba(99,102,241,0.2)', position: 'relative', overflow: 'hidden', animation: 'cdFadeSlide 0.45s ease 0.08s both' }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99,102,241,0.12) 1px, transparent 0)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
-          <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
-            <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(165,180,252,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('payment_instructions')}</span>
+
+          <div className="banner-inner" style={{ position: 'relative' }}>
+            <div style={{ flex: 1, minWidth: 260 }}>
+
+              {/* Section title */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(165,180,252,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  {t('payment_instructions')}
+                </span>
                 <div style={{ height: 1, flex: 1, background: 'rgba(99,102,241,0.25)' }} />
               </div>
 
-              {/* Lipa Numbers - dynamic from API */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.5rem', marginBottom: 16 }}>
+              {/* Lipa numbers */}
+              <div className="lipa-row">
                 {!loaded ? (
-                  <div style={{ height: 40, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                  <div style={{ height: 40, width: 140, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
                 ) : lipaNumbers.length === 0 ? (
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>{t('no_devices')}</div>
                 ) : lipaNumbers.map((ln: any, i: number) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {i > 0 && <div style={{ width: 1, background: 'rgba(255,255,255,0.1)', alignSelf: 'stretch' }} />}
+                    {i > 0 && <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', height: 36 }} />}
                     <div>
-                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 2px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                         {ln.network_display || t('lipa_number')}
                       </p>
-                      <p style={{ fontSize: 22, fontWeight: 900, color: '#a5b4fc', margin: 0, fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                      <p style={{ fontSize: 20, fontWeight: 900, color: '#a5b4fc', margin: 0, fontFamily: 'monospace', letterSpacing: '0.08em' }}>
                         {ln.lipa_number}
                       </p>
                     </div>
                   </div>
                 ))}
-                <div style={{ width: 1, background: 'rgba(255,255,255,0.1)', alignSelf: 'stretch' }} />
-                <div>
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 3px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t('your_number')}</p>
-                  {!loaded
-                    ? <div style={{ height: 30, width: 80, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
-                    : <p style={{ fontSize: 26, fontWeight: 900, margin: 0, fontFamily: 'monospace', letterSpacing: '0.12em', color: '#a5b4fc', background: 'rgba(165,180,252,0.12)', padding: '2px 12px', borderRadius: 8, display: 'inline-block' }}>{identifier}</p>
-                  }
-                </div>
+
+                {lipaNumbers.length > 0 && (
+                  <>
+                    <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' }} />
+                    <div>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 2px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        {t('your_number')}
+                      </p>
+                      {!loaded
+                        ? <div style={{ height: 28, width: 60, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                        : <p style={{ fontSize: 24, fontWeight: 900, margin: 0, fontFamily: 'monospace', letterSpacing: '0.12em', color: '#a5b4fc', background: 'rgba(165,180,252,0.12)', padding: '1px 10px', borderRadius: 8, display: 'inline-block' }}>
+                            {identifier}
+                          </p>
+                      }
+                    </div>
+                  </>
+                )}
               </div>
 
-              {/* Payment instructions */}
-              <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: '12px 14px', border: '1px solid rgba(99,102,241,0.15)' }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('how_customers_pay')}</p>
+              {/* Steps */}
+              <div className="steps-box">
+                <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  {t('how_customers_pay')}
+                </p>
                 {[
                   t('pay_step_1'),
-                  `${t('pay_step_2')} (${loaded ? identifier : '…'})`,
-                  null,
-                  t('pay_step_4'),
+                  `${t('pay_step_2')} (${loaded ? identifier : '…'}) ${t('pay_step_2_suffix')}`,
+                  loaded && lipaNumbers.length > 0
+                    ? <>{t('pay_step_3_prefix')} <strong style={{ color: '#fbbf24' }}>TZS {loaded ? `50${identifier}` : '…'}</strong> {t('pay_step_3_to')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</>
+                    : t('pay_step_3_prefix'),
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    {t('pay_step_4')}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}>
+                      <Icons.Check /> {t('automatic')}
+                    </span>
+                  </span>,
                 ].map((step, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 10, marginBottom: i < 3 ? 7 : 0 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
-                    <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55 }}>
-                      {i === 2 ? (
-                        loaded && lipaNumbers.length > 0
-                          ? <>{t('pay_step_3_prefix')} <strong style={{ color: '#fbbf24' }}>TZS 50{identifier}</strong> {t('pay_step_3_to')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</>
-                          : t('pay_step_3_placeholder')
-                      ) : i === 3 ? (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {step}
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 11, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}>
-                            <Icons.Check /> {t('automatic')}
-                          </span>
-                        </span>
-                      ) : step}
-                    </p>
+                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < 3 ? 6 : 0, alignItems: 'flex-start' }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>
+                      {i + 1}
+                    </div>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55 }}>{step}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Balance */}
-            <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: 14, padding: '1.1rem 1.4rem', border: '1px solid rgba(99,102,241,0.2)', minWidth: 160, textAlign: 'right', alignSelf: 'flex-start' }}>
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('balance')}</p>
+            <div className="balance-box">
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('bakaa')}</p>
               {!loaded
-                ? <div style={{ height: 34, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite', marginLeft: 'auto' }} />
-                : <p style={{ fontSize: 28, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>TZS {balance.toLocaleString()}</p>
+                ? <div style={{ height: 32, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                : <p style={{ fontSize: 26, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>TZS {balance.toLocaleString()}</p>
               }
-              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>{t('current_balance')}</p>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>{t('bakaa_ya_sasa')}</p>
             </div>
           </div>
         </div>
 
         {/* No devices warning */}
         {loaded && lipaNumbers.length === 0 && (
-          <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8, animation: 'cdFadeSlide 0.4s ease' }}>
-            <Icons.Alert />
-            {t('no_devices')}
+          <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Icons.Alert /> {t('no_devices')}
           </div>
         )}
 
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <DashStatCard title={t('routers')} icon={<Icons.Router />} accent="#10b981" value={loaded ? `${onlineRouters} / ${totalRouters}` : '—'} subtitle={t('zipo_online_sasa')} delay={100} loaded={loaded} />
-          <DashStatCard title={t('packages')} icon={<Icons.Package />} accent="#f59e0b" value={loaded ? totalPackages : '—'} delay={160} loaded={loaded} />
-          <DashStatCard title={t('payments_today')} icon={<Icons.Payment />} accent="#6366f1" value={loaded ? todayPayments : '—'} delay={220} loaded={loaded} />
-          <DashStatCard title={t('vouchers_today')} icon={<Icons.Voucher />} accent="#8b5cf6" value={loaded ? todayVouchers : '—'} delay={280} loaded={loaded} />
-          <DashStatCard title={t('today_revenue')} icon={<Icons.Revenue />} accent="#06b6d4" value={loaded ? `TZS ${todayRevenue.toLocaleString()}` : '—'} delay={340} loaded={loaded} />
+        {/* Stats grid - responsive */}
+        <div className="dash-grid">
+          <DashStatCard title={t('routers')} icon={<Icons.Router />} accent="#10b981"
+            value={loaded ? `${onlineRouters} / ${totalRouters}` : '—'}
+            subtitle={t('zipo_online_sasa')} delay={100} loaded={loaded} />
+          <DashStatCard title={t('packages')} icon={<Icons.Package />} accent="#f59e0b"
+            value={loaded ? totalPackages : '—'} delay={160} loaded={loaded} />
+          <DashStatCard title={t('payments_today')} icon={<Icons.Payment />} accent="#6366f1"
+            value={loaded ? todayPayments : '—'} delay={220} loaded={loaded} />
+          <DashStatCard title={t('vouchers_today')} icon={<Icons.Voucher />} accent="#8b5cf6"
+            value={loaded ? todayVouchers : '—'} delay={280} loaded={loaded} />
+          <DashStatCard title={t('today_revenue')} icon={<Icons.Revenue />} accent="#06b6d4"
+            value={loaded ? `TZS ${todayRevenue.toLocaleString()}` : '—'} delay={340} loaded={loaded} />
         </div>
 
-        {/* Chart + Recent */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
+        {/* Chart + Recent - responsive */}
+        <div className="dash-bottom">
+          {/* Chart */}
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.4s both' }}>
-            <div style={{ padding: '1.1rem 1.4rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{t('vouchers_today')}</h3>
-              <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '3px 10px', borderRadius: 20 }}>{t('by_hour')}</span>
+            <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{t('vouchers_today_chart')}</h3>
+              <span style={{ fontSize: 11, color: '#6b7280', background: '#f3f4f6', padding: '2px 9px', borderRadius: 20 }}>{t('by_hour')}</span>
             </div>
-            <div style={{ padding: '1.25rem' }}>
-              <ResponsiveContainer width="100%" height={190}>
+            <div style={{ padding: '1rem' }}>
+              <ResponsiveContainer width="100%" height={175}>
                 <AreaChart data={DASH_CHART} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
-                  <defs><linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22}/><stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/></linearGradient></defs>
-                  <XAxis dataKey="h" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
-                  <Tooltip content={<DashChartTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}/>
-                  <Area type="monotone" dataKey="v" stroke="#8b5cf6" fill="url(#cdGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#8b5cf6' }}/>
+                  <defs>
+                    <linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="h" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
+                  <Tooltip content={<DashChartTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }} />
+                  <Area type="monotone" dataKey="v" stroke="#8b5cf6" fill="url(#cdGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#8b5cf6' }} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
+          {/* Recent vouchers */}
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.5s both' }}>
-            <div style={{ padding: '1.1rem 1.4rem 0.75rem', borderBottom: '1px solid #f3f4f6' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#111827', margin: 0 }}>{t('recent_vouchers')}</h3>
+            <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{t('recent_vouchers')}</h3>
             </div>
             {!loaded ? (
               <div style={{ padding: '0.5rem 0' }}>
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} style={{ padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={i} style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ height: 13, width: 88, background: '#f3f4f6', borderRadius: 4, marginBottom: 7, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
-                      <div style={{ height: 11, width: 118, background: '#f3f4f6', borderRadius: 4, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                      <div style={{ height: 12, width: 80, background: '#f3f4f6', borderRadius: 4, marginBottom: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                      <div style={{ height: 10, width: 110, background: '#f3f4f6', borderRadius: 4, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
                     </div>
-                    <div style={{ height: 22, width: 64, background: '#f3f4f6', borderRadius: 20, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                    <div style={{ height: 20, width: 60, background: '#f3f4f6', borderRadius: 20, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
                   </div>
                 ))}
               </div>
             ) : recent.length === 0 ? (
-              <div style={{ padding: '3rem 1rem', textAlign: 'center' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', color: '#9ca3af' }}><Icons.Voucher /></div>
-                <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>{t('no_vouchers_today')}</p>
+              <div style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', color: '#9ca3af' }}>
+                  <Icons.Voucher />
+                </div>
+                <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{t('no_vouchers_today')}</p>
               </div>
             ) : (
-              <div style={{ padding: '0.5rem 0' }}>
+              <div style={{ padding: '0.25rem 0' }}>
                 {recent.map((v: any, i: number) => {
                   const sm = statusMap[v.status] || statusMap.used
                   return (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px', borderBottom: i < recent.length - 1 ? '1px solid #f9fafb' : 'none', transition: 'background 0.15s' }}
+                    <div key={i}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', borderBottom: i < recent.length - 1 ? '1px solid #f9fafb' : 'none', transition: 'background 0.15s' }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                       <div>
-                        <code style={{ fontWeight: 800, fontSize: 13.5, color: '#6366f1', letterSpacing: '0.06em' }}>{v.code}</code>
-                        <div style={{ fontSize: 11.5, color: '#9ca3af', marginTop: 2 }}>{v.customer_phone}<span style={{ margin: '0 5px', opacity: 0.4 }}>·</span>{v.package}</div>
+                        <code style={{ fontWeight: 800, fontSize: 13, color: '#6366f1', letterSpacing: '0.06em' }}>{v.code}</code>
+                        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>
+                          {v.customer_phone}<span style={{ margin: '0 4px', opacity: 0.4 }}>·</span>{v.package}
+                        </div>
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: sm.color, background: sm.bg, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>{sm.label}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: sm.color, background: sm.bg, padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>
+                        {sm.label}
+                      </span>
                     </div>
                   )
                 })}
