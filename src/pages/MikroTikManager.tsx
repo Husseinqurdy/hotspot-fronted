@@ -1,8 +1,135 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, type ReactNode } from 'react'
 import api from '../lib/api'
 import Layout from '../components/Layout'
 import { Card, CardHeader, Badge, Button, Table, Alert, Tabs, Spinner, ConfirmDialog, Input, FormActions, PageHeader } from '../components/UI'
 import { useLang } from '../contexts/LangContext'
+
+// ════════════════════════════════════════════════════════
+// REAL SVG ICON SET (replaces every emoji in this file)
+// ════════════════════════════════════════════════════════
+type IconProps = { size?: number }
+const svgBase = (children: ReactNode, { size = 15 }: IconProps = {}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+    {children}
+  </svg>
+)
+const Icons = {
+  Server: (p?: IconProps) => svgBase(<><rect x="2" y="3" width="20" height="7" rx="1.5" /><rect x="2" y="14" width="20" height="7" rx="1.5" /><line x1="6" y1="6.5" x2="6.01" y2="6.5" /><line x1="6" y1="17.5" x2="6.01" y2="17.5" /></>, p),
+  Clipboard: (p?: IconProps) => svgBase(<><rect x="6" y="3" width="12" height="18" rx="2" /><rect x="9" y="1.5" width="6" height="3.5" rx="1" /><line x1="9" y1="10" x2="15" y2="10" /><line x1="9" y1="14" x2="15" y2="14" /></>, p),
+  User: (p?: IconProps) => svgBase(<><circle cx="12" cy="8" r="3.5" /><path d="M4.5 20c1.5-4 4-6 7.5-6s6 2 7.5 6" /></>, p),
+  Circle: (p?: IconProps) => svgBase(<circle cx="12" cy="12" r="7" fill="currentColor" stroke="none" />, p),
+  Monitor: (p?: IconProps) => svgBase(<><rect x="2.5" y="4" width="19" height="13" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></>, p),
+  Link: (p?: IconProps) => svgBase(<><path d="M9 15l6-6" /><path d="M13 5.5l1-1a3.5 3.5 0 015 5l-1 1" /><path d="M11 18.5l-1 1a3.5 3.5 0 01-5-5l1-1" /></>, p),
+  Globe: (p?: IconProps) => svgBase(<><circle cx="12" cy="12" r="9" /><line x1="3" y1="12" x2="21" y2="12" /><path d="M12 3a13 13 0 013 9 13 13 0 01-3 9 13 13 0 01-3-9 13 13 0 013-9z" /></>, p),
+  Globe2: (p?: IconProps) => svgBase(<><circle cx="12" cy="12" r="9" /><path d="M3 9h18M3 15h18" /><path d="M12 3c2.2 2.4 3.4 5.6 3.4 9s-1.2 6.6-3.4 9c-2.2-2.4-3.4-5.6-3.4-9S9.8 5.4 12 3z" /></>, p),
+  Cookie: (p?: IconProps) => svgBase(<><path d="M12 2.5a9.5 9.5 0 109.5 9.5 4 4 0 01-4-4 4 4 0 01-4-4 4 4 0 01-1.5-1.5z" /><circle cx="9" cy="10" r=".7" fill="currentColor" /><circle cx="13" cy="14" r=".7" fill="currentColor" /><circle cx="9.5" cy="15" r=".7" fill="currentColor" /></>, p),
+  Clock: (p?: IconProps) => svgBase(<><circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15.5 14" /></>, p),
+  Terminal: (p?: IconProps) => svgBase(<><rect x="2.5" y="4" width="19" height="16" rx="2" /><polyline points="7 9 10.5 12 7 15" /><line x1="12.5" y1="15" x2="17" y2="15" /></>, p),
+  Edit: (p?: IconProps) => svgBase(<><path d="M11 4H4.5a2 2 0 00-2 2v13a2 2 0 002 2h13a2 2 0 002-2V13" /><path d="M18.5 2.5a2.1 2.1 0 013 3L11 16l-4 1 1-4z" /></>, p),
+  Trash: (p?: IconProps) => svgBase(<><polyline points="3.5 6 5.2 6 20.5 6" /><path d="M8.5 6V4a1.5 1.5 0 011.5-1.5h4A1.5 1.5 0 0115.5 4v2" /><path d="M6.5 6l1 14a1.5 1.5 0 001.5 1.5h6a1.5 1.5 0 001.5-1.5l1-14" /><line x1="10" y1="10.5" x2="10" y2="17" /><line x1="14" y1="10.5" x2="14" y2="17" /></>, p),
+  Plus: (p?: IconProps) => svgBase(<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>, p),
+  Save: (p?: IconProps) => svgBase(<><path d="M5 3h11l3 3v15H5z" /><path d="M8 3v6h8V3" /><path d="M7 21v-7h10v7" /></>, p),
+  X: (p?: IconProps) => svgBase(<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>, p),
+  Refresh: (p?: IconProps) => svgBase(<><path d="M3.5 12a8.5 8.5 0 0114.5-6" /><polyline points="18.5 2 18.5 6.5 14 6.5" /><path d="M20.5 12a8.5 8.5 0 01-14.5 6" /><polyline points="5.5 22 5.5 17.5 10 17.5" /></>, p),
+  Settings: (p?: IconProps) => svgBase(<><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></>, p),
+  Search: (p?: IconProps) => svgBase(<><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.5" y2="16.5" /></>, p),
+  Check: (p?: IconProps) => svgBase(<polyline points="20 6 9 17 4 12" />, p),
+  CheckSquare: (p?: IconProps) => svgBase(<><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" /></>, p),
+  Eye: (p?: IconProps) => svgBase(<><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z" /><circle cx="12" cy="12" r="3" /></>, p),
+  Lock: (p?: IconProps) => svgBase(<><rect x="4.5" y="10.5" width="15" height="10" rx="2" /><path d="M7.5 10.5V7a4.5 4.5 0 019 0v3.5" /></>, p),
+  Play: (p?: IconProps) => svgBase(<polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none" />, p),
+  Pause: (p?: IconProps) => svgBase(<><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none" /><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none" /></>, p),
+  Info: (p?: IconProps) => svgBase(<><circle cx="12" cy="12" r="9" /><line x1="12" y1="11" x2="12" y2="16.5" /><circle cx="12" cy="7.5" r=".9" fill="currentColor" stroke="none" /></>, p),
+  Bulb: (p?: IconProps) => svgBase(<><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6.5 6.5 0 00-3.8 11.8c.6.5 1 1.2 1 2.2h5.6c0-1 .4-1.7 1-2.2A6.5 6.5 0 0012 3z" /></>, p),
+  ArrowLeft: (p?: IconProps) => svgBase(<><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></>, p),
+  Router: (p?: IconProps) => svgBase(<><rect x="2.5" y="9.5" width="19" height="8" rx="2" /><line x1="7" y1="13.5" x2="7.01" y2="13.5" /><line x1="10.5" y1="13.5" x2="10.51" y2="13.5" /><path d="M7 9.5V6a2 2 0 012-2h6a2 2 0 012 2v3.5" /><line x1="16" y1="13.5" x2="19" y2="13.5" /></>, p),
+  Shield: (p?: IconProps) => svgBase(<path d="M12 2.5l8 3.5v6c0 5-3.5 8.5-8 9.5-4.5-1-8-4.5-8-9.5V6z" />, p),
+  Zap: (p?: IconProps) => svgBase(<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none" />, p),
+}
+
+// ════════════════════════════════════════════════════════
+// TOOLTIP — small label that appears on hover / focus
+// ════════════════════════════════════════════════════════
+function Tooltip({ label, children, side = 'top' }: { label: string; children: ReactNode; side?: 'top' | 'bottom' }) {
+  const [show, setShow] = useState(false)
+  return (
+    <span
+      style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <span
+          role="tooltip"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            [side === 'top' ? 'bottom' : 'top']: 'calc(100% + 7px)',
+            background: '#1e293b',
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: 600,
+            padding: '5px 9px',
+            borderRadius: 6,
+            whiteSpace: 'nowrap',
+            zIndex: 50,
+            pointerEvents: 'none',
+            animation: 'tooltipIn 0.12s ease',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </span>
+  )
+}
+
+// ════════════════════════════════════════════════════════
+// ICON BUTTON — icon-only action, label shown on hover (tooltip)
+// ════════════════════════════════════════════════════════
+type IBVariant = 'ghost' | 'danger' | 'success' | 'warning' | 'primary'
+const IB_COLORS: Record<IBVariant, { color: string; hoverBg: string; hoverColor: string }> = {
+  ghost:   { color: 'var(--gray-500)', hoverBg: 'var(--gray-100)', hoverColor: 'var(--gray-800)' },
+  danger:  { color: '#ef4444', hoverBg: '#fee2e2', hoverColor: '#b91c1c' },
+  success: { color: '#10b981', hoverBg: '#d1fae5', hoverColor: '#047857' },
+  warning: { color: '#f59e0b', hoverBg: '#fef3c7', hoverColor: '#b45309' },
+  primary: { color: 'var(--primary)', hoverBg: 'var(--primary-light)', hoverColor: 'var(--primary-dark)' },
+}
+function IconButton({ icon, label, onClick, variant = 'ghost', size = 30, disabled = false }: {
+  icon: ReactNode; label: string; onClick?: () => void; variant?: IBVariant; size?: number; disabled?: boolean
+}) {
+  const c = IB_COLORS[variant]
+  const [hover, setHover] = useState(false)
+  return (
+    <Tooltip label={label}>
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        aria-label={label}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          width: size, height: size, minWidth: size,
+          borderRadius: 8, border: 'none',
+          background: hover && !disabled ? c.hoverBg : 'transparent',
+          color: hover && !disabled ? c.hoverColor : c.color,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.4 : 1,
+          transition: 'background 0.15s, color 0.15s, transform 0.1s',
+          transform: hover && !disabled ? 'scale(1.08)' : 'scale(1)',
+        }}
+      >
+        {icon}
+      </button>
+    </Tooltip>
+  )
+}
 
 type Tab =
   | 'servers'
@@ -31,17 +158,17 @@ const ENDPOINTS: Record<Exclude<Tab, 'terminal'>, string> = {
 }
 
 const ALL_TABS = [
-  { key: 'servers',          label: 'Servers',           icon: '🖥' },
-  { key: 'server_profiles',  label: 'Server Profiles',   icon: '📋' },
-  { key: 'users',            label: 'Users',             icon: '👤' },
-  { key: 'active',           label: 'Active',            icon: '🟢' },
-  { key: 'hosts',            label: 'Hosts',             icon: '💻' },
-  { key: 'ip_bindings',      label: 'IP Bindings',       icon: '🔗' },
-  { key: 'walled_garden',    label: 'Walled Garden',     icon: '🌐' },
-  { key: 'walled_garden_ip', label: 'Walled Garden IP',  icon: '🌍' },
-  { key: 'cookies',          label: 'Cookies',           icon: '🍪' },
-  { key: 'scheduler',        label: 'Scheduler',         icon: '⏰' },
-  { key: 'terminal',         label: 'Terminal',          icon: '🖥️' },
+  { key: 'servers',          label: 'Servers',           icon: <Icons.Server size={14} /> },
+  { key: 'server_profiles',  label: 'Server Profiles',   icon: <Icons.Clipboard size={14} /> },
+  { key: 'users',            label: 'Users',             icon: <Icons.User size={14} /> },
+  { key: 'active',           label: 'Active',            icon: <Icons.Circle size={9} /> },
+  { key: 'hosts',            label: 'Hosts',             icon: <Icons.Monitor size={14} /> },
+  { key: 'ip_bindings',      label: 'IP Bindings',       icon: <Icons.Link size={14} /> },
+  { key: 'walled_garden',    label: 'Walled Garden',     icon: <Icons.Globe size={14} /> },
+  { key: 'walled_garden_ip', label: 'Walled Garden IP',  icon: <Icons.Globe2 size={14} /> },
+  { key: 'cookies',          label: 'Cookies',           icon: <Icons.Cookie size={14} /> },
+  { key: 'scheduler',        label: 'Scheduler',         icon: <Icons.Clock size={14} /> },
+  { key: 'terminal',         label: 'Terminal',          icon: <Icons.Terminal size={14} /> },
 ] as const
 
 function DetailRow({ label, value, mono = false, full = false }: {
@@ -146,10 +273,12 @@ function DetailTabs({ tabs, active, onChange }: {
 
 function EditModeToggle({ editing, onToggle }: { editing: boolean; onToggle: () => void }) {
   return (
-    <button onClick={onToggle}
-      style={{ padding: '4px 10px', borderRadius: 7, border: `1.5px solid ${editing ? 'var(--primary)' : 'var(--gray-200)'}`, background: editing ? 'var(--primary-light)' : '#fff', color: editing ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}>
-      {editing ? '👁 View' : '✏️ Edit'}
-    </button>
+    <Tooltip label={editing ? 'Angalia tu (View)' : 'Hariri (Edit)'}>
+      <button onClick={onToggle}
+        style={{ padding: '4px 10px', borderRadius: 7, border: `1.5px solid ${editing ? 'var(--primary)' : 'var(--gray-200)'}`, background: editing ? 'var(--primary-light)' : '#fff', color: editing ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}>
+        {editing ? <Icons.Eye size={13} /> : <Icons.Edit size={13} />} {editing ? 'View' : 'Edit'}
+      </button>
+    </Tooltip>
   )
 }
 
@@ -162,43 +291,43 @@ interface TerminalLine {
   timestamp: string
 }
 
-const QUICK_COMMANDS: { category: string; icon: string; commands: { label: string; cmd: string; params: Record<string, string> }[] }[] = [
+const QUICK_COMMANDS: { category: string; icon: ReactNode; commands: { label: string; cmd: string; params: Record<string, string> }[] }[] = [
   {
     category: 'System',
-    icon: '⚙️',
+    icon: <Icons.Settings size={14} />,
     commands: [
-      { label: '🕐 Angalia Saa na Timezone', cmd: '/system/clock/print', params: {} },
-      { label: '🌍 Weka Timezone Nairobi', cmd: '/system/clock/set', params: { 'time-zone-name': 'Africa/Nairobi' } },
-      { label: '📋 System Resources', cmd: '/system/resource/print', params: {} },
-      { label: '🔖 Router Identity', cmd: '/system/identity/print', params: {} },
-      { label: '📦 RouterOS Version', cmd: '/system/routerboard/print', params: {} },
+      { label: 'Angalia Saa na Timezone', cmd: '/system/clock/print', params: {} },
+      { label: 'Weka Timezone Nairobi', cmd: '/system/clock/set', params: { 'time-zone-name': 'Africa/Nairobi' } },
+      { label: 'System Resources', cmd: '/system/resource/print', params: {} },
+      { label: 'Router Identity', cmd: '/system/identity/print', params: {} },
+      { label: 'RouterOS Version', cmd: '/system/routerboard/print', params: {} },
     ]
   },
   {
     category: 'Hotspot',
-    icon: '📡',
+    icon: <Icons.Router size={14} />,
     commands: [
-      { label: '👥 Hotspot Users (count)', cmd: '/ip/hotspot/user/print', params: {} },
-      { label: '✅ Active Sessions', cmd: '/ip/hotspot/active/print', params: {} },
-      { label: '📅 Schedulers Zote', cmd: '/system/scheduler/print', params: {} },
-      { label: '🖥 Hotspot Servers', cmd: '/ip/hotspot/print', params: {} },
+      { label: 'Hotspot Users (count)', cmd: '/ip/hotspot/user/print', params: {} },
+      { label: 'Active Sessions', cmd: '/ip/hotspot/active/print', params: {} },
+      { label: 'Schedulers Zote', cmd: '/system/scheduler/print', params: {} },
+      { label: 'Hotspot Servers', cmd: '/ip/hotspot/print', params: {} },
     ]
   },
   {
     category: 'Network',
-    icon: '🌐',
+    icon: <Icons.Globe size={14} />,
     commands: [
-      { label: '🌐 IP Addresses', cmd: '/ip/address/print', params: {} },
-      { label: '📡 Interfaces', cmd: '/interface/print', params: {} },
-      { label: '🔒 DNS Settings', cmd: '/ip/dns/print', params: {} },
-      { label: '🛣️ Routes', cmd: '/ip/route/print', params: {} },
+      { label: 'IP Addresses', cmd: '/ip/address/print', params: {} },
+      { label: 'Interfaces', cmd: '/interface/print', params: {} },
+      { label: 'DNS Settings', cmd: '/ip/dns/print', params: {} },
+      { label: 'Routes', cmd: '/ip/route/print', params: {} },
     ]
   },
 ]
 
 function MikroTikTerminal({ routerId }: { routerId: number }) {
   const [lines, setLines] = useState<TerminalLine[]>([
-    { type: 'info', text: '🖥️  MikroTik Terminal — tayari kutumia', timestamp: new Date().toLocaleTimeString('sw-TZ') },
+    { type: 'info', text: 'MikroTik Terminal — tayari kutumia', timestamp: new Date().toLocaleTimeString('sw-TZ') },
     { type: 'info', text: 'Tumia quick commands au andika command mwenyewe hapa chini.', timestamp: '' },
     { type: 'info', text: '─────────────────────────────────────────────────────', timestamp: '' },
   ])
@@ -322,12 +451,12 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
     }
     if (e.key === 'l' && e.ctrlKey) {
       e.preventDefault()
-      setLines([{ type: 'info', text: '🖥️  Terminal imefutwa.', timestamp: now() }])
+      setLines([{ type: 'info', text: 'Terminal imefutwa.', timestamp: now() }])
     }
   }
 
   const clearTerminal = () => {
-    setLines([{ type: 'info', text: '🖥️  Terminal imesafishwa. Tayari kutumia.', timestamp: now() }])
+    setLines([{ type: 'info', text: 'Terminal imesafishwa. Tayari kutumia.', timestamp: now() }])
   }
 
   const lineColor = (type: TerminalLine['type']) => {
@@ -340,19 +469,25 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
   const currentCategory = QUICK_COMMANDS.find(c => c.category === activeCategory)
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1rem', alignItems: 'start' }}>
+    <div className="mt-terminal-grid" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1rem', alignItems: 'start' }}>
+      <style>{`
+        @media (max-width: 720px) {
+          .mt-terminal-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       {/* Quick Commands Sidebar */}
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--gray-100)', overflow: 'hidden' }}>
-        <div style={{ padding: '10px 14px', background: 'var(--primary-light)', borderBottom: '1px solid var(--gray-100)' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>⚡ Quick Commands</div>
+        <div style={{ padding: '10px 14px', background: 'var(--primary-light)', borderBottom: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Icons.Zap size={13} />
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>Quick Commands</div>
         </div>
         {/* Category tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--gray-100)' }}>
           {QUICK_COMMANDS.map(cat => (
             <button key={cat.category} onClick={() => setActiveCategory(cat.category)}
-              style={{ flex: 1, padding: '7px 4px', border: 'none', background: activeCategory === cat.category ? 'var(--primary-light)' : '#fff', color: activeCategory === cat.category ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 10, fontWeight: 700, cursor: 'pointer', borderBottom: activeCategory === cat.category ? '2px solid var(--primary)' : '2px solid transparent' }}>
+              style={{ flex: 1, padding: '7px 4px', border: 'none', background: activeCategory === cat.category ? 'var(--primary-light)' : '#fff', color: activeCategory === cat.category ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 10, fontWeight: 700, cursor: 'pointer', borderBottom: activeCategory === cat.category ? '2px solid var(--primary)' : '2px solid transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all 0.15s' }}>
               {cat.icon}
-              <div style={{ marginTop: 2 }}>{cat.category}</div>
+              <div>{cat.category}</div>
             </button>
           ))}
         </div>
@@ -397,10 +532,14 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
                 Inatekeleza...
               </span>
             )}
-            <button onClick={clearTerminal}
-              style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #334155', background: 'none', color: '#94a3b8', fontSize: 11, cursor: 'pointer' }}>
-              🗑 Clear
-            </button>
+            <Tooltip label="Futa skrini ya terminal">
+              <button onClick={clearTerminal}
+                style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #334155', background: 'none', color: '#94a3b8', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                <Icons.Trash size={12} /> Clear
+              </button>
+            </Tooltip>
           </div>
         </div>
 
@@ -495,13 +634,16 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
       <div style={{ background: '#fff', borderRadius: 14, maxWidth: 520, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
         <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>📋 Hotspot User Profile</div>
-            <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginTop: 2 }}>{profile.name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Icons.Clipboard size={16} />
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>Hotspot User Profile</div>
+              <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginTop: 2 }}>{profile.name}</div>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
-            <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+            <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
           </div>
         </div>
         {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
@@ -564,7 +706,7 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
         </div>
         <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'flex-end', gap: 8, flexShrink: 0 }}>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving}>{saving ? <Spinner size={14} /> : '💾 Apply'}</Button>}
+          {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
           <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
         </div>
       </div>
@@ -614,13 +756,16 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
         <div style={{ background: '#fff', borderRadius: 14, maxWidth: 480, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
           <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>👤 Hotspot User</div>
-              <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, marginTop: 2, fontFamily: 'monospace' }}>{user.name}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icons.User size={16} />
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>Hotspot User</div>
+                <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, marginTop: 2, fontFamily: 'monospace' }}>{user.name}</div>
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
-              <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+              <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
             </div>
           </div>
           {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
@@ -679,10 +824,10 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
             )}
           </div>
           <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon="🗑">Remove</Button>
+            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>Remove</Button>
             <div style={{ display: 'flex', gap: 8 }}>
               <Button variant="ghost" onClick={onClose}>Cancel</Button>
-              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving}>{saving ? <Spinner size={14} /> : '💾 Apply'}</Button>}
+              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
               <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
             </div>
           </div>
@@ -749,16 +894,19 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
         <div style={{ background: '#fff', borderRadius: 14, maxWidth: 540, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
           <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>⏰ Scheduler</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700 }}>{scheduler.name}</span>
-                <Badge text={isDisabled ? 'Disabled' : 'Running'} color={isDisabled ? 'red' : 'green'} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icons.Clock size={16} />
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>Scheduler</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                  <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700 }}>{scheduler.name}</span>
+                  <Badge text={isDisabled ? 'Disabled' : 'Running'} color={isDisabled ? 'red' : 'green'} />
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
-              <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+              <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
             </div>
           </div>
           {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
@@ -788,7 +936,7 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
                   </div>
                   <EditSelectRow label="Policy" name="policy" value={form.policy || 'read,write,reboot'} options={policyOptions} onChange={handleChange} />
                   <EditSelectRow label="Status" name="disabled" value={form.disabled || 'false'}
-                    options={[{ value: 'false', label: '▶ Enabled — inafanya kazi' }, { value: 'true', label: '⏸ Disabled — imesimamishwa' }]}
+                    options={[{ value: 'false', label: 'Enabled — inafanya kazi' }, { value: 'true', label: 'Disabled — imesimamishwa' }]}
                     onChange={handleChange} />
                 </div>
               ) : (
@@ -811,8 +959,8 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
                   <>
                     <EditTextareaRow label="On Event Script" name="on-event" value={form['on-event'] || ''} onChange={handleChange}
                       placeholder={`# Script ya scheduler\n# Mfano:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`} minHeight={180} />
-                    <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 11, color: '#a5b4fc' }}>
-                      💡 Mifano ya haraka:
+                    <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 11, color: '#a5b4fc', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icons.Bulb size={12} /> Mifano ya haraka:</span>
                       <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {[
                           { l: 'Log message', v: ':log info "Scheduler imefanya kazi"' },
@@ -844,14 +992,14 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
           </div>
           <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: 6 }}>
-              <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon="🗑">Remove</Button>
-              <Button variant={isDisabled ? 'success' : 'warning'} size="sm" onClick={() => { onToggle(scheduler); onClose() }}>
-                {isDisabled ? '▶ Enable' : '⏸ Disable'}
+              <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>Remove</Button>
+              <Button variant={isDisabled ? 'success' : 'warning'} size="sm" onClick={() => { onToggle(scheduler); onClose() }} icon={isDisabled ? <Icons.Play size={12} /> : <Icons.Pause size={12} />}>
+                {isDisabled ? 'Enable' : 'Disable'}
               </Button>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <Button variant="ghost" onClick={onClose}>Cancel</Button>
-              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving}>{saving ? <Spinner size={14} /> : '💾 Apply'}</Button>}
+              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
               <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
             </div>
           </div>
@@ -924,7 +1072,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   if (visibleTabs.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--gray-400)' }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Icons.Lock size={40} /></div>
         <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Huna ruhusa ya kufikia MikroTik Manager</div>
         <div style={{ fontSize: 13 }}>Wasiliana na admin wako kukupa ruhusa.</div>
       </div>
@@ -1155,7 +1303,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const modalHeader = (title: string, onClose: () => void) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
       <h3 style={{ fontSize: 15, fontWeight: 700 }}>{title}</h3>
-      <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14, color: 'var(--gray-500)' }}>✕</button>
+      <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
     </div>
   )
   const selectStyle: React.CSSProperties = {
@@ -1183,7 +1331,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
         <Tabs tabs={visibleTabs as any} active={tab} onChange={(k) => setTab(k as Tab)} />
         {tab !== 'terminal' && (
-          <Button size="sm" variant="ghost" onClick={() => fetchTab(tab)} icon="🔄">{t('refresh')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => fetchTab(tab)} icon={<Icons.Refresh size={13} />}>{t('refresh')}</Button>
         )}
       </div>
 
@@ -1191,7 +1339,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {tab === 'terminal' && (
         <div>
           <div style={{ marginBottom: '1rem', padding: '10px 14px', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe', fontSize: 13, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
-            🖥️ <strong>MikroTik Terminal</strong> — Tekeleza commands moja kwa moja kwenye router yako.
+            <Icons.Terminal size={16} /> <strong>MikroTik Terminal</strong> — Tekeleza commands moja kwa moja kwenye router yako.
             Commands zinatumwa salama kupitia API.
           </div>
           <MikroTikTerminal routerId={routerId} />
@@ -1217,8 +1365,8 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {!loading && tab === 'server_profiles' && (
         <Card>
           <CardHeader title={`Server Profiles (${(d?.profiles || []).length})`} />
-          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
-            💡 Bonyeza profile yoyote kuona na kuhariri maelezo yake (General, Scripts)
+          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icons.Bulb size={13} /> Bonyeza profile yoyote kuona na kuhariri maelezo yake (General, Scripts)
           </div>
           <Table headers={['Name', 'Rate Limit', 'Session Timeout', 'Shared Users', 'On Login Script', '']}
             rows={(d?.profiles || []).map((p: any) => [
@@ -1226,8 +1374,8 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               p['rate-limit'] || <span style={{ color: 'var(--gray-400)' }}>unlimited</span>,
               p['session-timeout'] || <span style={{ color: 'var(--gray-400)' }}>unlimited</span>,
               p['shared-users'] || '1',
-              p['on-login'] ? <Badge text="✓ Ipo" color="green" /> : <Badge text="Hakuna" color="gray" />,
-              <Button size="sm" variant="ghost" onClick={() => setSelectedProfile(p)} icon="✏️">Edit</Button>,
+              p['on-login'] ? <Badge text="Ipo" color="green" /> : <Badge text="Hakuna" color="gray" />,
+              <IconButton icon={<Icons.Edit size={14} />} label="Hariri Profile" onClick={() => setSelectedProfile(p)} />,
             ])} emptyMessage="Hakuna server profiles" />
         </Card>
       )}
@@ -1235,23 +1383,26 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 3. USERS */}
       {!loading && tab === 'users' && (
         <Card>
-          <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon="➕">{t('add_user')}</Button>} />
+          <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon={<Icons.Plus size={13} />}>{t('add_user')}</Button>} />
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '0 1rem 1rem', flexWrap: 'wrap' }}>
-            <input
-              value={userSearch}
-              onChange={e => setUserSearch(e.target.value)}
-              placeholder="🔍 Tafuta kwa username, comment au profile..."
-              style={{ flex: 1, minWidth: 200, padding: '8px 12px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, outline: 'none' }}
-              onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
-              onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
-            />
+            <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--gray-400)', display: 'flex' }}><Icons.Search size={14} /></span>
+              <input
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                placeholder="Tafuta kwa username, comment au profile..."
+                style={{ width: '100%', padding: '8px 12px 8px 32px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, outline: 'none', transition: 'border-color 0.15s' }}
+                onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
+              />
+            </div>
             {selectedUserNames.size > 0 && (
               <>
                 <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600 }}>
                   {selectedUserNames.size} zimechaguliwa
                 </span>
-                <Button size="sm" variant="danger" onClick={() => setConfirmBulkDeleteUsers(true)} icon="🗑">
+                <Button size="sm" variant="danger" onClick={() => setConfirmBulkDeleteUsers(true)} icon={<Icons.Trash size={13} />}>
                   Futa zilizochaguliwa
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setSelectedUserNames(new Set())}>
@@ -1289,8 +1440,8 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             </div>
           )}
 
-          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
-            💡 Bonyeza jina la user kuona na kuhariri maelezo yake
+          <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icons.Bulb size={13} /> Bonyeza jina la user kuona na kuhariri maelezo yake
           </div>
 
           <Table
@@ -1305,14 +1456,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               if (neverUsed) {
                 usageBadge = (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>
-                    ⭕ Haijatumika
+                    <Icons.Circle size={6} /> Haijatumika
                   </span>
                 )
               } else if (hasStarted) {
                 usageBadge = (
                   <div>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a' }}>
-                      ▶ {currentUptime}
+                      <Icons.Play size={9} /> {currentUptime}
                     </span>
                     {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>Login: {lastLogin}</div>}
                   </div>
@@ -1321,7 +1472,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                 usageBadge = (
                   <div>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }}>
-                      ⏸ Nje
+                      <Icons.Pause size={9} /> Nje
                     </span>
                     {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>Mwisho: {lastLogin}</div>}
                   </div>
@@ -1345,7 +1496,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                 usageBadge,
                 <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
                 <Badge text={u.disabled === 'true' ? 'Disabled' : 'Active'} color={u.disabled === 'true' ? 'red' : 'green'} />,
-                <Button size="sm" variant="ghost" onClick={() => setSelectedUser(u)} icon="✏️">Edit</Button>,
+                <IconButton icon={<Icons.Edit size={14} />} label="Hariri User" onClick={() => setSelectedUser(u)} />,
               ]
             })}
             emptyMessage={userSearch ? `Hakuna user inayofanana na "${userSearch}"` : 'Hakuna users'}
@@ -1358,14 +1509,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         <Card>
           <CardHeader title={`Active (${d?.count || 0})`} action={<LiveBadge />} />
           {(d?.sessions || []).length === 0
-            ? <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--gray-400)' }}><div style={{ fontSize: 36, marginBottom: 8 }}>🟢</div>Hakuna active sessions</div>
+            ? <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--gray-400)' }}><div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Circle size={30} /></div>Hakuna active sessions</div>
             : <Table headers={['User', 'MAC Address', 'IP Address', 'Uptime', 'TX Bytes', 'RX Bytes', 'Server', '']}
                 rows={(d?.sessions || []).map((s: any) => [
                   <strong>{s.user || '—'}</strong>,
                   <code style={{ fontSize: 11 }}>{s['mac-address'] || '—'}</code>,
                   <code style={{ fontSize: 11 }}>{s.address || '—'}</code>,
                   s.uptime || '—', s['bytes-out'] || '0', s['bytes-in'] || '0', s.server || '—',
-                  <Button size="sm" variant="danger" onClick={() => setConfirmDisconnect(s['.id'])}>Disconnect</Button>,
+                  <IconButton icon={<Icons.X size={14} />} label="Kata Connection" variant="danger" onClick={() => setConfirmDisconnect(s['.id'])} />,
                 ])} emptyMessage="Hakuna active sessions" />
           }
         </Card>
@@ -1389,14 +1540,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 6. IP BINDINGS */}
       {!loading && tab === 'ip_bindings' && (
         <Card>
-          <CardHeader title={`IP Bindings (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddBinding(true)} icon="➕">Add Binding</Button>} />
+          <CardHeader title={`IP Bindings (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddBinding(true)} icon={<Icons.Plus size={13} />}>Add Binding</Button>} />
           <Table headers={['MAC Address', 'IP Address', 'Type', 'Comment', '']}
             rows={(d?.bindings || []).map((b: any) => [
               <code style={{ fontSize: 11 }}>{b['mac-address'] || '—'}</code>,
               <code style={{ fontSize: 11 }}>{b.address || '—'}</code>,
               <Badge text={b.type || 'regular'} color={b.type === 'bypassed' ? 'green' : b.type === 'blocked' ? 'red' : 'blue'} />,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{b.comment || '—'}</span>,
-              <Button size="sm" variant="danger" onClick={() => setConfirmDeleteBinding(b['.id'])} icon="🗑">Remove</Button>,
+              <IconButton icon={<Icons.Trash size={14} />} label="Futa Binding" variant="danger" onClick={() => setConfirmDeleteBinding(b['.id'])} />,
             ])} emptyMessage="Hakuna IP Bindings" />
         </Card>
       )}
@@ -1404,9 +1555,9 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 7. WALLED GARDEN */}
       {!loading && tab === 'walled_garden' && (
         <Card>
-          <CardHeader title={`Walled Garden (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWG(true)} icon="➕">Add Entry</Button>} />
-          <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
-            🌐 Tovuti zinazoweza kufikiwa <strong>bila login</strong> (HTTP)
+          <CardHeader title={`Walled Garden (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWG(true)} icon={<Icons.Plus size={13} />}>Add Entry</Button>} />
+          <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icons.Globe size={13} /> Tovuti zinazoweza kufikiwa <strong>bila login</strong> (HTTP)
           </div>
           <Table headers={['Dst Host', 'Action', 'Server', 'Path', 'Comment', '']}
             rows={(d?.entries || []).map((e: any) => [
@@ -1415,7 +1566,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               e.server || <span style={{ color: 'var(--gray-300)' }}>all</span>,
               e.path || <span style={{ color: 'var(--gray-300)' }}>—</span>,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{e.comment || '—'}</span>,
-              <Button size="sm" variant="danger" onClick={() => setConfirmDeleteWG(e['.id'])} icon="🗑">Remove</Button>,
+              <IconButton icon={<Icons.Trash size={14} />} label="Futa Entry" variant="danger" onClick={() => setConfirmDeleteWG(e['.id'])} />,
             ])} emptyMessage="Hakuna Walled Garden entries" />
         </Card>
       )}
@@ -1423,9 +1574,9 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 8. WALLED GARDEN IP */}
       {!loading && tab === 'walled_garden_ip' && (
         <Card>
-          <CardHeader title={`Walled Garden IP List (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWGIP(true)} icon="➕">Add IP</Button>} />
-          <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af' }}>
-            🌍 IP addresses zinazoweza kufikiwa <strong>bila login</strong> (HTTPS/IP direct)
+          <CardHeader title={`Walled Garden IP List (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWGIP(true)} icon={<Icons.Plus size={13} />}>Add IP</Button>} />
+          <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icons.Globe2 size={13} /> IP addresses zinazoweza kufikiwa <strong>bila login</strong> (HTTPS/IP direct)
           </div>
           <Table headers={['Dst Address', 'Action', 'Protocol', 'Server', 'Comment', '']}
             rows={(d?.entries || []).map((e: any) => [
@@ -1434,7 +1585,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               e.protocol || <span style={{ color: 'var(--gray-300)' }}>any</span>,
               e.server || <span style={{ color: 'var(--gray-300)' }}>all</span>,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{e.comment || '—'}</span>,
-              <Button size="sm" variant="danger" onClick={() => setConfirmDeleteWGIP(e['.id'])} icon="🗑">Remove</Button>,
+              <IconButton icon={<Icons.Trash size={14} />} label="Futa IP" variant="danger" onClick={() => setConfirmDeleteWGIP(e['.id'])} />,
             ])} emptyMessage="Hakuna Walled Garden IP entries" />
         </Card>
       )}
@@ -1444,10 +1595,10 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         <Card>
           <CardHeader title={`Cookies (${d?.count || 0})`}
             action={(d?.count || 0) > 0
-              ? <Button size="sm" variant="danger" onClick={() => setConfirmClearCookies(true)} icon="🗑">Clear All</Button>
+              ? <Button size="sm" variant="danger" onClick={() => setConfirmClearCookies(true)} icon={<Icons.Trash size={13} />}>Clear All</Button>
               : undefined} />
-          <div style={{ padding: '8px 16px', background: '#fff7ed', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#92400e' }}>
-            🍪 Login cookies — ruhusu mtumiaji kuingia <strong>bila password</strong> tena
+          <div style={{ padding: '8px 16px', background: '#fff7ed', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icons.Cookie size={13} /> Login cookies — ruhusu mtumiaji kuingia <strong>bila password</strong> tena
           </div>
           <Table headers={['User', 'MAC Address', 'IP Address', 'Expires At', '']}
             rows={(d?.cookies || []).map((c: any) => [
@@ -1455,7 +1606,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <code style={{ fontSize: 11 }}>{c['mac-address'] || '—'}</code>,
               <code style={{ fontSize: 11 }}>{c.address || '—'}</code>,
               c['expires-at'] || '—',
-              <Button size="sm" variant="danger" onClick={() => setConfirmDeleteCookie(c['.id'])} icon="🗑">Remove</Button>,
+              <IconButton icon={<Icons.Trash size={14} />} label="Futa Cookie" variant="danger" onClick={() => setConfirmDeleteCookie(c['.id'])} />,
             ])} emptyMessage="Hakuna cookies" />
         </Card>
       )}
@@ -1463,9 +1614,9 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 10. SCHEDULER */}
       {!loading && tab === 'scheduler' && (
         <Card>
-          <CardHeader title={`Scheduler (${(d?.schedulers || []).length})`} action={<Button size="sm" onClick={openAddScheduler} icon="➕">Add Schedule</Button>} />
-          <div style={{ padding: '8px 16px', background: '#f0fdf4', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#166534' }}>
-            ⏰ Bonyeza scheduler kuona na kuhariri script yake kamili
+          <CardHeader title={`Scheduler (${(d?.schedulers || []).length})`} action={<Button size="sm" onClick={openAddScheduler} icon={<Icons.Plus size={13} />}>Add Schedule</Button>} />
+          <div style={{ padding: '8px 16px', background: '#f0fdf4', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Icons.Clock size={13} /> Bonyeza scheduler kuona na kuhariri script yake kamili
           </div>
           <Table
             headers={['Name', 'Start Date', 'Start Time', 'Interval', 'Run Count', 'Next Run', 'Status', '']}
@@ -1480,12 +1631,10 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <span style={{ fontWeight: 700, color: (s['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)', fontSize: 13 }}>{s['run-count'] || '0'}</span>,
               s['next-run'] ? <span style={{ fontSize: 11, color: 'var(--gray-600)' }}>{s['next-run']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
               <Badge text={s.disabled === 'true' ? 'Disabled' : 'Running'} color={s.disabled === 'true' ? 'red' : 'green'} />,
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Button size="sm" variant="ghost" onClick={() => openEditScheduler(s)} icon="✏️">Edit</Button>
-                <Button size="sm" variant={s.disabled === 'true' ? 'success' : 'warning'} onClick={() => handleToggleScheduler(s)}>
-                  {s.disabled === 'true' ? '▶' : '⏸'}
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => setConfirmDeleteScheduler(s['.id'])} icon="🗑">Del</Button>
+              <div style={{ display: 'flex', gap: 2 }}>
+                <IconButton icon={<Icons.Edit size={14} />} label="Hariri Scheduler" onClick={() => openEditScheduler(s)} />
+                <IconButton icon={s.disabled === 'true' ? <Icons.Play size={13} /> : <Icons.Pause size={13} />} label={s.disabled === 'true' ? 'Washa (Enable)' : 'Zima (Disable)'} variant={s.disabled === 'true' ? 'success' : 'warning'} onClick={() => handleToggleScheduler(s)} />
+                <IconButton icon={<Icons.Trash size={14} />} label="Futa Scheduler" variant="danger" onClick={() => setConfirmDeleteScheduler(s['.id'])} />
               </div>,
             ])}
             emptyMessage="Hakuna schedulers"
@@ -1529,7 +1678,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             <Input label="Comment (optional)" placeholder="Jina la mteja" value={newUser.comment} onChange={(e: any) => setNewUser({ ...newUser, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddUser(false)}>{t('cancel')}</Button>
-              <Button onClick={handleAddUser} disabled={profilesLoading} icon="➕">{t('save')}</Button>
+              <Button onClick={handleAddUser} disabled={profilesLoading} icon={<Icons.Plus size={13} />}>{t('save')}</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1553,7 +1702,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             <Input label="Comment (optional)" placeholder="Maelezo" value={newBinding.comment} onChange={(e: any) => setNewBinding({ ...newBinding, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddBinding(false)}>{t('cancel')}</Button>
-              <Button onClick={handleAddBinding} icon="➕">Add Binding</Button>
+              <Button onClick={handleAddBinding} icon={<Icons.Plus size={13} />}>Add Binding</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1575,7 +1724,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             <Input label="Comment (optional)" placeholder="Maelezo" value={newWG.comment} onChange={(e: any) => setNewWG({ ...newWG, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddWG(false)}>{t('cancel')}</Button>
-              <Button onClick={handleAddWG} icon="➕">Add Entry</Button>
+              <Button onClick={handleAddWG} icon={<Icons.Plus size={13} />}>Add Entry</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1597,7 +1746,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             <Input label="Comment (optional)" placeholder="Maelezo" value={newWGIP.comment} onChange={(e: any) => setNewWGIP({ ...newWGIP, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddWGIP(false)}>{t('cancel')}</Button>
-              <Button onClick={handleAddWGIP} icon="➕">Add IP</Button>
+              <Button onClick={handleAddWGIP} icon={<Icons.Plus size={13} />}>Add IP</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1647,7 +1796,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <textarea value={newScheduler.on_event} onChange={(e: any) => setNewScheduler({ ...newScheduler, on_event: e.target.value })}
                 placeholder={`# Mfano:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`} style={textareaStyle} />
               <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#a5b4fc' }}>
-                💡 Mifano:
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icons.Bulb size={12} /> Mifano:</span>
                 <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {[{ l: 'Log message', v: ':log info "Scheduler imefanya kazi"' }, { l: 'Futa used users', v: '/ip hotspot user remove [find comment~"used"]' }, { l: 'Reboot router', v: '/system reboot' }].map((ex, i) => (
                     <button key={i} onClick={() => setNewScheduler({ ...newScheduler, on_event: ex.v })}
@@ -1662,17 +1811,17 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <label style={labelStyle}>Hali ya Awali</label>
               <div style={{ display: 'flex', gap: 8 }}>
-                {[{ v: 'false', l: '▶ Enabled' }, { v: 'true', l: '⏸ Disabled' }].map(opt => (
+                {[{ v: 'false', l: 'Enabled', Ico: Icons.Play }, { v: 'true', l: 'Disabled', Ico: Icons.Pause }].map(opt => (
                   <button key={opt.v} onClick={() => setNewScheduler({ ...newScheduler, disabled: opt.v })}
-                    style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid', borderColor: newScheduler.disabled === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: newScheduler.disabled === opt.v ? 'var(--primary-light)' : '#fff', color: newScheduler.disabled === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                    {opt.l}
+                    style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid', borderColor: newScheduler.disabled === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: newScheduler.disabled === opt.v ? 'var(--primary-light)' : '#fff', color: newScheduler.disabled === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <opt.Ico size={12} /> {opt.l}
                   </button>
                 ))}
               </div>
             </div>
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddScheduler(false)}>{t('cancel')}</Button>
-              <Button onClick={handleSaveScheduler} icon={editScheduler ? '💾' : '➕'}>{editScheduler ? 'Sasisha' : 'Ongeza Scheduler'}</Button>
+              <Button onClick={handleSaveScheduler} icon={editScheduler ? <Icons.Save size={13} /> : <Icons.Plus size={13} />}>{editScheduler ? 'Sasisha' : 'Ongeza Scheduler'}</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1700,35 +1849,40 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         @keyframes modalIn { from { opacity:0; transform:scale(0.95) } to { opacity:1; transform:scale(1) } }
         @keyframes livepulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
         @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
+        @keyframes tooltipIn { from { opacity:0; transform:translate(-50%,2px) } to { opacity:1; transform:translate(-50%,0) } }
+
+        @media (max-width: 640px) {
+          .card-header-row { flex-direction: column; align-items: stretch !important; }
+        }
       `}</style>
     </div>
   )
 }
 
 // ── FEATURE LABELS ────────────────────────────────────────
-const FEATURE_LABELS: Record<string, { label: string; icon: string; desc: string }> = {
-  servers:          { label: 'Servers',          icon: '🖥',  desc: 'Ona hotspot servers' },
-  server_profiles:  { label: 'Server Profiles',  icon: '📋',  desc: 'Ona server profiles' },
-  users:            { label: 'Users',            icon: '👤',  desc: 'Simamia hotspot users' },
-  active:           { label: 'Active Sessions',  icon: '🟢',  desc: 'Ona na kata sessions' },
-  hosts:            { label: 'Hosts',            icon: '💻',  desc: 'Vifaa vilivyounganika' },
-  ip_bindings:      { label: 'IP Bindings',      icon: '🔗',  desc: 'Simamia IP bindings' },
-  walled_garden:    { label: 'Walled Garden',    icon: '🌐',  desc: 'Tovuti bila login (HTTP)' },
-  walled_garden_ip: { label: 'Walled Garden IP', icon: '🌍',  desc: 'IPs bila login (HTTPS)' },
-  cookies:          { label: 'Cookies',          icon: '🍪',  desc: 'Simamia login cookies' },
-  scheduler:        { label: 'Scheduler',        icon: '⏰',  desc: 'Scripts za wakati maalum' },
-  terminal:         { label: 'Terminal',         icon: '🖥️',  desc: 'Run commands moja kwa moja' },
+const FEATURE_LABELS: Record<string, { label: string; icon: ReactNode; desc: string }> = {
+  servers:          { label: 'Servers',          icon: <Icons.Server size={16} />,   desc: 'Ona hotspot servers' },
+  server_profiles:  { label: 'Server Profiles',  icon: <Icons.Clipboard size={16} />, desc: 'Ona server profiles' },
+  users:            { label: 'Users',            icon: <Icons.User size={16} />,      desc: 'Simamia hotspot users' },
+  active:           { label: 'Active Sessions',  icon: <Icons.Circle size={10} />,    desc: 'Ona na kata sessions' },
+  hosts:            { label: 'Hosts',            icon: <Icons.Monitor size={16} />,   desc: 'Vifaa vilivyounganika' },
+  ip_bindings:      { label: 'IP Bindings',      icon: <Icons.Link size={16} />,      desc: 'Simamia IP bindings' },
+  walled_garden:    { label: 'Walled Garden',    icon: <Icons.Globe size={16} />,     desc: 'Tovuti bila login (HTTP)' },
+  walled_garden_ip: { label: 'Walled Garden IP', icon: <Icons.Globe2 size={16} />,    desc: 'IPs bila login (HTTPS)' },
+  cookies:          { label: 'Cookies',          icon: <Icons.Cookie size={16} />,    desc: 'Simamia login cookies' },
+  scheduler:        { label: 'Scheduler',        icon: <Icons.Clock size={16} />,     desc: 'Scripts za wakati maalum' },
+  terminal:         { label: 'Terminal',         icon: <Icons.Terminal size={16} />,  desc: 'Run commands moja kwa moja' },
 }
 
 function RouterCard({ router, onSelect }: { router: any; onSelect: () => void }) {
   const { t } = useLang()
   return (
     <div onClick={onSelect}
-      style={{ background: '#fff', borderRadius: 14, padding: '1.25rem', border: `2px solid ${router.is_online ? 'var(--success)' : 'var(--gray-200)'}`, cursor: 'pointer', transition: 'all 0.2s', boxShadow: 'var(--card-shadow)' }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontSize: 26 }}>📡</span>
+      style={{ background: '#fff', borderRadius: 14, padding: '1.25rem', border: `2px solid ${router.is_online ? 'var(--success)' : 'var(--gray-200)'}`, cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease', boxShadow: 'var(--card-shadow)' }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 24px rgba(0,0,0,0.1)' }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.boxShadow = 'var(--card-shadow)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, color: 'var(--primary)' }}>
+        <Icons.Router size={24} />
         <Badge text={router.is_online ? t('online') : t('offline')} color={router.is_online ? 'green' : 'red'} />
       </div>
       <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{router.name}</h3>
@@ -1776,12 +1930,12 @@ export function ClientMikroTikPage() {
               ? <div style={{ textAlign: 'center', padding: '3rem' }}><Spinner size={32} /></div>
               : allowedTabs.length === 0
                 ? <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--gray-400)' }}>
-                    <div style={{ fontSize: 48, marginBottom: 12 }}>🔒</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Icons.Lock size={40} /></div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Huna ruhusa ya MikroTik Manager</div>
                     <div style={{ fontSize: 13 }}>Wasiliana na admin kukupa ruhusa.</div>
                   </div>
                 : routers.length === 0
-                  ? <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--gray-400)' }}><div style={{ fontSize: 40, marginBottom: 8 }}>📡</div>Hakuna routers</div>
+                  ? <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--gray-400)' }}><div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Router size={32} /></div>Hakuna routers</div>
                   : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '1rem' }}>
                       {routers.map(r => <RouterCard key={r.id} router={r} onSelect={() => setSelectedRouter(r.id)} />)}
                     </div>
@@ -1790,7 +1944,7 @@ export function ClientMikroTikPage() {
         ) : (
           <>
             <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon="←">Rudi</Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>Rudi</Button>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{routers.find(r => r.id === selectedRouter)?.name}</span>
             </div>
             <MikroTikManager routerId={selectedRouter} allowedTabs={allowedTabs} />
@@ -1826,7 +1980,7 @@ export function AdminMikroTikPage() {
         ) : (
           <>
             <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon="←">Rudi</Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>Rudi</Button>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{routers.find(r => r.id === selectedRouter)?.name}</span>
               <span style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}>{routers.find(r => r.id === selectedRouter)?.client_name}</span>
             </div>
@@ -1865,15 +2019,21 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--gray-100)', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>🔐 MikroTik Permissions</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}><Icons.Shield size={15} /> MikroTik Permissions</h3>
               <p style={{ fontSize: 12, color: 'var(--gray-500)' }}>{client.business_name}</p>
             </div>
-            <button onClick={onClose} style={{ background: 'var(--gray-100)', border: 'none', borderRadius: 7, width: 28, height: 28, cursor: 'pointer', fontSize: 14 }}>✕</button>
+            <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
           </div>
           {alert && <Alert type={alert.type} message={alert.msg} />}
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button onClick={() => setPermissions(ALL_FEATURES)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#166534', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>✅ Chagua Zote</button>
-            <button onClick={() => setPermissions([])} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #fee2e2', background: '#fef2f2', color: '#991b1b', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>❌ Futa Zote</button>
+            <button onClick={() => setPermissions(ALL_FEATURES)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#166534', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'transform 0.1s' }}
+              onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}>
+              <Icons.Check size={12} /> Chagua Zote
+            </button>
+            <button onClick={() => setPermissions([])} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #fee2e2', background: '#fef2f2', color: '#991b1b', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'transform 0.1s' }}
+              onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}>
+              <Icons.X size={12} /> Futa Zote
+            </button>
           </div>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1883,10 +2043,10 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
             return (
               <div key={key} onClick={() => toggle(key)}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${checked ? '#6366f1' : 'var(--gray-200)'}`, background: checked ? '#eef2ff' : '#fafafa', cursor: 'pointer', transition: 'all 0.15s' }}>
-                <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${checked ? '#6366f1' : 'var(--gray-300)'}`, background: checked ? '#6366f1' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {checked && <span style={{ color: '#fff', fontSize: 12, fontWeight: 900 }}>✓</span>}
+                <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${checked ? '#6366f1' : 'var(--gray-300)'}`, background: checked ? '#6366f1' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s, border-color 0.15s' }}>
+                  {checked && <span style={{ color: '#fff', display: 'flex' }}><Icons.Check size={12} /></span>}
                 </div>
-                <span style={{ fontSize: 18 }}>{f.icon}</span>
+                <span style={{ display: 'flex', color: checked ? '#4338ca' : 'var(--gray-500)' }}>{f.icon}</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: checked ? '#4338ca' : 'var(--gray-700)' }}>{f.label}</div>
                   <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{f.desc}</div>
@@ -1899,7 +2059,7 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
           <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{permissions.length} / {ALL_FEATURES.length} features zimechaguliwa</span>
           <div style={{ display: 'flex', gap: 10 }}>
             <Button variant="ghost" onClick={onClose}>Funga</Button>
-            <Button onClick={handleSave} disabled={saving} icon="💾">{saving ? 'Inahifadhi...' : 'Hifadhi'}</Button>
+            <Button onClick={handleSave} disabled={saving} icon={<Icons.Save size={13} />}>{saving ? 'Inahifadhi...' : 'Hifadhi'}</Button>
           </div>
         </div>
       </div>
