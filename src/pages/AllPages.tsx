@@ -20,24 +20,159 @@ const nc: Record<string, any> = { vodacom: 'green', tigo: 'blue', airtel: 'red',
 const sc: Record<string, any> = { completed: 'green', failed: 'red', processing: 'yellow', pending: 'gray' }
 const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
 
+// ── GLOBAL STYLES ─────────────────────────────────────────
+const GLOBAL_STYLES = `
+  @keyframes apFadeUp    { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:translateY(0) } }
+  @keyframes apFadeIn    { from { opacity:0 } to { opacity:1 } }
+  @keyframes apPulse     { 0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.4)} 60%{box-shadow:0 0 0 6px rgba(16,185,129,0)} }
+  @keyframes apSpin      { to { transform:rotate(360deg) } }
+  @keyframes apShimmer   { 0%,100%{opacity:.5} 50%{opacity:1} }
+  @keyframes cdShimmer   { 0%,100%{opacity:.5} 50%{opacity:1} }
+  @keyframes cdFadeSlide { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+
+  .ap-tip-wrap { position:relative; display:inline-flex; }
+  .ap-tip {
+    position:absolute; bottom:calc(100% + 7px); left:50%;
+    transform:translateX(-50%) translateY(4px);
+    white-space:nowrap; background:#1e293b; color:#fff;
+    font-size:11px; font-weight:600; padding:4px 10px;
+    border-radius:7px; pointer-events:none; z-index:100;
+    box-shadow:0 4px 14px rgba(0,0,0,0.22);
+    opacity:0; transition:opacity 0.15s ease, transform 0.15s ease;
+  }
+  .ap-tip::after {
+    content:''; position:absolute; top:100%; left:50%;
+    transform:translateX(-50%);
+    border:5px solid transparent; border-top-color:#1e293b;
+  }
+  .ap-tip-wrap:hover .ap-tip,
+  .ap-tip-wrap:focus-within .ap-tip {
+    opacity:1 !important; transform:translateX(-50%) translateY(0) !important;
+  }
+
+  .ap-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:34px; height:34px; border-radius:9px; border:none;
+    cursor:pointer; background:#f8fafc; color:#64748b;
+    transition:background 0.15s, color 0.15s, transform 0.12s, box-shadow 0.15s;
+  }
+  .ap-btn:hover { transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,0.13); }
+  .ap-btn:active { transform:scale(0.92); box-shadow:none; }
+  .ap-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+  .ap-btn:focus-visible { outline:2px solid #6366f1; outline-offset:2px; }
+  .ap-btn-test:hover    { background:#ecfdf5; color:#10b981; }
+  .ap-btn-edit:hover    { background:#eff6ff; color:#3b82f6; }
+  .ap-btn-delete:hover  { background:#fef2f2; color:#ef4444; }
+  .ap-btn-pw:hover      { background:#fdf4ff; color:#a855f7; }
+  .ap-btn-money:hover   { background:#f0fdf4; color:#059669; }
+  .ap-btn-mikrotik:hover{ background:#fff7ed; color:#f97316; }
+  .ap-btn-toggle-on:hover  { background:#fefce8; color:#ca8a04; }
+  .ap-btn-toggle-off:hover { background:#f0fdf4; color:#16a34a; }
+  .ap-btn-sync:hover    { background:#f0f9ff; color:#0284c7; }
+
+  .ap-tr { transition:background 0.12s; animation:apFadeUp 0.3s ease both; }
+  .ap-tr:hover { background:#f8fafc; }
+  .ap-tr td { padding:12px 16px; border-bottom:1px solid #f1f5f9; font-size:13px; vertical-align:middle; }
+  .ap-tr:last-child td { border-bottom:none; }
+
+  .ap-card-hover { transition:box-shadow 0.2s, transform 0.2s; }
+  .ap-card-hover:hover { box-shadow:0 8px 24px rgba(0,0,0,0.1); transform:translateY(-3px); }
+
+  .ap-table-wrap { display:block; }
+  .ap-cards-wrap { display:none; }
+  .ap-cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; }
+
+  @media (max-width:700px) {
+    .ap-table-wrap { display:none !important; }
+    .ap-cards-wrap { display:block !important; }
+  }
+
+  .dash-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.5rem; }
+  .dash-bottom { display:grid; grid-template-columns:2fr 1fr; gap:1.25rem; }
+  .banner-inner { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; }
+  .lipa-row { display:flex; flex-wrap:wrap; gap:0.75rem 1.5rem; margin-bottom:16px; }
+  .steps-box { background:rgba(0,0,0,0.2); border-radius:12px; padding:12px 14px; border:1px solid rgba(99,102,241,0.15); }
+  .balance-box { background:rgba(0,0,0,0.25); border-radius:14px; padding:1.1rem 1.4rem; border:1px solid rgba(99,102,241,0.2); min-width:160px; text-align:right; align-self:flex-start; }
+
+  @media (max-width:768px) {
+    .dash-grid { grid-template-columns:repeat(2,1fr) !important; }
+    .dash-grid > div:last-child { grid-column:span 2; }
+    .dash-bottom { grid-template-columns:1fr !important; }
+    .banner-inner { flex-direction:column !important; }
+    .balance-box { width:100% !important; text-align:left !important; min-width:unset !important; }
+    .lipa-row { flex-direction:column !important; gap:0.5rem !important; }
+  }
+  @media (max-width:480px) {
+    .dash-grid { grid-template-columns:1fr 1fr !important; gap:0.6rem !important; }
+  }
+`
+
 // ── SVG ICONS ─────────────────────────────────────────────
 const Icons = {
-  Router: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="7" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/><circle cx="8.5" cy="14.5" r="1" fill="currentColor"/><circle cx="12" cy="14.5" r="1" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1" fill="currentColor"/></svg>,
-  Package: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>,
-  Payment: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
-  Voucher: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3"/><path d="M2 15v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3"/><path d="M20 9a2 2 0 0 0 0 6"/><path d="M4 9a2 2 0 0 1 0 6"/></svg>,
-  Revenue: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
-  Check: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
-  Wifi: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>,
-  Phone: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l1.09-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>,
-  Money: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
-  Alert: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
-  Users: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-  Online: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
-  Diamond: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>,
-  Clock: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-  Device: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
+  Router:    () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="7" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/><circle cx="8.5" cy="14.5" r="1" fill="currentColor"/><circle cx="12" cy="14.5" r="1" fill="currentColor"/><circle cx="15.5" cy="14.5" r="1" fill="currentColor"/></svg>,
+  Package:   () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>,
+  Payment:   () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
+  Voucher:   () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3"/><path d="M2 15v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3"/><path d="M20 9a2 2 0 0 0 0 6"/><path d="M4 9a2 2 0 0 1 0 6"/></svg>,
+  Revenue:   () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+  Check:     () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  Money:     () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  AlertIco:  () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  Users:     () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  Online:    () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  Diamond:   () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9z"/><path d="M11 3L8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>,
+  Clock:     () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  Device:    () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
+  // Action icons
+  IcoTest:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  IcoEdit:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  IcoDelete: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
+  IcoSpin:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation:'apSpin 0.8s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>,
+  IcoLock:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+  IcoBal:    () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  IcoMikro:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
+  IcoOn:     () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64A9 9 0 1 1 5.64 17.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>,
+  IcoPlus:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  IcoSync:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>,
+  IcoActive: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  IcoUsed:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
+  IcoExpired:() => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
 }
+
+// ── REUSABLE: Tooltip wrapper ──────────────────────────────
+const Tip = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <span className="ap-tip-wrap">
+    {children}
+    <span className="ap-tip">{label}</span>
+  </span>
+)
+
+// ── REUSABLE: Action icon button ───────────────────────────
+const ABtn = ({ icon: Ico, tip, onClick, cls = '', disabled = false, spinning = false }: {
+  icon: React.ElementType; tip: string; onClick?: () => void; cls?: string; disabled?: boolean; spinning?: boolean
+}) => (
+  <Tip label={tip}>
+    <button className={`ap-btn ${cls}`} onClick={onClick} disabled={disabled} aria-label={tip}>
+      {spinning ? <Icons.IcoSpin /> : <Ico />}
+    </button>
+  </Tip>
+)
+
+// ── STATUS DOT with router icon ───────────────────────────
+const StatusDot = ({ online, testing = false }: { online: boolean; testing?: boolean }) => (
+  <div style={{ position: 'relative', display: 'inline-flex', width: 34, height: 34, borderRadius: 9, background: online ? '#ecfdf5' : '#fef2f2', color: online ? '#10b981' : '#ef4444', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <Icons.Router />
+    <div style={{ position: 'absolute', bottom: -2, right: -2, width: 9, height: 9, borderRadius: '50%', background: testing ? '#f59e0b' : online ? '#10b981' : '#ef4444', border: '2px solid #fff', animation: online && !testing ? 'apPulse 2s ease-in-out infinite' : 'none' }} />
+  </div>
+)
+
+// ── PRIMARY BUTTON helper ─────────────────────────────────
+const PrimaryBtn = ({ onClick, children, disabled = false }: { onClick: () => void; children: React.ReactNode; disabled?: boolean }) => (
+  <button onClick={onClick} disabled={disabled} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 9, border: 'none', background: disabled ? '#c7d2fe' : 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: disabled ? 'not-allowed' : 'pointer', transition: 'opacity 0.15s, transform 0.12s' }}
+    onMouseEnter={e => { if (!disabled) (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}>
+    {children}
+  </button>
+)
 
 const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -104,9 +239,7 @@ function VoucherPrintCard({ voucher, business_name, theme }: { voucher: any; bus
             <span style={{ fontSize: 9, fontWeight: 700, color: '#555', letterSpacing: 1 }}>PACKAGE</span>
             <span style={{ fontSize: 10, fontWeight: 700, color: theme.bg }}>{packageName}</span>
           </div>
-          {voucher.customer_phone && (
-            <div style={{ fontSize: 9, color: '#666', marginTop: 3 }}>{voucher.customer_phone}</div>
-          )}
+          {voucher.customer_phone && <div style={{ fontSize: 9, color: '#666', marginTop: 3 }}>{voucher.customer_phone}</div>}
         </div>
         <div style={{ borderTop: '1.5px dashed #c9a227', margin: '6px 0' }} />
         <div style={{ background: '#fff', border: '2px solid #c9a227', borderRadius: 10, padding: '7px 10px', textAlign: 'center', marginBottom: 7, boxShadow: '0 2px 8px rgba(201,162,39,0.15)' }}>
@@ -140,6 +273,7 @@ export function AdminDashboard() {
   const s = data?.stats
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
         <PageHeader title={t('dashboard')} subtitle={t('summary')} action={<span style={{ fontSize: 12, color: 'var(--gray-500)', background: '#fff', padding: '6px 12px', borderRadius: 8, border: '1px solid var(--gray-200)' }}>{new Date().toLocaleDateString('sw-TZ', { day: 'numeric', month: 'long', year: 'numeric' })}</span>} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
@@ -175,7 +309,7 @@ export function AdminDashboard() {
                 { label: `GSM Devices (${s?.active_devices || 0})`, ok: (s?.active_devices || 0) > 0 },
                 { label: `VPN Routers (${s?.online_routers || 0})`, ok: (s?.online_routers || 0) > 0 },
               ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', animation: `apFadeUp 0.3s ease ${i * 60}ms both` }}>
                   <span style={{ fontSize: 13, color: 'var(--gray-600)', fontWeight: 500 }}>{item.label}</span>
                   <Badge text={item.ok ? 'OK' : 'Issue'} color={item.ok ? 'green' : 'red'} />
                 </div>
@@ -209,6 +343,7 @@ export function AdminClients() {
   const [clients, setClients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
   const [showBalance, setShowBalance] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
@@ -218,21 +353,44 @@ export function AdminClients() {
   const [balanceAmount, setBalanceAmount] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [form, setForm] = useState({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' })
+  const [editForm, setEditForm] = useState({ business_name: '', email: '', phone: '', commission_rate: '10' })
 
-  const fetch = () => { setLoading(true); api.get('/clients/').then(r => { setClients(r.data.results || r.data); setLoading(false) }) }
-  useEffect(() => { fetch() }, [])
+  const fetchClients = () => { setLoading(true); api.get('/clients/').then(r => { setClients(r.data.results || r.data); setLoading(false) }) }
+  useEffect(() => { fetchClients() }, [])
 
   const handleCreate = async () => {
     if (!form.business_name || !form.username || !form.password) { show('error', 'Jaza sehemu zote'); return }
     setSaving(true)
-    try { await api.post('/clients/', form); show('success', `${form.business_name} ameundwa!`); setShowCreate(false); setForm({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' }); fetch() }
-    catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
+    try {
+      await api.post('/clients/', form)
+      show('success', `${form.business_name} ameundwa!`)
+      setShowCreate(false)
+      setForm({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' })
+      fetchClients()
+    } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
+    finally { setSaving(false) }
+  }
+
+  const openEdit = (c: any) => {
+    setSelected(c)
+    setEditForm({ business_name: c.business_name, email: c.email || '', phone: c.phone || '', commission_rate: String(c.commission_rate) })
+    setShowEdit(true)
+  }
+
+  const handleEdit = async () => {
+    if (!selected) return
+    setSaving(true)
+    try {
+      await api.patch(`/clients/${selected.id}/`, editForm)
+      show('success', `${editForm.business_name} imesasishwa!`)
+      setShowEdit(false); fetchClients()
+    } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
     finally { setSaving(false) }
   }
 
   const handleBalance = async () => {
     if (!selected || !balanceAmount) return
-    try { const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount }); show('success', r.data.message); setShowBalance(false); setBalanceAmount(''); fetch() }
+    try { const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount }); show('success', r.data.message); setShowBalance(false); setBalanceAmount(''); fetchClients() }
     catch { show('error', t('error')) }
   }
 
@@ -243,40 +401,98 @@ export function AdminClients() {
   }
 
   const handleToggle = async (c: any, action: 'activate' | 'deactivate') => {
-    try { const r = await api.post(`/clients/${c.id}/${action}/`); show('success', r.data.message); fetch() }
+    try { const r = await api.post(`/clients/${c.id}/${action}/`); show('success', r.data.message); fetchClients() }
     catch { show('error', t('error')) }
   }
 
   const handleDelete = async () => {
     if (!selected) return
-    try { await api.delete(`/clients/${selected.id}/`); show('success', 'Imefutwa'); setShowDelete(false); setSelected(null); fetch() }
+    try { await api.delete(`/clients/${selected.id}/`); show('success', 'Imefutwa'); setShowDelete(false); setSelected(null); fetchClients() }
     catch { show('error', t('error')) }
   }
 
+  const ActionBtns = ({ c }: { c: any }) => (
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+      <ABtn icon={Icons.IcoBal}    tip={t('add_balance')}     cls="ap-btn-money"       onClick={() => { setSelected(c); setShowBalance(true) }} />
+      <ABtn icon={Icons.IcoEdit}   tip={t('edit')}            cls="ap-btn-edit"        onClick={() => openEdit(c)} />
+      <ABtn icon={Icons.IcoLock}   tip={t('change_password')} cls="ap-btn-pw"          onClick={() => { setSelected(c); setShowPassword(true) }} />
+      <ABtn icon={Icons.IcoMikro}  tip="MikroTik"             cls="ap-btn-mikrotik"    onClick={() => { setSelected(c); setShowPermissions(true) }} />
+      <ABtn icon={Icons.IcoOn}     tip={c.is_active ? t('deactivate') : t('activate')} cls={c.is_active ? 'ap-btn-toggle-on' : 'ap-btn-toggle-off'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')} />
+      <ABtn icon={Icons.IcoDelete} tip={t('delete')}          cls="ap-btn-delete"      onClick={() => { setSelected(c); setShowDelete(true) }} />
+    </div>
+  )
+
+  const ClientCard = ({ c }: { c: any }) => (
+    <div className="ap-card-hover" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', animation: 'apFadeUp 0.3s ease both' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{c.business_name}</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{c.username}{c.email ? ` · ${c.email}` : ''}</div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+          <span style={{ fontFamily: 'monospace', fontWeight: 800, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 5, fontSize: 12 }}>{c.identifier}</span>
+          <Badge text={c.is_active ? t('active') : t('inactive')} color={c.is_active ? 'green' : 'red'} />
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6b7280', marginBottom: 12 }}>
+        <span>{t('commission_rate')}: <strong>{c.commission_rate}%</strong></span>
+        <span style={{ fontWeight: 700, color: '#059669' }}>TZS {Number(c.balance).toLocaleString()}</span>
+      </div>
+      <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 10 }}><ActionBtns c={c} /></div>
+    </div>
+  )
+
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title={t('clients')} subtitle={`${clients.length} wateja`} action={<Button onClick={() => setShowCreate(true)} icon="➕">{t('add_client')}</Button>} />
-        {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-        <Card>
-          <Table loading={loading} headers={[t('business_name'), 'ID', t('commission_rate'), t('balance'), t('status'), '']}
-            rows={clients.map(c => [
-              <div><div style={{ fontWeight: 600, fontSize: 13 }}>{c.business_name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{c.username} {c.email ? `· ${c.email}` : ''}</div></div>,
-              <span style={{ fontFamily: 'monospace', fontWeight: 800, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 5, fontSize: 13, letterSpacing: '0.1em' }}>{c.identifier}</span>,
-              `${c.commission_rate}%`,
-              <span style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>TZS {Number(c.balance).toLocaleString()}</span>,
-              <Badge text={c.is_active ? t('active') : t('inactive')} color={c.is_active ? 'green' : 'red'} />,
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowBalance(true) }}>{t('add_balance')}</Button>
-                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPassword(true) }}>{t('change_password')}</Button>
-                <Button size="sm" variant="ghost" onClick={() => { setSelected(c); setShowPermissions(true) }}>MikroTik</Button>
-                <Button size="sm" variant={c.is_active ? 'warning' : 'success'} onClick={() => handleToggle(c, c.is_active ? 'deactivate' : 'activate')}>{c.is_active ? t('deactivate') : t('activate')}</Button>
-                <Button size="sm" variant="danger" onClick={() => { setSelected(c); setShowDelete(true) }}>{t('delete')}</Button>
-              </div>,
-            ])}
-            emptyMessage={t('no_clients_yet')}
-          />
-        </Card>
+        <PageHeader title={t('clients')} subtitle={`${clients.length} ${t('clients').toLowerCase()}`}
+          action={<PrimaryBtn onClick={() => setShowCreate(true)}><Icons.IcoPlus />{t('add_client')}</PrimaryBtn>}
+        />
+        {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
+
+        <div className="ap-table-wrap">
+          <Card>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                  {[t('business_name'), 'ID', t('commission_rate'), t('balance'), t('status'), ''].map((h, i) => (
+                    <th key={i} style={{ padding: '10px 16px', textAlign: i === 5 ? 'right' : 'left', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></td></tr>
+                ) : clients.map((c, idx) => (
+                  <tr key={c.id} className="ap-tr" style={{ animationDelay: `${idx * 35}ms` }}>
+                    <td>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{c.business_name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{c.username}{c.email ? ` · ${c.email}` : ''}</div>
+                    </td>
+                    <td><span style={{ fontFamily: 'monospace', fontWeight: 800, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: 5, fontSize: 12, letterSpacing: '0.1em' }}>{c.identifier}</span></td>
+                    <td style={{ color: '#6b7280' }}>{c.commission_rate}%</td>
+                    <td><span style={{ fontWeight: 700, color: '#059669', fontSize: 13 }}>TZS {Number(c.balance).toLocaleString()}</span></td>
+                    <td><Badge text={c.is_active ? t('active') : t('inactive')} color={c.is_active ? 'green' : 'red'} /></td>
+                    <td style={{ textAlign: 'right' }}><ActionBtns c={c} /></td>
+                  </tr>
+                ))}
+                {!loading && clients.length === 0 && (
+                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{t('no_clients_yet')}</td></tr>
+                )}
+              </tbody>
+            </table>
+          </Card>
+        </div>
+
+        <div className="ap-cards-wrap">
+          {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+            : clients.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{t('no_clients_yet')}</div>
+            : <div className="ap-cards-grid">{clients.map(c => <ClientCard key={c.id} c={c} />)}</div>
+          }
+        </div>
+
+        {/* CREATE */}
         <Modal open={showCreate} onClose={() => setShowCreate(false)} title={t('add_client')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('business_name')} *`} placeholder="Mama Fatuma Hotspot" value={form.business_name} onChange={(e: any) => setForm({ ...form, business_name: e.target.value })} />
@@ -296,6 +512,23 @@ export function AdminClients() {
             </FormActions>
           </div>
         </Modal>
+
+        {/* EDIT */}
+        <Modal open={showEdit} onClose={() => setShowEdit(false)} title={`${t('edit')}: ${selected?.business_name}`}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Input label={`${t('business_name')} *`} value={editForm.business_name} onChange={(e: any) => setEditForm({ ...editForm, business_name: e.target.value })} />
+            <FormRow>
+              <Input label={t('phone')} value={editForm.phone} onChange={(e: any) => setEditForm({ ...editForm, phone: e.target.value })} />
+              <Input label={t('email')} type="email" value={editForm.email} onChange={(e: any) => setEditForm({ ...editForm, email: e.target.value })} />
+            </FormRow>
+            <Input label={t('commission_rate')} type="number" value={editForm.commission_rate} onChange={(e: any) => setEditForm({ ...editForm, commission_rate: e.target.value })} />
+            <FormActions>
+              <Button variant="ghost" onClick={() => setShowEdit(false)}>{t('cancel')}</Button>
+              <Button onClick={handleEdit} disabled={saving}>{saving ? t('loading') : t('save')}</Button>
+            </FormActions>
+          </div>
+        </Modal>
+
         <Modal open={showBalance} onClose={() => setShowBalance(false)} title={`${t('add_balance')} — ${selected?.business_name}`} width={380}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: 'var(--gray-50)', borderRadius: 9, padding: '10px 14px', display: 'flex', justifyContent: 'space-between' }}>
@@ -309,6 +542,7 @@ export function AdminClients() {
             </FormActions>
           </div>
         </Modal>
+
         <Modal open={showPassword} onClose={() => setShowPassword(false)} title={`${t('change_password')} — ${selected?.business_name}`} width={380}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <Input label={t('new_password')} type="password" placeholder="••••••••" value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
@@ -318,8 +552,9 @@ export function AdminClients() {
             </FormActions>
           </div>
         </Modal>
+
         {showPermissions && selected && (
-          <MikroTikPermissionsModal client={selected} onClose={() => { setShowPermissions(false); setSelected(null) }} onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa`); fetch() }} />
+          <MikroTikPermissionsModal client={selected} onClose={() => { setShowPermissions(false); setSelected(null) }} onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa`); fetchClients() }} />
         )}
         <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete} title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
       </div>
@@ -334,36 +569,86 @@ export function AdminRouters() {
   const [routers, setRouters] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [testing, setTesting] = useState<number | null>(null)
-  const fetch = () => { setLoading(true); api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) }) }
-  useEffect(() => { fetch() }, [])
+
+  const fetchRouters = () => { setLoading(true); api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) }) }
+  useEffect(() => { fetchRouters() }, [])
+
   const testConn = async (id: number) => {
     setTesting(id)
-    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message); fetch() }
+    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message); fetchRouters() }
     catch { show('error', t('router_offline')) }
     finally { setTesting(null) }
   }
+
+  const RouterCardAdmin = ({ r }: { r: any }) => {
+    const isOnline = r.is_online; const isTesting = testing === r.id
+    return (
+      <div className="ap-card-hover" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', animation: 'apFadeUp 0.3s ease both' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+          <div style={{ display: 'flex', gap: 10, minWidth: 0 }}>
+            <StatusDot online={isOnline} testing={isTesting} />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{r.name}</div>
+              <div style={{ marginTop: 2 }}><Badge text={r.client_name} color="indigo" /></div>
+            </div>
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, flexShrink: 0, background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2', color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b' }}>
+            {isTesting ? t('testing') : isOnline ? t('online') : t('offline')}
+          </span>
+        </div>
+        <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 12 }}>
+          <code>{r.host}</code> :{r.api_port} · {r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}
+        </div>
+        <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 10 }}>
+          <ABtn icon={Icons.IcoTest} tip={t('test_connection')} cls="ap-btn-test" spinning={isTesting} disabled={isTesting} onClick={() => testConn(r.id)} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
         <PageHeader title={t('routers')} subtitle={t('all_routers_subtitle')} />
-        {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-        <Card>
-          <Table loading={loading} headers={[t('router_name'), t('client'), 'Host', 'Port', t('status'), t('last_seen'), '']}
-            rows={routers.map(r => [
-              <div style={{ fontWeight: 600, fontSize: 13 }}>{r.name}</div>,
-              <Badge text={r.client_name} color="indigo" />,
-              <code style={{ fontSize: 11, color: 'var(--gray-500)' }}>{r.host}</code>,
-              r.api_port,
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: r.is_online ? '#10b981' : '#ef4444', boxShadow: r.is_online ? '0 0 0 3px #d1fae5' : 'none' }} />
-                <Badge text={r.is_online ? t('online') : t('offline')} color={r.is_online ? 'green' : 'red'} />
-              </div>,
-              r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never'),
-              <Button size="sm" variant="ghost" onClick={() => testConn(r.id)} disabled={testing === r.id}>{testing === r.id ? t('testing') : 'Test'}</Button>,
-            ])}
-            emptyMessage={t('no_routers')}
-          />
-        </Card>
+        {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
+        <div className="ap-table-wrap">
+          <Card>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                  {[t('router_name'), t('client'), 'Host', 'Port', t('status'), t('last_seen'), ''].map((h, i) => (
+                    <th key={i} style={{ padding: '10px 16px', textAlign: i === 6 ? 'right' : 'left', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></td></tr>
+                  : routers.map((r, idx) => {
+                    const isOnline = r.is_online; const isTesting = testing === r.id
+                    return (
+                      <tr key={r.id} className="ap-tr" style={{ animationDelay: `${idx * 40}ms` }}>
+                        <td><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><StatusDot online={isOnline} testing={isTesting} /><span style={{ fontWeight: 600 }}>{r.name}</span></div></td>
+                        <td><Badge text={r.client_name} color="indigo" /></td>
+                        <td><code style={{ fontSize: 11, color: 'var(--gray-500)', background: '#f8fafc', padding: '2px 7px', borderRadius: 5 }}>{r.host}</code></td>
+                        <td style={{ color: '#6b7280' }}>{r.api_port}</td>
+                        <td><span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2', color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b' }}>{isTesting ? t('testing') : isOnline ? t('online') : t('offline')}</span></td>
+                        <td style={{ color: '#9ca3af', fontSize: 12 }}>{r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}</td>
+                        <td style={{ textAlign: 'right' }}><ABtn icon={Icons.IcoTest} tip={t('test_connection')} cls="ap-btn-test" spinning={isTesting} disabled={isTesting} onClick={() => testConn(r.id)} /></td>
+                      </tr>
+                    )
+                  })}
+                {!loading && routers.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</td></tr>}
+              </tbody>
+            </table>
+          </Card>
+        </div>
+        <div className="ap-cards-wrap">
+          {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+            : routers.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</div>
+            : <div className="ap-cards-grid">{routers.map(r => <RouterCardAdmin key={r.id} r={r} />)}</div>
+          }
+        </div>
       </div>
     </Layout>
   )
@@ -378,6 +663,7 @@ export function AdminPayments() {
   useEffect(() => { Promise.all([api.get('/payments/'), api.get('/payments/summary/')]).then(([p, s]) => { setPayments(p.data.results || p.data); setSummary(s.data); setLoading(false) }) }, [])
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
         <PageHeader title={t('payments')} subtitle={t('all_payments_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
@@ -414,21 +700,30 @@ export function AdminVouchers() {
     const url = filter ? `/vouchers/?status=${filter}` : '/vouchers/'
     Promise.all([api.get(url), api.get('/vouchers/stats/')]).then(([v, s]) => { setVouchers(v.data.results || v.data); setStats(s.data); setLoading(false) })
   }, [filter])
-  const FILTERS = [{ k: '', l: t('all') }, { k: 'active', l: 'Active' }, { k: 'used', l: t('used') }, { k: 'expired', l: t('expired') }]
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
         <PageHeader title={t('vouchers')} subtitle={t('all_vouchers_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          {[{ l: t('all'), v: stats?.total || 0, c: '#6366f1' }, { l: 'Active', v: stats?.active || 0, c: '#10b981' }, { l: t('used'), v: stats?.used || 0, c: '#6b7280' }, { l: t('expired'), v: stats?.expired || 0, c: '#ef4444' }].map((s, i) => (
-            <div key={i} style={{ background: '#fff', border: '1px solid var(--gray-100)', borderRadius: 12, padding: '0.9rem', borderLeft: `4px solid ${s.c}` }}>
+          {[{ l: t('all'), v: stats?.total || 0, c: '#6366f1' }, { l: t('active'), v: stats?.active || 0, c: '#10b981' }, { l: t('used'), v: stats?.used || 0, c: '#6b7280' }, { l: t('expired'), v: stats?.expired || 0, c: '#ef4444' }].map((s, i) => (
+            <div key={i} className="ap-card-hover" style={{ background: '#fff', border: '1px solid var(--gray-100)', borderRadius: 12, padding: '0.9rem', borderLeft: `4px solid ${s.c}`, animation: `apFadeUp 0.3s ease ${i * 60}ms both` }}>
               <div style={{ fontSize: 11, color: 'var(--gray-500)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{s.l}</div>
               <div style={{ fontSize: 24, fontWeight: 800, color: s.c, marginTop: 3 }}>{s.v}</div>
             </div>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: '1rem', flexWrap: 'wrap' }}>
-          {FILTERS.map(f => <button key={f.k} onClick={() => setFilter(f.k)} style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? 'var(--primary)' : 'var(--gray-200)', background: filter === f.k ? 'var(--primary-light)' : '#fff', color: filter === f.k ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{f.l}</button>)}
+          {[
+            { k: '', l: t('all'), Ico: Icons.Voucher, c: '#6366f1' },
+            { k: 'active', l: t('active'), Ico: Icons.IcoActive, c: '#10b981' },
+            { k: 'used', l: t('used'), Ico: Icons.IcoUsed, c: '#6b7280' },
+            { k: 'expired', l: t('expired'), Ico: Icons.IcoExpired, c: '#ef4444' },
+          ].map(f => (
+            <button key={f.k} onClick={() => setFilter(f.k)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? f.c : 'var(--gray-200)', background: filter === f.k ? f.c + '15' : '#fff', color: filter === f.k ? f.c : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+              <f.Ico /> {f.l}
+            </button>
+          ))}
         </div>
         <Card>
           <Table loading={loading} headers={[t('code'), t('client'), t('packages'), t('price'), t('customer_phone'), t('status'), t('created_at')]}
@@ -459,43 +754,46 @@ export function AdminDevices() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '' })
   const NETS = [{ value: 'vodacom', label: 'Vodacom M-Pesa' }, { value: 'tigo', label: 'Tigo Pesa' }, { value: 'airtel', label: 'Airtel Money' }, { value: 'halo', label: 'HaloPesa' }]
-  const fetch = () => { setLoading(true); api.get('/devices/').then(r => { setDevices(r.data.results || r.data); setLoading(false) }) }
-  useEffect(() => { fetch() }, [])
+  const fetchDevices = () => { setLoading(true); api.get('/devices/').then(r => { setDevices(r.data.results || r.data); setLoading(false) }) }
+  useEffect(() => { fetchDevices() }, [])
   const openEdit = (d: any) => { setEditDev(d); setForm({ name: d.name, network: d.network, lipa_number: d.lipa_number, phone_number: d.phone_number, device_id: d.device_id, description: d.description || '' }); setShowModal(true) }
   const openCreate = () => { setEditDev(null); setForm({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '' }); setShowModal(true) }
   const handleSave = async () => {
     if (!form.name || !form.lipa_number || !form.phone_number || !form.device_id) { show('error', 'Jaza sehemu zote'); return }
     setSaving(true)
-    try { if (editDev) await api.patch(`/devices/${editDev.id}/`, form); else await api.post('/devices/', form); show('success', editDev ? 'Imesasishwa!' : 'Imeongezwa!'); setShowModal(false); fetch() }
+    try { if (editDev) await api.patch(`/devices/${editDev.id}/`, form); else await api.post('/devices/', form); show('success', editDev ? 'Imesasishwa!' : 'Imeongezwa!'); setShowModal(false); fetchDevices() }
     catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
     finally { setSaving(false) }
   }
   const handleDelete = async (d: any) => {
     if (!confirm(`Futa ${d.name}?`)) return
-    try { await api.delete(`/devices/${d.id}/`); show('success', 'Imefutwa'); fetch() }
+    try { await api.delete(`/devices/${d.id}/`); show('success', 'Imefutwa'); fetchDevices() }
     catch { show('error', t('error')) }
   }
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1100, margin: '0 auto' }}>
-        <PageHeader title={t('devices')} subtitle="GSM Devices — lipa namba zinasimamia hapa" action={<Button onClick={openCreate} icon="➕">{t('add_device')}</Button>} />
-        {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af' }}>
+        <PageHeader title={t('devices')} subtitle="GSM Devices — lipa namba zinasimamia hapa"
+          action={<PrimaryBtn onClick={openCreate}><Icons.IcoPlus />{t('add_device')}</PrimaryBtn>}
+        />
+        {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af', animation: 'apFadeUp 0.3s ease' }}>
           Ukibadilisha lipa namba hapa, clients wote wataona mabadiliko automatically.
         </div>
         <Card>
           <Table loading={loading} headers={[t('device_name'), t('network'), t('lipa_number'), 'SIM', 'ID', t('last_seen'), t('status'), '']}
-            rows={devices.map(d => [
-              <div><div style={{ fontWeight: 600, fontSize: 13 }}>{d.name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.description}</div></div>,
+            rows={devices.map((d, idx) => [
+              <div style={{ animation: `apFadeUp 0.3s ease ${idx * 40}ms both` }}><div style={{ fontWeight: 600, fontSize: 13 }}>{d.name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.description}</div></div>,
               <Badge text={d.network_display} color={nc[d.network] || 'gray'} />,
               <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>{d.lipa_number}</span>,
               <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{d.phone_number}</span>,
               <code style={{ fontSize: 11 }}>{d.device_id}</code>,
               d.last_seen ? new Date(d.last_seen).toLocaleString('sw-TZ') : t('never'),
               <Badge text={d.is_active ? t('active') : t('inactive')} color={d.is_active ? 'green' : 'red'} />,
-              <div style={{ display: 'flex', gap: 5 }}>
-                <Button size="sm" variant="ghost" onClick={() => openEdit(d)}>{t('edit')}</Button>
-                <Button size="sm" variant="danger" onClick={() => handleDelete(d)}>{t('delete')}</Button>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <ABtn icon={Icons.IcoEdit}   tip={t('edit')}   cls="ap-btn-edit"   onClick={() => openEdit(d)} />
+                <ABtn icon={Icons.IcoDelete} tip={t('delete')} cls="ap-btn-delete" onClick={() => handleDelete(d)} />
               </div>,
             ])}
             emptyMessage={t('no_devices_admin')}
@@ -525,7 +823,7 @@ export function AdminDevices() {
   )
 }
 
-// ── CLIENT DASHBOARD ──────────────────────────────────────
+// ── CLIENT DASHBOARD helpers ──────────────────────────────
 function useCountUp(target: number, duration = 900, active = true) {
   const [value, setValue] = useState(0)
   useEffect(() => {
@@ -545,15 +843,9 @@ function useCountUp(target: number, duration = 900, active = true) {
 function useFadeIn(delay = 0) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    el.style.opacity = '0'
-    el.style.transform = 'translateY(14px)'
-    const t = setTimeout(() => {
-      el.style.transition = 'opacity 0.45s ease, transform 0.45s ease'
-      el.style.opacity = '1'
-      el.style.transform = 'translateY(0)'
-    }, delay)
+    const el = ref.current; if (!el) return
+    el.style.opacity = '0'; el.style.transform = 'translateY(14px)'
+    const t = setTimeout(() => { el.style.transition = 'opacity 0.45s ease, transform 0.45s ease'; el.style.opacity = '1'; el.style.transform = 'translateY(0)' }, delay)
     return () => clearTimeout(t)
   }, [delay])
   return ref
@@ -595,191 +887,106 @@ const DASH_CHART = [
   { h: '14:00', v: 15 }, { h: '15:00', v: 11 }, { h: '16:00', v: 7 },
 ]
 
-// __CLIENT DASHBOARD _____________________________
+// ── CLIENT DASHBOARD ──────────────────────────────────────
 export function ClientDashboard() {
   const { t } = useLang()
   const [data, setData] = useState<any>(null)
   const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    api.get('/dashboard/client/').then(r => { setData(r.data); setLoaded(true) })
-  }, [])
-
+  useEffect(() => { api.get('/dashboard/client/').then(r => { setData(r.data); setLoaded(true) }) }, [])
   const s = data?.stats
   const identifier = data?.client?.identifier || ''
   const balance = Number(data?.client?.balance || 0)
   const lipaNumbers: any[] = data?.lipa_numbers || []
   const primaryLipa = lipaNumbers[0]?.lipa_number || '—'
-
   const onlineRouters = useCountUp(s?.online_routers ?? 0, 800, loaded)
   const totalRouters  = useCountUp(s?.total_routers  ?? 0, 800, loaded)
   const totalPackages = useCountUp(s?.total_packages ?? 0, 700, loaded)
   const todayPayments = useCountUp(s?.today_payments ?? 0, 750, loaded)
   const todayVouchers = useCountUp(s?.today_vouchers ?? 0, 750, loaded)
   const todayRevenue  = useCountUp(s?.today_revenue  ?? 0, 1000, loaded)
-
   const recent = (data?.recent_vouchers || []).slice(0, 6)
   const statusMap: Record<string, { label: string; color: string; bg: string }> = {
     active:  { label: t('active'), color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
     used:    { label: t('used'), color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
     expired: { label: t('expired'), color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   }
-
   return (
     <Layout>
-      <style>{`
-        @keyframes cdShimmer { 0%,100%{opacity:.5} 50%{opacity:1} }
-        @keyframes cdFadeSlide { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes livepulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-        .dash-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-        .dash-bottom { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
-        .banner-inner { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
-        .lipa-row { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin-bottom: 16px; }
-        .steps-box { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px 14px; border: 1px solid rgba(99,102,241,0.15); }
-        .balance-box { background: rgba(0,0,0,0.25); border-radius: 14px; padding: 1.1rem 1.4rem; border: 1px solid rgba(99,102,241,0.2); min-width: 160px; text-align: right; align-self: flex-start; }
-
-        @media (max-width: 768px) {
-          .dash-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .dash-grid > div:last-child { grid-column: span 2; }
-          .dash-bottom { grid-template-columns: 1fr !important; }
-          .banner-inner { flex-direction: column !important; }
-          .balance-box { width: 100% !important; text-align: left !important; min-width: unset !important; }
-          .lipa-row { flex-direction: column !important; gap: 0.5rem !important; }
-        }
-        @media (max-width: 480px) {
-          .dash-grid { grid-template-columns: 1fr 1fr !important; gap: 0.6rem !important; }
-        }
-      `}</style>
-
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: '1.25rem', maxWidth: 1100 }}>
-
-        {/* Header */}
         <div style={{ marginBottom: '1.5rem', animation: 'cdFadeSlide 0.4s ease' }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: '#111827', margin: '0 0 4px', letterSpacing: '-0.5px' }}>
             {loaded ? `${t('welcome_client')}, ${data?.client?.business_name}` : '...'}
           </h1>
           <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>{t('business_summary_today')}</p>
         </div>
-
-        {/* Banner */}
         <div style={{ background: 'linear-gradient(135deg, #13103a 0%, #1e1b4b 60%, #1a1040 100%)', borderRadius: 16, padding: '1.25rem', marginBottom: '1.25rem', border: '1px solid rgba(99,102,241,0.2)', position: 'relative', overflow: 'hidden', animation: 'cdFadeSlide 0.45s ease 0.08s both' }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(99,102,241,0.12) 1px, transparent 0)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
-
           <div className="banner-inner" style={{ position: 'relative' }}>
             <div style={{ flex: 1, minWidth: 260 }}>
-
-              {/* Section title */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(165,180,252,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                  {t('payment_instructions')}
-                </span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(165,180,252,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{t('payment_instructions')}</span>
                 <div style={{ height: 1, flex: 1, background: 'rgba(99,102,241,0.25)' }} />
               </div>
-
-              {/* Lipa numbers */}
               <div className="lipa-row">
-                {!loaded ? (
-                  <div style={{ height: 40, width: 140, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
-                ) : lipaNumbers.length === 0 ? (
-                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>{t('no_devices')}</div>
-                ) : lipaNumbers.map((ln: any, i: number) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {i > 0 && <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', height: 36 }} />}
-                    <div>
-                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 2px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                        {ln.network_display || t('lipa_number')}
-                      </p>
-                      <p style={{ fontSize: 20, fontWeight: 900, color: '#a5b4fc', margin: 0, fontFamily: 'monospace', letterSpacing: '0.08em' }}>
-                        {ln.lipa_number}
-                      </p>
+                {!loaded ? <div style={{ height: 40, width: 140, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                  : lipaNumbers.length === 0 ? <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>{t('no_devices')}</div>
+                  : lipaNumbers.map((ln: any, i: number) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {i > 0 && <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', height: 36 }} />}
+                      <div>
+                        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 2px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{ln.network_display || t('lipa_number')}</p>
+                        <p style={{ fontSize: 20, fontWeight: 900, color: '#a5b4fc', margin: 0, fontFamily: 'monospace', letterSpacing: '0.08em' }}>{ln.lipa_number}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-
+                  ))}
                 {lipaNumbers.length > 0 && (
                   <>
                     <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' }} />
                     <div>
-                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 2px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                        {t('your_number')}
-                      </p>
-                      {!loaded
-                        ? <div style={{ height: 28, width: 60, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
-                        : <p style={{ fontSize: 24, fontWeight: 900, margin: 0, fontFamily: 'monospace', letterSpacing: '0.12em', color: '#a5b4fc', background: 'rgba(165,180,252,0.12)', padding: '1px 10px', borderRadius: 8, display: 'inline-block' }}>
-                            {identifier}
-                          </p>
-                      }
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 2px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{t('your_number')}</p>
+                      {!loaded ? <div style={{ height: 28, width: 60, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                        : <p style={{ fontSize: 24, fontWeight: 900, margin: 0, fontFamily: 'monospace', letterSpacing: '0.12em', color: '#a5b4fc', background: 'rgba(165,180,252,0.12)', padding: '1px 10px', borderRadius: 8, display: 'inline-block' }}>{identifier}</p>}
                     </div>
                   </>
                 )}
               </div>
-
-              {/* Steps */}
               <div className="steps-box">
-                <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {t('how_customers_pay')}
-                </p>
+                <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('how_customers_pay')}</p>
                 {[
                   t('pay_step_1'),
                   `${t('pay_step_2')} (${loaded ? identifier : '…'}) ${t('pay_step_2_suffix')}`,
-                  loaded && lipaNumbers.length > 0
-                    ? <>{t('pay_step_3_prefix')} <strong style={{ color: '#fbbf24' }}>TZS {loaded ? `50${identifier}` : '…'}</strong> {t('pay_step_3_to')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</>
-                    : t('pay_step_3_prefix'),
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    {t('pay_step_4')}
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}>
-                      <Icons.Check /> {t('automatic')}
-                    </span>
-                  </span>,
+                  loaded && lipaNumbers.length > 0 ? <>{t('pay_step_3_prefix')} <strong style={{ color: '#fbbf24' }}>TZS {loaded ? `50${identifier}` : '…'}</strong> {t('pay_step_3_to')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</> : t('pay_step_3_prefix'),
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>{t('pay_step_4')}<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}><Icons.Check /> {t('automatic')}</span></span>,
                 ].map((step, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < 3 ? 6 : 0, alignItems: 'flex-start' }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>
-                      {i + 1}
-                    </div>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55 }}>{step}</p>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Balance */}
             <div className="balance-box">
               <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('bakaa')}</p>
-              {!loaded
-                ? <div style={{ height: 32, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
-                : <p style={{ fontSize: 26, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>TZS {balance.toLocaleString()}</p>
-              }
+              {!loaded ? <div style={{ height: 32, width: 120, background: 'rgba(255,255,255,0.08)', borderRadius: 6, animation: 'cdShimmer 1.4s ease-in-out infinite' }} />
+                : <p style={{ fontSize: 26, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px', fontVariantNumeric: 'tabular-nums' }}>TZS {balance.toLocaleString()}</p>}
               <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>{t('bakaa_ya_sasa')}</p>
             </div>
           </div>
         </div>
-
-        {/* No devices warning */}
         {loaded && lipaNumbers.length === 0 && (
           <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: 13, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Icons.Alert /> {t('no_devices')}
+            <Icons.AlertIco /> {t('no_devices')}
           </div>
         )}
-
-        {/* Stats grid - responsive */}
         <div className="dash-grid">
-          <DashStatCard title={t('routers')} icon={<Icons.Router />} accent="#10b981"
-            value={loaded ? `${onlineRouters} / ${totalRouters}` : '—'}
-            subtitle={t('zipo_online_sasa')} delay={100} loaded={loaded} />
-          <DashStatCard title={t('packages')} icon={<Icons.Package />} accent="#f59e0b"
-            value={loaded ? totalPackages : '—'} delay={160} loaded={loaded} />
-          <DashStatCard title={t('payments_today')} icon={<Icons.Payment />} accent="#6366f1"
-            value={loaded ? todayPayments : '—'} delay={220} loaded={loaded} />
-          <DashStatCard title={t('vouchers_today')} icon={<Icons.Voucher />} accent="#8b5cf6"
-            value={loaded ? todayVouchers : '—'} delay={280} loaded={loaded} />
-          <DashStatCard title={t('today_revenue')} icon={<Icons.Revenue />} accent="#06b6d4"
-            value={loaded ? `TZS ${todayRevenue.toLocaleString()}` : '—'} delay={340} loaded={loaded} />
+          <DashStatCard title={t('routers')} icon={<Icons.Router />} accent="#10b981" value={loaded ? `${onlineRouters} / ${totalRouters}` : '—'} subtitle={t('zipo_online_sasa')} delay={100} loaded={loaded} />
+          <DashStatCard title={t('packages')} icon={<Icons.Package />} accent="#f59e0b" value={loaded ? totalPackages : '—'} delay={160} loaded={loaded} />
+          <DashStatCard title={t('payments_today')} icon={<Icons.Payment />} accent="#6366f1" value={loaded ? todayPayments : '—'} delay={220} loaded={loaded} />
+          <DashStatCard title={t('vouchers_today')} icon={<Icons.Voucher />} accent="#8b5cf6" value={loaded ? todayVouchers : '—'} delay={280} loaded={loaded} />
+          <DashStatCard title={t('today_revenue')} icon={<Icons.Revenue />} accent="#06b6d4" value={loaded ? `TZS ${todayRevenue.toLocaleString()}` : '—'} delay={340} loaded={loaded} />
         </div>
-
-        {/* Chart + Recent - responsive */}
         <div className="dash-bottom">
-          {/* Chart */}
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.4s both' }}>
             <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{t('vouchers_today_chart')}</h3>
@@ -788,12 +995,7 @@ export function ClientDashboard() {
             <div style={{ padding: '1rem' }}>
               <ResponsiveContainer width="100%" height={175}>
                 <AreaChart data={DASH_CHART} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
+                  <defs><linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22}/><stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/></linearGradient></defs>
                   <XAxis dataKey="h" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
                   <Tooltip content={<DashChartTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }} />
@@ -802,8 +1004,6 @@ export function ClientDashboard() {
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* Recent vouchers */}
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.5s both' }}>
             <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid #f3f4f6' }}>
               <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{t('recent_vouchers')}</h3>
@@ -822,9 +1022,7 @@ export function ClientDashboard() {
               </div>
             ) : recent.length === 0 ? (
               <div style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', color: '#9ca3af' }}>
-                  <Icons.Voucher />
-                </div>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', color: '#9ca3af' }}><Icons.Voucher /></div>
                 <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{t('no_vouchers_today')}</p>
               </div>
             ) : (
@@ -832,19 +1030,14 @@ export function ClientDashboard() {
                 {recent.map((v: any, i: number) => {
                   const sm = statusMap[v.status] || statusMap.used
                   return (
-                    <div key={i}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', borderBottom: i < recent.length - 1 ? '1px solid #f9fafb' : 'none', transition: 'background 0.15s' }}
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 14px', borderBottom: i < recent.length - 1 ? '1px solid #f9fafb' : 'none', transition: 'background 0.15s' }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f9fafb'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                       <div>
                         <code style={{ fontWeight: 800, fontSize: 13, color: '#6366f1', letterSpacing: '0.06em' }}>{v.code}</code>
-                        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>
-                          {v.customer_phone}<span style={{ margin: '0 4px', opacity: 0.4 }}>·</span>{v.package}
-                        </div>
+                        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{v.customer_phone}<span style={{ margin: '0 4px', opacity: 0.4 }}>·</span>{v.package}</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: sm.color, background: sm.bg, padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>
-                        {sm.label}
-                      </span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: sm.color, background: sm.bg, padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>{sm.label}</span>
                     </div>
                   )
                 })}
@@ -870,29 +1063,17 @@ export function ClientRouters() {
   const [showDelete, setShowDelete] = useState<any>(null)
   const [form, setForm] = useState({ name: '', host: '', api_port: '8728', api_username: 'admin', api_password: '', hotspot_interface: 'bridge' })
 
-  const fetchRouters = () => {
-    setLoading(true)
-    api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) })
-  }
+  const fetchRouters = () => { setLoading(true); api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) }) }
   useEffect(() => { fetchRouters() }, [])
 
-  const openCreate = () => {
-    setEditRouter(null)
-    setForm({ name: '', host: '', api_port: '8728', api_username: 'admin', api_password: '', hotspot_interface: 'bridge' })
-    setShowModal(true)
-  }
-  const openEdit = (r: any) => {
-    setEditRouter(r)
-    setForm({ name: r.name, host: r.host, api_port: String(r.api_port), api_username: r.api_username, api_password: '', hotspot_interface: r.hotspot_interface })
-    setShowModal(true)
-  }
+  const openCreate = () => { setEditRouter(null); setForm({ name: '', host: '', api_port: '8728', api_username: 'admin', api_password: '', hotspot_interface: 'bridge' }); setShowModal(true) }
+  const openEdit = (r: any) => { setEditRouter(r); setForm({ name: r.name, host: r.host, api_port: String(r.api_port), api_username: r.api_username, api_password: '', hotspot_interface: r.hotspot_interface }); setShowModal(true) }
   const handleSave = async () => {
     try {
       if (editRouter) await api.patch(`/routers/${editRouter.id}/`, form)
       else await api.post('/routers/', { ...form, client: clientInfo?.id })
       show('success', editRouter ? 'Imesasishwa!' : `${form.name} imeongezwa!`)
-      setShowModal(false)
-      fetchRouters()
+      setShowModal(false); fetchRouters()
     } catch { show('error', t('error')) }
   }
   const handleDelete = async () => {
@@ -907,141 +1088,27 @@ export function ClientRouters() {
     finally { setTesting(null) }
   }
 
-  // SVG icons ndogo kwa actions — zinaonekana vizuri kwenye buttons ndogo
-  const IcoTest = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-    </svg>
-  )
-  const IcoEdit = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-    </svg>
-  )
-  const IcoDelete = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="3 6 5 6 21 6"/>
-      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-      <path d="M10 11v6M14 11v6"/>
-      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-    </svg>
-  )
-  const IcoSpin = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: 'crSpin 0.8s linear infinite' }}>
-      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-    </svg>
-  )
-
-  // Tooltip wrapper rahisi — pure CSS, hakuna library
-  const Tip = ({ label, children, side = 'top' }: { label: string; children: React.ReactNode; side?: 'top' | 'bottom' }) => (
-    <span style={{ position: 'relative', display: 'inline-flex' }} className="cr-tip-wrap">
-      {children}
-      <span className="cr-tip" style={{
-        position: 'absolute',
-        [side === 'top' ? 'bottom' : 'top']: 'calc(100% + 6px)',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        whiteSpace: 'nowrap',
-        background: '#1e293b',
-        color: '#fff',
-        fontSize: 11,
-        fontWeight: 600,
-        padding: '4px 9px',
-        borderRadius: 6,
-        pointerEvents: 'none',
-        zIndex: 50,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-        opacity: 0,
-        transition: 'opacity 0.15s, transform 0.15s',
-      }}>
-        {label}
-        <span style={{
-          position: 'absolute',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          ...(side === 'top'
-            ? { top: '100%', borderTop: '5px solid #1e293b', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }
-            : { bottom: '100%', borderBottom: '5px solid #1e293b', borderLeft: '5px solid transparent', borderRight: '5px solid transparent' }),
-          width: 0,
-          height: 0,
-        }} />
-      </span>
-    </span>
-  )
-
-  // Kadi moja ya router — mobile view
   const RouterCard = ({ r }: { r: any }) => {
-    const isOnline = r.is_online
-    const isTesting = testing === r.id
+    const isOnline = r.is_online; const isTesting = testing === r.id
     return (
-      <div className="cr-card" style={{
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 14,
-        padding: '14px 16px',
-        transition: 'box-shadow 0.2s, transform 0.2s',
-        animation: 'crFadeUp 0.3s ease both',
-      }}>
-        {/* Header ya kadi */}
+      <div className="ap-card-hover" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', animation: 'apFadeUp 0.3s ease both' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-            {/* Status dot + router icon */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: isOnline ? '#ecfdf5' : '#fef2f2',
-                color: isOnline ? '#10b981' : '#ef4444',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Icons.Router />
-              </div>
-              <div style={{
-                position: 'absolute', bottom: -2, right: -2,
-                width: 10, height: 10, borderRadius: '50%',
-                background: isTesting ? '#f59e0b' : isOnline ? '#10b981' : '#ef4444',
-                border: '2px solid #fff',
-                boxShadow: isOnline && !isTesting ? '0 0 0 3px rgba(16,185,129,0.2)' : 'none',
-                animation: isOnline && !isTesting ? 'crPulse 2s ease-in-out infinite' : 'none',
-              }} />
-            </div>
+            <StatusDot online={isOnline} testing={isTesting} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
               <code style={{ fontSize: 11, color: '#6b7280' }}>{r.host}:{r.api_port}</code>
             </div>
           </div>
-          {/* Status badge */}
-          <span style={{
-            fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, flexShrink: 0,
-            background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2',
-            color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b',
-          }}>
-            {isTesting ? 'Inajaribu...' : isOnline ? t('online') : t('offline')}
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, flexShrink: 0, background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2', color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b' }}>
+            {isTesting ? t('testing') : isOnline ? t('online') : t('offline')}
           </span>
         </div>
-
-        {/* Last seen */}
-        <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 12 }}>
-          {t('last_seen')}: {r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}
-        </div>
-
-        {/* Actions */}
+        <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 12 }}>{t('last_seen')}: {r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}</div>
         <div style={{ display: 'flex', gap: 6, borderTop: '1px solid #f3f4f6', paddingTop: 10 }}>
-          <Tip label="Pima Muunganisho">
-            <button className="cr-action-btn cr-action-test" onClick={() => testConn(r.id)} disabled={isTesting} aria-label="Pima">
-              {isTesting ? <IcoSpin /> : <IcoTest />}
-            </button>
-          </Tip>
-          <Tip label="Hariri Router">
-            <button className="cr-action-btn cr-action-edit" onClick={() => openEdit(r)} aria-label="Hariri">
-              <IcoEdit />
-            </button>
-          </Tip>
-          <Tip label="Futa Router">
-            <button className="cr-action-btn cr-action-delete" onClick={() => setShowDelete(r)} aria-label="Futa">
-              <IcoDelete />
-            </button>
-          </Tip>
+          <ABtn icon={Icons.IcoTest}   tip={t('test_connection')} cls="ap-btn-test"   spinning={isTesting} disabled={isTesting} onClick={() => testConn(r.id)} />
+          <ABtn icon={Icons.IcoEdit}   tip={t('edit')}            cls="ap-btn-edit"   onClick={() => openEdit(r)} />
+          <ABtn icon={Icons.IcoDelete} tip={t('delete')}          cls="ap-btn-delete" onClick={() => setShowDelete(r)} />
         </div>
       </div>
     )
@@ -1049,162 +1116,59 @@ export function ClientRouters() {
 
   return (
     <Layout>
-      <style>{`
-        @keyframes crFadeUp   { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes crPulse    { 0%,100% { box-shadow:0 0 0 0 rgba(16,185,129,0.4) } 60% { box-shadow:0 0 0 5px rgba(16,185,129,0) } }
-        @keyframes crSpin     { to { transform:rotate(360deg) } }
-
-        /* Tooltip hover */
-        .cr-tip-wrap:hover .cr-tip,
-        .cr-tip-wrap:focus-within .cr-tip {
-          opacity: 1 !important;
-          transform: translateX(-50%) translateY(-2px) !important;
-        }
-
-        /* Action button base */
-        .cr-action-btn {
-          display: inline-flex; align-items: center; justify-content: center;
-          width: 34px; height: 34px; border-radius: 9px; border: none;
-          cursor: pointer; transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
-          background: #f8fafc; color: #64748b;
-        }
-        .cr-action-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
-        .cr-action-btn:active { transform: scale(0.93); }
-        .cr-action-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        .cr-action-btn:focus-visible { outline: 2px solid #6366f1; outline-offset: 2px; }
-
-        .cr-action-test:hover  { background: #ecfdf5; color: #10b981; }
-        .cr-action-edit:hover  { background: #eff6ff; color: #3b82f6; }
-        .cr-action-delete:hover{ background: #fef2f2; color: #ef4444; }
-
-        /* Card hover */
-        .cr-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.09); transform: translateY(-2px); }
-
-        /* Table row hover */
-        .cr-tr:hover { background: #f8fafc; }
-        .cr-tr { transition: background 0.12s; }
-        .cr-tr td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-        .cr-tr:last-child td { border-bottom: none; }
-
-        /* Responsive grid kwa cards */
-        .cr-cards-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 12px;
-        }
-
-        /* Desktop table — inaonekana md+ */
-        .cr-table-wrap { display: block; }
-        .cr-cards-wrap  { display: none; }
-
-        @media (max-width: 700px) {
-          .cr-table-wrap { display: none !important; }
-          .cr-cards-wrap  { display: block !important; }
-        }
-      `}</style>
-
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
-        <PageHeader
-          title={t('routers')}
-          subtitle={t('manage_routers_subtitle')}
-          action={
-            <Button onClick={openCreate} icon="➕">{t('add_router')}</Button>
-          }
+        <PageHeader title={t('routers')} subtitle={t('manage_routers_subtitle')}
+          action={<PrimaryBtn onClick={openCreate}><Icons.IcoPlus />{t('add_router')}</PrimaryBtn>}
         />
+        {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af', animation: 'apFadeUp 0.3s ease' }}>{t('vpn_hint')}</div>
 
-        {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
-
-        {/* Hint VPN */}
-        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af', animation: 'crFadeUp 0.3s ease' }}>
-          {t('vpn_hint')}
-        </div>
-
-        {/* ─── DESKTOP: Table ─── */}
-        <div className="cr-table-wrap">
+        <div className="ap-table-wrap">
           <Card>
-            {loading ? (
-              <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}>
-                <IcoSpin />
-                <div style={{ marginTop: 8, fontSize: 13 }}>Inapakia...</div>
-              </div>
-            ) : routers.length === 0 ? (
-              <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</div>
-            ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                    {[t('router_name'), 'VPN Host', 'Port', t('status'), t('last_seen'), ''].map((h, i) => (
-                      <th key={i} style={{ padding: '10px 16px', textAlign: i === 5 ? 'right' : 'left', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {routers.map((r, idx) => {
-                    const isOnline = r.is_online
-                    const isTesting = testing === r.id
-                    return (
-                      <tr key={r.id} className="cr-tr" style={{ animationDelay: `${idx * 40}ms`, animation: 'crFadeUp 0.3s ease both' }}>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ position: 'relative' }}>
-                              <div style={{ width: 34, height: 34, borderRadius: 9, background: isOnline ? '#ecfdf5' : '#fef2f2', color: isOnline ? '#10b981' : '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Icons.Router />
-                              </div>
-                              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 9, height: 9, borderRadius: '50%', background: isTesting ? '#f59e0b' : isOnline ? '#10b981' : '#ef4444', border: '2px solid #fff', animation: isOnline && !isTesting ? 'crPulse 2s ease-in-out infinite' : 'none' }} />
+            {loading ? <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+              : routers.length === 0 ? <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</div>
+              : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                      {[t('router_name'), 'VPN Host', 'Port', t('status'), t('last_seen'), ''].map((h, i) => (
+                        <th key={i} style={{ padding: '10px 16px', textAlign: i === 5 ? 'right' : 'left', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {routers.map((r, idx) => {
+                      const isOnline = r.is_online; const isTesting = testing === r.id
+                      return (
+                        <tr key={r.id} className="ap-tr" style={{ animationDelay: `${idx * 40}ms` }}>
+                          <td><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><StatusDot online={isOnline} testing={isTesting} /><span style={{ fontWeight: 600 }}>{r.name}</span></div></td>
+                          <td><code style={{ fontSize: 12, color: '#6b7280', background: '#f8fafc', padding: '2px 7px', borderRadius: 5 }}>{r.host}</code></td>
+                          <td style={{ color: '#6b7280' }}>{r.api_port}</td>
+                          <td><span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2', color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b' }}>{isTesting ? t('testing') : isOnline ? t('online') : t('offline')}</span></td>
+                          <td style={{ color: '#9ca3af', fontSize: 12 }}>{r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                              <ABtn icon={Icons.IcoTest}   tip={t('test_connection')} cls="ap-btn-test"   spinning={isTesting} disabled={isTesting} onClick={() => testConn(r.id)} />
+                              <ABtn icon={Icons.IcoEdit}   tip={t('edit')}            cls="ap-btn-edit"   onClick={() => openEdit(r)} />
+                              <ABtn icon={Icons.IcoDelete} tip={t('delete')}          cls="ap-btn-delete" onClick={() => setShowDelete(r)} />
                             </div>
-                            <span style={{ fontWeight: 600, color: '#111827' }}>{r.name}</span>
-                          </div>
-                        </td>
-                        <td><code style={{ fontSize: 12, color: '#6b7280', background: '#f8fafc', padding: '2px 7px', borderRadius: 5 }}>{r.host}</code></td>
-                        <td style={{ color: '#6b7280' }}>{r.api_port}</td>
-                        <td>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: isTesting ? '#fef3c7' : isOnline ? '#ecfdf5' : '#fef2f2', color: isTesting ? '#b45309' : isOnline ? '#065f46' : '#991b1b' }}>
-                            {isTesting ? 'Inajaribu...' : isOnline ? t('online') : t('offline')}
-                          </span>
-                        </td>
-                        <td style={{ color: '#9ca3af', fontSize: 12 }}>{r.last_seen ? new Date(r.last_seen).toLocaleString('sw-TZ') : t('never')}</td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                            <Tip label="Pima Muunganisho">
-                              <button className="cr-action-btn cr-action-test" onClick={() => testConn(r.id)} disabled={isTesting} aria-label="Pima">
-                                {isTesting ? <IcoSpin /> : <IcoTest />}
-                              </button>
-                            </Tip>
-                            <Tip label="Hariri Router">
-                              <button className="cr-action-btn cr-action-edit" onClick={() => openEdit(r)} aria-label="Hariri">
-                                <IcoEdit />
-                              </button>
-                            </Tip>
-                            <Tip label="Futa Router">
-                              <button className="cr-action-btn cr-action-delete" onClick={() => setShowDelete(r)} aria-label="Futa">
-                                <IcoDelete />
-                              </button>
-                            </Tip>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
           </Card>
         </div>
-
-        {/* ─── MOBILE: Cards ─── */}
-        <div className="cr-cards-wrap">
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>Inapakia...</div>
-          ) : routers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</div>
-          ) : (
-            <div className="cr-cards-grid">
-              {routers.map(r => <RouterCard key={r.id} r={r} />)}
-            </div>
-          )}
+        <div className="ap-cards-wrap">
+          {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+            : routers.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{t('no_routers')}</div>
+            : <div className="ap-cards-grid">{routers.map(r => <RouterCard key={r.id} r={r} />)}</div>
+          }
         </div>
 
-        {/* ─── MODAL: Add / Edit ─── */}
         <Modal open={showModal} onClose={() => setShowModal(false)} title={editRouter ? `${t('edit_router')}: ${editRouter.name}` : t('add_router')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('router_name')} *`} placeholder="Router ya Ofisi" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
@@ -1221,16 +1185,7 @@ export function ClientRouters() {
             </FormActions>
           </div>
         </Modal>
-
-        {/* ─── CONFIRM DELETE ─── */}
-        <ConfirmDialog
-          open={!!showDelete}
-          onClose={() => setShowDelete(null)}
-          onConfirm={handleDelete}
-          title={t('delete_router')}
-          message={`Futa router "${showDelete?.name}"?`}
-          danger
-        />
+        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={t('delete_router')} message={`Futa router "${showDelete?.name}"?`} danger />
       </div>
     </Layout>
   )
@@ -1258,7 +1213,6 @@ export function ClientPackages() {
     catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa') }
     finally { setSyncingPkg(null) }
   }
-
   const handleSyncAll = async () => {
     setSyncingAll(true)
     try { const r = await api.post('/packages/sync-all-from-mikrotik/'); show('success', r.data?.message || 'Zote zimesasishwa'); fetchPackages() }
@@ -1272,7 +1226,6 @@ export function ClientPackages() {
     setForm({ name: pkg.name, price: String(pkg.price), duration_value: String(pkg.duration_value || Math.round(pkg.duration_minutes / 60)), duration_unit: pkg.duration_unit || 'hours', speed_up: pkg.speed_up, speed_down: pkg.speed_down, mikrotik_profile: pkg.mikrotik_profile, shared_users: String(pkg.shared_users) })
     setShowModal(true)
   }
-
   const handleSave = async () => {
     try {
       if (editPkg) { await api.patch(`/packages/${editPkg.id}/`, form); show('success', `${form.name} imesasishwa!`) }
@@ -1283,35 +1236,34 @@ export function ClientPackages() {
       show('error', typeof err === 'object' ? Object.values(err).flat().join(', ') : t('error'))
     }
   }
-
   const handleDelete = async () => {
     if (!showDelete) return
     try { await api.delete(`/packages/${showDelete.id}/`); show('success', `${showDelete.name} imefutwa!`); setShowDelete(null); fetchPackages() }
     catch { show('error', t('error')) }
   }
-
   const identifier = clientInfo?.identifier
 
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
         <PageHeader title={t('packages')} subtitle={t('manage_packages_subtitle')}
-          action={<div style={{ display: 'flex', gap: 8 }}>
-            <Button variant="ghost" onClick={handleSyncAll} disabled={syncingAll}>{syncingAll ? t('syncing') : 'Sync All'}</Button>
-            <Button onClick={openCreate} icon="➕">{t('add_package')}</Button>
-          </div>}
+          action={
+            <div style={{ display: 'flex', gap: 8 }}>
+              <ABtn icon={syncingAll ? Icons.IcoSpin : Icons.IcoSync} tip={t('sync_all')} cls="ap-btn-sync" spinning={syncingAll} disabled={syncingAll} onClick={handleSyncAll} />
+              <PrimaryBtn onClick={openCreate}><Icons.IcoPlus />{t('add_package')}</PrimaryBtn>
+            </div>
+          }
         />
-        {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
+        {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
         {identifier && (
-          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#166534' }}>
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#166534', animation: 'apFadeUp 0.3s ease' }}>
             Bei inayoonekana kwenye kadi ni bei ya msingi. Wateja wako watalipa <strong>bei + {identifier}</strong>. Mfano: TZS 500 → wateja watalipa <strong>TZS {500 + identifier}</strong>.
           </div>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '1rem' }}>
-          {packages.map(pkg => (
-            <div key={pkg.id} style={{ background: '#fff', borderRadius: 14, padding: '1.1rem', border: '1px solid var(--gray-100)', boxShadow: 'var(--card-shadow)', borderTop: '3px solid var(--primary)', transition: 'transform 0.15s' }}
-              onMouseEnter={e => (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'}
-              onMouseLeave={e => (e.currentTarget as HTMLElement).style.transform = 'none'}>
+          {packages.map((pkg, idx) => (
+            <div key={pkg.id} className="ap-card-hover" style={{ background: '#fff', borderRadius: 14, padding: '1.1rem', border: '1px solid var(--gray-100)', boxShadow: 'var(--card-shadow)', borderTop: '3px solid var(--primary)', animation: `apFadeUp 0.35s ease ${idx * 50}ms both` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontSize: 14, fontWeight: 700 }}>{pkg.name}</span>
                 <Badge text={pkg.is_active ? t('active') : 'Off'} color={pkg.is_active ? 'green' : 'gray'} />
@@ -1326,15 +1278,15 @@ export function ClientPackages() {
                 <div key={j} style={{ fontSize: 12, color: 'var(--gray-600)', marginBottom: 3 }}>{x.label}</div>
               ))}
               <div style={{ marginTop: 8, fontSize: 11, color: 'var(--gray-400)', fontFamily: 'monospace', marginBottom: 10 }}>{pkg.mikrotik_profile}</div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10, flexWrap: 'wrap' }}>
-                <Button size="sm" variant="ghost" onClick={() => handleSyncPkg(pkg.id)} disabled={syncingPkg === pkg.id} style={{ flex: 1 }}>{syncingPkg === pkg.id ? '...' : 'Sync'}</Button>
-                <Button size="sm" variant="ghost" onClick={() => openEdit(pkg)} style={{ flex: 1 }}>{t('edit')}</Button>
-                <Button size="sm" variant="danger" onClick={() => setShowDelete(pkg)} style={{ flex: 1 }}>{t('delete')}</Button>
+              <div style={{ display: 'flex', gap: 6, marginTop: 8, borderTop: '1px solid var(--gray-100)', paddingTop: 10, justifyContent: 'center' }}>
+                <ABtn icon={Icons.IcoSync}   tip={t('sync')}   cls="ap-btn-sync"   spinning={syncingPkg === pkg.id} disabled={syncingPkg === pkg.id} onClick={() => handleSyncPkg(pkg.id)} />
+                <ABtn icon={Icons.IcoEdit}   tip={t('edit')}   cls="ap-btn-edit"   onClick={() => openEdit(pkg)} />
+                <ABtn icon={Icons.IcoDelete} tip={t('delete')} cls="ap-btn-delete" onClick={() => setShowDelete(pkg)} />
               </div>
             </div>
           ))}
           {packages.length === 0 && (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: 'var(--gray-400)', background: '#fff', borderRadius: 14, border: '2px dashed var(--gray-200)' }}>
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: 'var(--gray-400)', background: '#fff', borderRadius: 14, border: '2px dashed var(--gray-200)', animation: 'apFadeUp 0.3s ease' }}>
               {t('no_packages')}
             </div>
           )}
@@ -1380,16 +1332,31 @@ export function ClientVouchers() {
     const url = filter ? `/vouchers/?status=${filter}` : '/vouchers/'
     Promise.all([api.get(url), api.get('/vouchers/stats/')]).then(([v, s]) => { setVouchers(v.data.results || v.data); setStats(s.data); setLoading(false) })
   }, [filter])
-  const FILTERS = [{ k: '', l: t('all') }, { k: 'active', l: 'Active' }, { k: 'used', l: t('used') }, { k: 'expired', l: t('expired') }]
+
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
         <PageHeader title={t('vouchers')} subtitle={t('vouchers_history_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
-          {[{ l: t('all'), v: stats?.total || 0, c: '#6366f1' }, { l: 'Active', v: stats?.active || 0, c: '#10b981' }, { l: t('used'), v: stats?.used || 0, c: '#6b7280' }, { l: t('expired'), v: stats?.expired || 0, c: '#ef4444' }].map((s, i) => <StatCard key={i} title={s.l} value={s.v} icon={[<Icons.Voucher />, <Icons.Check />, <Icons.Check />, <Icons.Clock />][i]} color={s.c} />)}
+          {[
+            { l: t('all'),     v: stats?.total   || 0, c: '#6366f1', ico: <Icons.Voucher /> },
+            { l: t('active'),  v: stats?.active  || 0, c: '#10b981', ico: <Icons.IcoActive /> },
+            { l: t('used'),    v: stats?.used    || 0, c: '#6b7280', ico: <Icons.IcoUsed /> },
+            { l: t('expired'), v: stats?.expired || 0, c: '#ef4444', ico: <Icons.IcoExpired /> },
+          ].map((s, i) => <StatCard key={i} title={s.l} value={s.v} icon={s.ico} color={s.c} />)}
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: '1rem', flexWrap: 'wrap' }}>
-          {FILTERS.map(f => <button key={f.k} onClick={() => setFilter(f.k)} style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? 'var(--primary)' : 'var(--gray-200)', background: filter === f.k ? 'var(--primary-light)' : '#fff', color: filter === f.k ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{f.l}</button>)}
+          {[
+            { k: '', l: t('all'), Ico: Icons.Voucher, c: '#6366f1' },
+            { k: 'active',  l: t('active'),  Ico: Icons.IcoActive,  c: '#10b981' },
+            { k: 'used',    l: t('used'),    Ico: Icons.IcoUsed,    c: '#6b7280' },
+            { k: 'expired', l: t('expired'), Ico: Icons.IcoExpired, c: '#ef4444' },
+          ].map(f => (
+            <button key={f.k} onClick={() => setFilter(f.k)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? f.c : 'var(--gray-200)', background: filter === f.k ? f.c + '15' : '#fff', color: filter === f.k ? f.c : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+              <f.Ico /> {f.l}
+            </button>
+          ))}
         </div>
         <Card>
           <Table loading={loading} headers={[t('code'), t('packages'), t('price'), t('customer_phone'), t('status'), t('created_at')]}
@@ -1417,6 +1384,7 @@ export function ClientPayments() {
   useEffect(() => { Promise.all([api.get('/payments/'), api.get('/payments/summary/')]).then(([p, s]) => { setPayments(p.data.results || p.data); setSummary(s.data); setLoading(false) }) }, [])
   return (
     <Layout>
+      <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
         <PageHeader title={t('payments')} subtitle={t('payments_history_subtitle')} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
