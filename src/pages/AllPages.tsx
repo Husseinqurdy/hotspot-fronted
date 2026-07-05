@@ -10,9 +10,12 @@ import { MikroTikPermissionsModal } from './MikroTikManager'
 const WEEK = [{ d: 'Ju', v: 12 }, { d: 'Al', v: 19 }, { d: 'Ju', v: 8 }, { d: 'Al', v: 24 }, { d: 'Ij', v: 16 }, { d: 'Ar', v: 31 }, { d: 'Ju', v: 22 }]
 
 function useAlert() {
+  const { t } = useLang()
   const [alert, setAlert] = useState<{ type: any; msg: string } | null>(null)
   const show = (type: any, msg: string) => { setAlert({ type, msg }); setTimeout(() => setAlert(null), 4000) }
-  return { alert, show }
+  // Helper: show with auto-translated common messages
+  const showT = (type: any, key: string, fallback?: string) => show(type, t(key) || fallback || key)
+  return { alert, show, showT, t }
 }
 
 const P = '1.25rem'
@@ -359,11 +362,11 @@ export function AdminClients() {
   useEffect(() => { fetchClients() }, [])
 
   const handleCreate = async () => {
-    if (!form.business_name || !form.username || !form.password) { show('error', 'Jaza sehemu zote'); return }
+    if (!form.business_name || !form.username || !form.password) { show('error', t('fill_required')); return }
     setSaving(true)
     try {
       await api.post('/clients/', form)
-      show('success', `${form.business_name} ameundwa!`)
+      show('success', `${form.business_name} ${t('created_success')}`)
       setShowCreate(false)
       setForm({ business_name: '', username: '', password: '', email: '', phone: '', commission_rate: '10' })
       fetchClients()
@@ -382,7 +385,7 @@ export function AdminClients() {
     setSaving(true)
     try {
       await api.patch(`/clients/${selected.id}/`, editForm)
-      show('success', `${editForm.business_name} imesasishwa!`)
+      show('success', `${editForm.business_name} ${t('updated_success')}`)
       setShowEdit(false); fetchClients()
     } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
     finally { setSaving(false) }
@@ -390,24 +393,24 @@ export function AdminClients() {
 
   const handleBalance = async () => {
     if (!selected || !balanceAmount) return
-    try { const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount }); show('success', r.data.message); setShowBalance(false); setBalanceAmount(''); fetchClients() }
+    try { const r = await api.post(`/clients/${selected.id}/add-balance/`, { amount: balanceAmount }); show('success', r.data.message || t('balance_added')); setShowBalance(false); setBalanceAmount(''); fetchClients() }
     catch { show('error', t('error')) }
   }
 
   const handlePassword = async () => {
     if (!selected || !newPassword) return
-    try { await api.post(`/clients/${selected.id}/change-password/`, { new_password: newPassword }); show('success', 'Password imebadilishwa'); setShowPassword(false); setNewPassword('') }
+    try { await api.post(`/clients/${selected.id}/change-password/`, { new_password: newPassword }); show('success', t('password_changed')); setShowPassword(false); setNewPassword('') }
     catch { show('error', t('error')) }
   }
 
   const handleToggle = async (c: any, action: 'activate' | 'deactivate') => {
-    try { const r = await api.post(`/clients/${c.id}/${action}/`); show('success', r.data.message); fetchClients() }
+    try { const r = await api.post(`/clients/${c.id}/${action}/`); show('success', r.data.message || t(action === 'activate' ? 'activated' : 'deactivated')); fetchClients() }
     catch { show('error', t('error')) }
   }
 
   const handleDelete = async () => {
     if (!selected) return
-    try { await api.delete(`/clients/${selected.id}/`); show('success', 'Imefutwa'); setShowDelete(false); setSelected(null); fetchClients() }
+    try { await api.delete(`/clients/${selected.id}/`); show('success', t('deleted_success')); setShowDelete(false); setSelected(null); fetchClients() }
     catch { show('error', t('error')) }
   }
 
@@ -554,7 +557,7 @@ export function AdminClients() {
         </Modal>
 
         {showPermissions && selected && (
-          <MikroTikPermissionsModal client={selected} onClose={() => { setShowPermissions(false); setSelected(null) }} onSaved={() => { show('success', `Permissions za ${selected.business_name} zimehifadhiwa`); fetchClients() }} />
+          <MikroTikPermissionsModal client={selected} onClose={() => { setShowPermissions(false); setSelected(null) }} onSaved={() => { show('success', `${selected.business_name} ${t('permissions_saved')}`); fetchClients() }} />
         )}
         <ConfirmDialog open={showDelete} onClose={() => setShowDelete(false)} onConfirm={handleDelete} title={t('delete_client')} message={`Futa ${selected?.business_name}? Hatua hii haiwezi kurudishwa!`} danger />
       </div>
@@ -575,7 +578,7 @@ export function AdminRouters() {
 
   const testConn = async (id: number) => {
     setTesting(id)
-    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message); fetchRouters() }
+    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message || t('connection_ok')); fetchRouters() }
     catch { show('error', t('router_offline')) }
     finally { setTesting(null) }
   }
@@ -759,15 +762,15 @@ export function AdminDevices() {
   const openEdit = (d: any) => { setEditDev(d); setForm({ name: d.name, network: d.network, lipa_number: d.lipa_number, phone_number: d.phone_number, device_id: d.device_id, description: d.description || '' }); setShowModal(true) }
   const openCreate = () => { setEditDev(null); setForm({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '' }); setShowModal(true) }
   const handleSave = async () => {
-    if (!form.name || !form.lipa_number || !form.phone_number || !form.device_id) { show('error', 'Jaza sehemu zote'); return }
+    if (!form.name || !form.lipa_number || !form.phone_number || !form.device_id) { show('error', t('fill_required')); return }
     setSaving(true)
-    try { if (editDev) await api.patch(`/devices/${editDev.id}/`, form); else await api.post('/devices/', form); show('success', editDev ? 'Imesasishwa!' : 'Imeongezwa!'); setShowModal(false); fetchDevices() }
+    try { if (editDev) await api.patch(`/devices/${editDev.id}/`, form); else await api.post('/devices/', form); show('success', editDev ? t('updated_success') : t('created_success')); setShowModal(false); fetchDevices() }
     catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
     finally { setSaving(false) }
   }
   const handleDelete = async (d: any) => {
-    if (!confirm(`Futa ${d.name}?`)) return
-    try { await api.delete(`/devices/${d.id}/`); show('success', 'Imefutwa'); fetchDevices() }
+    if (!confirm(`${t('delete_confirm')} ${d.name}?`)) return
+    try { await api.delete(`/devices/${d.id}/`); show('success', t('deleted_success')); fetchDevices() }
     catch { show('error', t('error')) }
   }
   return (
@@ -1072,18 +1075,18 @@ export function ClientRouters() {
     try {
       if (editRouter) await api.patch(`/routers/${editRouter.id}/`, form)
       else await api.post('/routers/', { ...form, client: clientInfo?.id })
-      show('success', editRouter ? 'Imesasishwa!' : `${form.name} imeongezwa!`)
+      show('success', editRouter ? t('updated_success') : `${form.name} ${t('created_success')}`)
       setShowModal(false); fetchRouters()
     } catch { show('error', t('error')) }
   }
   const handleDelete = async () => {
     if (!showDelete) return
-    try { await api.delete(`/routers/${showDelete.id}/`); show('success', 'Imefutwa'); setShowDelete(null); fetchRouters() }
+    try { await api.delete(`/routers/${showDelete.id}/`); show('success', t('deleted_success')); setShowDelete(null); fetchRouters() }
     catch { show('error', t('error')) }
   }
   const testConn = async (id: number) => {
     setTesting(id)
-    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message); fetchRouters() }
+    try { const r = await api.post(`/routers/${id}/test-connection/`); show('success', r.data.message || t('connection_ok')); fetchRouters() }
     catch { show('error', t('router_offline')) }
     finally { setTesting(null) }
   }
@@ -1209,14 +1212,14 @@ export function ClientPackages() {
 
   const handleSyncPkg = async (pkgId: number) => {
     setSyncingPkg(pkgId)
-    try { const r = await api.post(`/packages/${pkgId}/sync-from-mikrotik/`); show('success', r.data?.message || 'Imesasishwa'); fetchPackages() }
-    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa') }
+    try { const r = await api.post(`/packages/${pkgId}/sync-from-mikrotik/`); show('success', r.data?.message || t('updated_success')); fetchPackages() }
+    catch (e: any) { show('error', e.response?.data?.error || t('sync_failed')) }
     finally { setSyncingPkg(null) }
   }
   const handleSyncAll = async () => {
     setSyncingAll(true)
-    try { const r = await api.post('/packages/sync-all-from-mikrotik/'); show('success', r.data?.message || 'Zote zimesasishwa'); fetchPackages() }
-    catch (e: any) { show('error', e.response?.data?.error || 'Sync imeshindwa') }
+    try { const r = await api.post('/packages/sync-all-from-mikrotik/'); show('success', r.data?.message || t('sync_all_success')); fetchPackages() }
+    catch (e: any) { show('error', e.response?.data?.error || t('sync_failed')) }
     finally { setSyncingAll(false) }
   }
 
@@ -1228,8 +1231,8 @@ export function ClientPackages() {
   }
   const handleSave = async () => {
     try {
-      if (editPkg) { await api.patch(`/packages/${editPkg.id}/`, form); show('success', `${form.name} imesasishwa!`) }
-      else { await api.post('/packages/', { ...form, client: clientInfo?.id }); show('success', `${form.name} imeundwa!`) }
+      if (editPkg) { await api.patch(`/packages/${editPkg.id}/`, form); show('success', `${form.name} ${t('updated_success')}`) }
+      else { await api.post('/packages/', { ...form, client: clientInfo?.id }); show('success', `${form.name} ${t('created_success')}`) }
       setShowModal(false); setForm({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' }); fetchPackages()
     } catch (e: any) {
       const err = e.response?.data
@@ -1238,7 +1241,7 @@ export function ClientPackages() {
   }
   const handleDelete = async () => {
     if (!showDelete) return
-    try { await api.delete(`/packages/${showDelete.id}/`); show('success', `${showDelete.name} imefutwa!`); setShowDelete(null); fetchPackages() }
+    try { await api.delete(`/packages/${showDelete.id}/`); show('success', `${showDelete.name} ${t('deleted_success')}`); setShowDelete(null); fetchPackages() }
     catch { show('error', t('error')) }
   }
   const identifier = clientInfo?.identifier
@@ -1328,48 +1331,170 @@ export function ClientVouchers() {
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
+
   useEffect(() => {
+    setLoading(true)
     const url = filter ? `/vouchers/?status=${filter}` : '/vouchers/'
-    Promise.all([api.get(url), api.get('/vouchers/stats/')]).then(([v, s]) => { setVouchers(v.data.results || v.data); setStats(s.data); setLoading(false) })
+    Promise.all([api.get(url), api.get('/vouchers/stats/')]).then(([v, s]) => {
+      setVouchers(v.data.results || v.data); setStats(s.data); setLoading(false)
+    })
   }, [filter])
+
+  const FILTERS = [
+    { k: '', l: t('all'),     Ico: Icons.Voucher,    c: '#6366f1' },
+    { k: 'active',  l: t('active'),  Ico: Icons.IcoActive,  c: '#10b981' },
+    { k: 'used',    l: t('used'),    Ico: Icons.IcoUsed,    c: '#6b7280' },
+    { k: 'expired', l: t('expired'), Ico: Icons.IcoExpired, c: '#ef4444' },
+  ]
+
+  const statusStyle: Record<string, { bg: string; color: string }> = {
+    active:  { bg: '#ecfdf5', color: '#065f46' },
+    used:    { bg: '#f3f4f6', color: '#374151' },
+    expired: { bg: '#fef2f2', color: '#991b1b' },
+  }
+
+  // Voucher card for mobile
+  const VoucherCard = ({ v, idx }: { v: any; idx: number }) => {
+    const ss = statusStyle[v.status] || statusStyle.used
+    return (
+      <div className="ap-card-hover" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', animation: `apFadeUp 0.3s ease ${idx * 45}ms both` }}>
+        {/* Top: code + status */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+          <div>
+            <code style={{ fontWeight: 900, fontSize: 16, color: 'var(--primary)', letterSpacing: '0.1em' }}>{v.code}</code>
+            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 3 }}>{v.package_name}</div>
+          </div>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0, background: ss.bg, color: ss.color }}>
+            {v.status_display}
+          </span>
+        </div>
+        {/* Details row */}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: '#6b7280' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <strong style={{ color: '#059669' }}>TZS {Number(v.package_price).toLocaleString()}</strong>
+          </span>
+          {v.customer_phone && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.8a16 16 0 0 0 6.29 6.29l1.09-.9a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              {v.customer_phone}
+            </span>
+          )}
+        </div>
+        {/* Footer: date */}
+        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 10, paddingTop: 10, borderTop: '1px solid #f3f4f6' }}>
+          {t('created_at')}: {new Date(v.created_at).toLocaleString('sw-TZ')}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Layout>
       <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1000, margin: '0 auto' }}>
         <PageHeader title={t('vouchers')} subtitle={t('vouchers_history_subtitle')} />
+
+        {/* Stat cards — animated entry */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[
             { l: t('all'),     v: stats?.total   || 0, c: '#6366f1', ico: <Icons.Voucher /> },
             { l: t('active'),  v: stats?.active  || 0, c: '#10b981', ico: <Icons.IcoActive /> },
             { l: t('used'),    v: stats?.used    || 0, c: '#6b7280', ico: <Icons.IcoUsed /> },
             { l: t('expired'), v: stats?.expired || 0, c: '#ef4444', ico: <Icons.IcoExpired /> },
-          ].map((s, i) => <StatCard key={i} title={s.l} value={s.v} icon={s.ico} color={s.c} />)}
+          ].map((s, i) => (
+            <div key={i} style={{ animation: `apFadeUp 0.3s ease ${i * 60}ms both` }}>
+              <StatCard title={s.l} value={s.v} icon={s.ico} color={s.c} />
+            </div>
+          ))}
         </div>
-        <div style={{ display: 'flex', gap: 6, marginBottom: '1rem', flexWrap: 'wrap' }}>
-          {[
-            { k: '', l: t('all'), Ico: Icons.Voucher, c: '#6366f1' },
-            { k: 'active',  l: t('active'),  Ico: Icons.IcoActive,  c: '#10b981' },
-            { k: 'used',    l: t('used'),    Ico: Icons.IcoUsed,    c: '#6b7280' },
-            { k: 'expired', l: t('expired'), Ico: Icons.IcoExpired, c: '#ef4444' },
-          ].map(f => (
-            <button key={f.k} onClick={() => setFilter(f.k)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? f.c : 'var(--gray-200)', background: filter === f.k ? f.c + '15' : '#fff', color: filter === f.k ? f.c : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+
+        {/* Filter tabs — real icons + t() labels */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: '1rem', flexWrap: 'wrap', animation: 'apFadeUp 0.3s ease 0.15s both' }}>
+          {FILTERS.map(f => (
+            <button
+              key={f.k}
+              onClick={() => setFilter(f.k)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 14px', borderRadius: 8, border: '1.5px solid',
+                borderColor: filter === f.k ? f.c : 'var(--gray-200)',
+                background: filter === f.k ? f.c + '15' : '#fff',
+                color: filter === f.k ? f.c : 'var(--gray-600)',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                transition: 'all 0.15s', outline: 'none',
+                boxShadow: filter === f.k ? `0 0 0 3px ${f.c}22` : 'none',
+              }}
+            >
               <f.Ico /> {f.l}
+              {filter === f.k && (
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: f.c, display: 'inline-block' }} />
+              )}
             </button>
           ))}
         </div>
-        <Card>
-          <Table loading={loading} headers={[t('code'), t('packages'), t('price'), t('customer_phone'), t('status'), t('created_at')]}
-            rows={vouchers.map(v => [
-              <code style={{ fontWeight: 800, fontSize: 14, color: 'var(--primary)', letterSpacing: '0.08em' }}>{v.code}</code>,
-              v.package_name, `TZS ${Number(v.package_price).toLocaleString()}`,
-              v.customer_phone,
-              <Badge text={v.status_display} color={vs[v.status] || 'gray'} />,
-              new Date(v.created_at).toLocaleString('sw-TZ'),
-            ])}
-            emptyMessage={t('no_vouchers')}
-          />
-        </Card>
+
+        {/* ── DESKTOP: Table ── */}
+        <div className="ap-table-wrap">
+          <Card>
+            {loading ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+            ) : vouchers.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#9ca3af' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', color: '#9ca3af' }}><Icons.Voucher /></div>
+                <p style={{ fontSize: 13, margin: 0 }}>{t('no_vouchers')}</p>
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                    {[t('code'), t('packages'), t('price'), t('customer_phone'), t('status'), t('created_at')].map((h, i) => (
+                      <th key={i} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {vouchers.map((v, idx) => {
+                    const ss = statusStyle[v.status] || statusStyle.used
+                    return (
+                      <tr key={v.id || idx} className="ap-tr" style={{ animationDelay: `${idx * 35}ms` }}>
+                        <td><code style={{ fontWeight: 800, fontSize: 14, color: 'var(--primary)', letterSpacing: '0.08em' }}>{v.code}</code></td>
+                        <td style={{ color: '#374151' }}>{v.package_name}</td>
+                        <td><strong style={{ color: '#059669', fontSize: 13 }}>TZS {Number(v.package_price).toLocaleString()}</strong></td>
+                        <td style={{ color: '#6b7280', fontSize: 12 }}>{v.customer_phone || '—'}</td>
+                        <td>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: ss.bg, color: ss.color }}>
+                            {v.status === 'active' && <Icons.IcoActive />}
+                            {v.status === 'used' && <Icons.IcoUsed />}
+                            {v.status === 'expired' && <Icons.IcoExpired />}
+                            {v.status_display}
+                          </span>
+                        </td>
+                        <td style={{ color: '#9ca3af', fontSize: 12 }}>{new Date(v.created_at).toLocaleString('sw-TZ')}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            )}
+          </Card>
+        </div>
+
+        {/* ── MOBILE: Cards ── */}
+        <div className="ap-cards-wrap">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+          ) : vouchers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>
+              <Icons.Voucher />
+              <p style={{ marginTop: 8 }}>{t('no_vouchers')}</p>
+            </div>
+          ) : (
+            <div className="ap-cards-grid">
+              {vouchers.map((v, idx) => <VoucherCard key={v.id || idx} v={v} idx={idx} />)}
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
   )
