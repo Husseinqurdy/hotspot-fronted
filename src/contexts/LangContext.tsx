@@ -182,15 +182,98 @@ export function LangProvider({ children }: { children: ReactNode }) {
 
 export const useLang = () => { const ctx = useContext(LangContext); if (!ctx) throw new Error('useLang'); return ctx }
 
-export function LanguageSwitcher({ dark=true }: { dark?: boolean }) {
+// ── Real SVG globe icon (no emoji flags) ──────────────────
+const GlobeIcon = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+)
+
+// ── Language switcher: sliding pill, real icon, smooth animation ──
+export function LanguageSwitcher({ dark = true }: { dark?: boolean }) {
   const { lang, setLang } = useLang()
+  const options: { key: Language; label: string }[] = [
+    { key: 'sw', label: 'SW' },
+    { key: 'en', label: 'EN' },
+  ]
+  const activeIndex = lang === 'sw' ? 0 : 1
+
+  const trackBg = dark ? 'rgba(255,255,255,0.08)' : 'var(--gray-100)'
+  const trackBorder = dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid var(--gray-200)'
+  const inactiveColor = dark ? 'rgba(255,255,255,0.55)' : 'var(--gray-500)'
+  const activeColor = '#fff'
+  const pillBg = dark
+    ? 'linear-gradient(135deg,#6366f1 0%,#4f46e5 100%)'
+    : 'linear-gradient(135deg,var(--primary) 0%,#4f46e5 100%)'
+
   return (
-    <div style={{ display:'flex', gap:3, background: dark?'rgba(255,255,255,0.08)':'var(--gray-100)', borderRadius:8, padding:3 }}>
-      {(['sw','en'] as Language[]).map(l => (
-        <button key={l} onClick={() => setLang(l)} style={{ padding:'4px 10px', borderRadius:6, border:'none', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all 0.15s', background: lang===l ? (dark?'#6366f1':'var(--primary)') : 'transparent', color: lang===l ? '#fff' : (dark?'rgba(255,255,255,0.5)':'var(--gray-500)') }}>
-          {l==='sw' ? '🇹🇿 SW' : '🇬🇧 EN'}
-        </button>
-      ))}
+    <div
+      role="group"
+      aria-label="Language switcher"
+      style={{
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        background: trackBg,
+        border: trackBorder,
+        borderRadius: 10,
+        padding: 3,
+        width: 118,
+        height: 32,
+        boxSizing: 'border-box',
+      }}
+    >
+      {/* Sliding active pill */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 3,
+          left: 3,
+          width: 'calc(50% - 3px)',
+          height: 'calc(100% - 6px)',
+          borderRadius: 7,
+          background: pillBg,
+          boxShadow: '0 2px 8px rgba(99,102,241,0.4)',
+          transform: `translateX(${activeIndex * 100}%)`,
+          transition: 'transform 0.25s cubic-bezier(0.34,1.4,0.64,1)',
+          pointerEvents: 'none',
+        }}
+      />
+      {options.map((opt, i) => {
+        const isActive = lang === opt.key
+        return (
+          <button
+            key={opt.key}
+            onClick={() => setLang(opt.key)}
+            aria-pressed={isActive}
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+              height: '100%',
+              border: 'none',
+              background: 'transparent',
+              borderRadius: 7,
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+              cursor: 'pointer',
+              color: isActive ? activeColor : inactiveColor,
+              transition: 'color 0.2s ease',
+            }}
+          >
+            {i === 0 && <GlobeIcon size={12} />}
+            {opt.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
