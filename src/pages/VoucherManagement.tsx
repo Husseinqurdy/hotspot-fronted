@@ -152,15 +152,16 @@ const Icons = {
   ),
 }
 
+// NOTE: `name` here is now a translation KEY (resolved via t() at render time), not literal text.
 const COLOR_THEMES = [
-  { id: 'blue',    name: 'Bluu',     bg: '#1e40af', accent: '#3b82f6', text: '#fff', light: '#dbeafe' },
-  { id: 'green',   name: 'Kijani',   bg: '#065f46', accent: '#10b981', text: '#fff', light: '#d1fae5' },
-  { id: 'purple',  name: 'Zambarau', bg: '#4c1d95', accent: '#8b5cf6', text: '#fff', light: '#ede9fe' },
-  { id: 'red',     name: 'Nyekundu', bg: '#991b1b', accent: '#ef4444', text: '#fff', light: '#fee2e2' },
-  { id: 'orange',  name: 'Chungwa',  bg: '#9a3412', accent: '#f97316', text: '#fff', light: '#ffedd5' },
-  { id: 'teal',    name: 'Teal',     bg: '#134e4a', accent: '#14b8a6', text: '#fff', light: '#ccfbf1' },
-  { id: 'black',   name: 'Nyeusi',   bg: '#111827', accent: '#6b7280', text: '#fff', light: '#f3f4f6' },
-  { id: 'gold',    name: 'Dhahabu',  bg: '#78350f', accent: '#f59e0b', text: '#fff', light: '#fef3c7' },
+  { id: 'blue',    name: 'theme_blue',    bg: '#1e40af', accent: '#3b82f6', text: '#fff', light: '#dbeafe' },
+  { id: 'green',   name: 'theme_green',   bg: '#065f46', accent: '#10b981', text: '#fff', light: '#d1fae5' },
+  { id: 'purple',  name: 'theme_purple',  bg: '#4c1d95', accent: '#8b5cf6', text: '#fff', light: '#ede9fe' },
+  { id: 'red',     name: 'theme_red',     bg: '#991b1b', accent: '#ef4444', text: '#fff', light: '#fee2e2' },
+  { id: 'orange',  name: 'theme_orange',  bg: '#9a3412', accent: '#f97316', text: '#fff', light: '#ffedd5' },
+  { id: 'teal',    name: 'theme_teal',    bg: '#134e4a', accent: '#14b8a6', text: '#fff', light: '#ccfbf1' },
+  { id: 'black',   name: 'theme_black',   bg: '#111827', accent: '#6b7280', text: '#fff', light: '#f3f4f6' },
+  { id: 'gold',    name: 'theme_gold',    bg: '#78350f', accent: '#f59e0b', text: '#fff', light: '#fef3c7' },
 ]
 
 type ThemeId = typeof COLOR_THEMES[number]['id']
@@ -184,24 +185,24 @@ function generateCodeWithSettings(settings: CodeSettings): string {
   ).join('')
 }
 
-function CodeSettingsPanel({ settings, onChange }: { settings: CodeSettings; onChange: (s: CodeSettings) => void }) {
+function CodeSettingsPanel({ settings, onChange, t }: { settings: CodeSettings; onChange: (s: CodeSettings) => void; t: (k: string) => string }) {
   const TYPE_OPTS = [
-    { v: 'mixed', l: 'Mchanganyiko', Ico: Icons.Mixed },
-    { v: 'letters', l: 'Herufi Tu', Ico: Icons.Letters },
-    { v: 'numbers', l: 'Namba Tu', Ico: Icons.Numbers },
+    { v: 'mixed', l: t('type_mixed'), Ico: Icons.Mixed },
+    { v: 'letters', l: t('type_letters'), Ico: Icons.Letters },
+    { v: 'numbers', l: t('type_numbers'), Ico: Icons.Numbers },
   ] as const
   const CASE_OPTS = [
-    { v: 'upper', l: 'KUBWA (ABC)', Ico: Icons.CaseUp },
-    { v: 'lower', l: 'Ndogo (abc)', Ico: Icons.CaseDown },
+    { v: 'upper', l: t('case_upper'), Ico: Icons.CaseUp },
+    { v: 'lower', l: t('case_lower'), Ico: Icons.CaseDown },
   ] as const
   return (
     <div style={{ background: '#f8fafc', border: '1px solid var(--gray-200)', borderRadius: 10, padding: '12px 14px' }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-        <Icons.Settings /> Mipangilio ya Code
+        <Icons.Settings /> {t('code_settings_title')}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div>
-          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>Aina ya Herufi</label>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>{t('char_type_label')}</label>
           <div style={{ display: 'flex', gap: 6 }}>
             {TYPE_OPTS.map(opt => (
               <button key={opt.v} onClick={() => onChange({ ...settings, type: opt.v as any })}
@@ -213,7 +214,7 @@ function CodeSettingsPanel({ settings, onChange }: { settings: CodeSettings; onC
         </div>
         {settings.type !== 'numbers' && (
           <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>Ukubwa wa Herufi</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>{t('char_case_label')}</label>
             <div style={{ display: 'flex', gap: 6 }}>
               {CASE_OPTS.map(opt => (
                 <button key={opt.v} onClick={() => onChange({ ...settings, case: opt.v as any })}
@@ -226,7 +227,7 @@ function CodeSettingsPanel({ settings, onChange }: { settings: CodeSettings; onC
         )}
         <div>
           <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>
-            Idadi ya Herufi: <strong style={{ color: 'var(--primary)' }}>{settings.length}</strong>
+            {t('char_count_label')}: <strong style={{ color: 'var(--primary)' }}>{settings.length}</strong>
           </label>
           <div style={{ display: 'flex', gap: 6 }}>
             {[4, 5, 6, 7, 8].map(n => (
@@ -238,7 +239,7 @@ function CodeSettingsPanel({ settings, onChange }: { settings: CodeSettings; onC
           </div>
         </div>
         <div style={{ fontSize: 11, color: 'var(--gray-500)' }}>
-          Preview: <strong style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--primary)', letterSpacing: 2 }}>{generateCodeWithSettings(settings)}</strong>
+          {t('preview_label')}: <strong style={{ fontFamily: 'monospace', fontSize: 13, color: 'var(--primary)', letterSpacing: 2 }}>{generateCodeWithSettings(settings)}</strong>
         </div>
       </div>
     </div>
@@ -248,8 +249,9 @@ function CodeSettingsPanel({ settings, onChange }: { settings: CodeSettings; onC
 type VTab = 'list' | 'manual' | 'batch'
 
 export function VoucherManagementPage() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const { clientInfo } = useAuth()
+  const dateLocale = lang === 'sw' ? 'sw-TZ' : 'en-US'
 
   const [tab, setTab] = useState<VTab>('list')
   const [vouchers, setVouchers] = useState<any[]>([])
@@ -291,7 +293,7 @@ export function VoucherManagementPage() {
       return {
         ...v,
         duration: v.duration && v.duration !== '—' ? v.duration
-          : pkg.duration_display || (pkg.duration_unit === 'days' ? `Siku ${pkg.duration_value}` : `Saa ${pkg.duration_value}`),
+          : pkg.duration_display || (pkg.duration_unit === 'days' ? `${t('duration_days_prefix')} ${pkg.duration_value}` : `${t('duration_hours_prefix')} ${pkg.duration_value}`),
         speed: v.speed && v.speed !== '—' ? v.speed : `${pkg.speed_down}mb / ${pkg.speed_up}mb`,
         package_price: v.package_price || pkg.price,
       }
@@ -300,8 +302,8 @@ export function VoucherManagementPage() {
   }
 
   const showAlrt = (type: any, msg: string) => { setAlert({ type, msg }); setTimeout(() => setAlert(null), 5000) }
-  const theme = COLOR_THEMES.find(t => t.id === selectedTheme) || COLOR_THEMES[0]
-  const printThemeObj = COLOR_THEMES.find(t => t.id === printTheme) || COLOR_THEMES[0]
+  const theme = COLOR_THEMES.find(th => th.id === selectedTheme) || COLOR_THEMES[0]
+  const printThemeObj = COLOR_THEMES.find(th => th.id === printTheme) || COLOR_THEMES[0]
 
   const fetchVouchers = () => {
     setLoading(true)
@@ -363,7 +365,7 @@ export function VoucherManagementPage() {
   const makeCode = () => generateCodeWithSettings(codeSettings)
 
   const handleManualCreate = async () => {
-    if (!manualForm.router_id || !manualForm.profile) { showAlrt('error', 'Chagua router na profile'); return }
+    if (!manualForm.router_id || !manualForm.profile) { showAlrt('error', t('alert_select_router_profile')); return }
     setSaving(true)
     try {
       const code = manualForm.custom_code || makeCode()
@@ -374,7 +376,7 @@ export function VoucherManagementPage() {
         comment: `Manual|${manualForm.customer_phone || 'N/A'}`,
       })
 
-      showAlrt('success', `Voucher ${code} imeundwa!`)
+      showAlrt('success', `${t('alert_voucher_created_prefix')} ${code} ${t('alert_voucher_created_suffix')}`)
       const pkg = allPackages.find((p: any) => p.mikrotik_profile === manualForm.profile || p.name === manualForm.profile)
       setPrintVouchers([{
         code,
@@ -388,14 +390,14 @@ export function VoucherManagementPage() {
       setManualForm({ router_id: manualForm.router_id, profile: manualForm.profile, customer_phone: '', custom_code: '' })
       fetchVouchers()
     } catch (e: any) {
-      showAlrt('error', e.response?.data?.error || 'Imeshindwa — angalia router ipo online')
+      showAlrt('error', e.response?.data?.error || t('alert_create_failed'))
     } finally { setSaving(false) }
   }
 
   const handleBatchCreate = async () => {
-    if (!batchForm.router_id || !batchForm.profile) { showAlrt('error', 'Chagua router na profile'); return }
+    if (!batchForm.router_id || !batchForm.profile) { showAlrt('error', t('alert_select_router_profile')); return }
     const qty = parseInt(batchForm.quantity)
-    if (isNaN(qty) || qty < 1 || qty > 200) { showAlrt('error', 'Quantity lazima iwe kati ya 1 na 200'); return }
+    if (isNaN(qty) || qty < 1 || qty > 200) { showAlrt('error', t('alert_quantity_range')); return }
     setSaving(true)
     const profileInfo = await getProfileInfo(batchForm.profile)
     const results: any[] = []
@@ -408,7 +410,7 @@ export function VoucherManagementPage() {
         try {
           await api.post(`/mikrotik/${batchForm.router_id}/hotspot/users/`, {
             username: code, password: code, profile: batchForm.profile,
-            comment: `Batch|${new Date().toLocaleDateString('sw-TZ')}`,
+            comment: `Batch|${new Date().toLocaleDateString(dateLocale)}`,
           })
           results.push({ code, package_name: batchForm.profile, customer_phone: '', duration: profileInfo.duration, speed: profileInfo.speed, package_price: pkgPrice })
         } catch { failed++ }
@@ -416,10 +418,10 @@ export function VoucherManagementPage() {
       setBatchResult(results)
       setPrintVouchers(results)
       setShowBatchPrint(true)
-      if (failed > 0) showAlrt('warning', `${results.length} imefanikiwa, ${failed} imeshindwa`)
-      else showAlrt('success', `Vouchers ${results.length} zimeundwa!`)
+      if (failed > 0) showAlrt('warning', `${results.length} ${t('alert_batch_partial_ok')}, ${failed} ${t('alert_batch_partial_failed')}`)
+      else showAlrt('success', `${t('alert_batch_success_prefix')} ${results.length} ${t('alert_batch_success_suffix')}`)
       fetchVouchers()
-    } catch { showAlrt('error', 'Imeshindwa kuwasiliana na router') }
+    } catch { showAlrt('error', t('alert_batch_router_failed')) }
     finally { setSaving(false) }
   }
 
@@ -619,28 +621,28 @@ export function VoucherManagementPage() {
   const business_name = clientInfo?.business_name || 'NetSafi Hotspot'
   const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
   const VTABS = [
-    { key: 'list',   label: 'Lista ya Vouchers', icon: <Icons.List /> },
-    { key: 'manual', label: 'Unda Moja',          icon: <Icons.Edit /> },
-    { key: 'batch',  label: 'Unda Batch',          icon: <Icons.Package /> },
+    { key: 'list',   label: t('tab_voucher_list'), icon: <Icons.List /> },
+    { key: 'manual', label: t('tab_voucher_manual'), icon: <Icons.Edit /> },
+    { key: 'batch',  label: t('tab_voucher_batch'), icon: <Icons.Package /> },
   ] as const
-  const FILTERS = [{ k: '', l: t('all') }, { k: 'active', l: 'Active' }, { k: 'used', l: t('used') }, { k: 'expired', l: t('expired') }]
+  const FILTERS = [{ k: '', l: t('all') }, { k: 'active', l: t('active') }, { k: 'used', l: t('used') }, { k: 'expired', l: t('expired') }]
 
   const ProfileDropdown = ({ routerId, value, onChange }: { routerId: string; value: string; onChange: (v: string) => void }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
       <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        Hotspot Profile * {profilesLoading && <Spinner size={12} />}
+        {t('hotspot_profile_star')} {profilesLoading && <Spinner size={12} />}
       </label>
       {!routerId ? (
-        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>Chagua router kwanza...</div>
+        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>{t('choose_router_first')}</div>
       ) : profilesLoading ? (
-        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>Inapakia profiles kutoka MikroTik...</div>
+        <div style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', background: '#fafafa' }}>{t('loading_profiles_mikrotik')}</div>
       ) : (
         <select value={value} onChange={(e: any) => onChange(e.target.value)}
           style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', background: '#fff', color: 'var(--gray-800)' }}>
           {profiles.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
       )}
-      {profiles.length > 0 && <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>Profiles {profiles.length} kutoka MikroTik</span>}
+      {profiles.length > 0 && <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{t('profiles_count_prefix')} {profiles.length} {t('profiles_count_suffix')}</span>}
     </div>
   )
 
@@ -648,14 +650,14 @@ export function VoucherManagementPage() {
     <Layout>
       <style>{PRINT_STYLE}</style>
       <div style={{ padding: '1.25rem', maxWidth: 1100, margin: '0 auto' }}>
-        <PageHeader title={t('vouchers')} subtitle="Simamia, unda, na chapisha vouchers" />
+        <PageHeader title={t('vouchers')} subtitle={t('voucher_page_subtitle')} />
 
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[
             { l: t('all'), v: stats?.total || 0, c: '#6366f1', Ico: Icons.Voucher },
-            { l: 'Active', v: stats?.active || 0, c: '#10b981', Ico: Icons.CheckCircle },
+            { l: t('active'), v: stats?.active || 0, c: '#10b981', Ico: Icons.CheckCircle },
             { l: t('used'), v: stats?.used || 0, c: '#6b7280', Ico: Icons.Check },
             { l: t('expired'), v: stats?.expired || 0, c: '#ef4444', Ico: Icons.Clock },
           ].map((s, i) => (
@@ -686,20 +688,20 @@ export function VoucherManagementPage() {
                   <>
                     <select value={printTheme} onChange={e => setPrintTheme(e.target.value as ThemeId)}
                       style={{ padding: '5px 8px', borderRadius: 7, border: '1px solid var(--gray-200)', fontSize: 12, cursor: 'pointer' }}>
-                      {COLOR_THEMES.map(th => <option key={th.id} value={th.id}>{th.name}</option>)}
+                      {COLOR_THEMES.map(th => <option key={th.id} value={th.id}>{t(th.name)}</option>)}
                     </select>
-                    <Button size="sm" variant="success" onClick={openPrintSelected} icon={<Icons.Printer />}>Chapisha ({selectedForPrint.size})</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setSelectedForPrint(new Set())}>Futa Chaguo</Button>
+                    <Button size="sm" variant="success" onClick={openPrintSelected} icon={<Icons.Printer />}>{t('print_selected_prefix')} ({selectedForPrint.size})</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setSelectedForPrint(new Set())}>{t('deselect_all')}</Button>
                   </>
                 )}
                 {selectedForPrint.size === 0 && vouchers.length > 0 && (
-                  <Button size="sm" variant="ghost" onClick={() => setSelectedForPrint(new Set(vouchers.map((_, i) => i)))} icon={<Icons.CheckSquare />}>Chagua Zote</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedForPrint(new Set(vouchers.map((_, i) => i)))} icon={<Icons.CheckSquare />}>{t('select_all')}</Button>
                 )}
               </div>
             </div>
             <Card>
               <Table loading={loading}
-                headers={['', t('code'), 'Package', 'Bei', t('customer_phone'), t('status'), t('created_at'), '']}
+                headers={['', t('code'), t('package_name'), t('price'), t('customer_phone'), t('status'), t('created_at'), '']}
                 rows={vouchers.map((v, i) => [
                   <input type="checkbox" checked={selectedForPrint.has(i)} onChange={() => toggleSelect(i)} style={{ width: 15, height: 15, cursor: 'pointer' }} />,
                   <code style={{ fontWeight: 800, fontSize: 13, color: 'var(--primary)', letterSpacing: '0.08em' }}>{v.code}</code>,
@@ -707,8 +709,8 @@ export function VoucherManagementPage() {
                   `TZS ${Number(v.package_price || 0).toLocaleString()}`,
                   v.customer_phone || '—',
                   <Badge text={v.status_display || v.status} color={vs[v.status] || 'gray'} />,
-                  new Date(v.created_at).toLocaleString('sw-TZ'),
-                  <Button size="sm" variant="ghost" onClick={() => { setPrintVouchers([enrichVoucherForPrint(v)]); setShowPrintModal(true) }} icon={<Icons.Printer />}>Print</Button>,
+                  new Date(v.created_at).toLocaleString(dateLocale),
+                  <Button size="sm" variant="ghost" onClick={() => { setPrintVouchers([enrichVoucherForPrint(v)]); setShowPrintModal(true) }} icon={<Icons.Printer />}>{t('print')}</Button>,
                 ])}
                 emptyMessage={t('no_vouchers')}
               />
@@ -719,36 +721,36 @@ export function VoucherManagementPage() {
         {/* ── MANUAL ── */}
         {tab === 'manual' && (
           <Card>
-            <CardHeader title="Unda Voucher Moja Kwa Moja" />
+            <CardHeader title={t('create_manual_title')} />
             <div style={{ padding: '1.25rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} />
-                  <Select label="Router (lazima iwe online) *" value={manualForm.router_id} onChange={(e: any) => handleManualRouterChange(e.target.value)}>
-                    <option value="">— Chagua Router —</option>
+                  <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} t={t} />
+                  <Select label={t('router_online_required')} value={manualForm.router_id} onChange={(e: any) => handleManualRouterChange(e.target.value)}>
+                    <option value="">— {t('choose_router')} —</option>
                     {routers.map(r => <option key={r.id} value={r.id}>{r.name} ({r.host})</option>)}
                   </Select>
                   <ProfileDropdown routerId={manualForm.router_id} value={manualForm.profile} onChange={v => setManualForm(prev => ({ ...prev, profile: v }))} />
-                  <Input label="Simu ya Mteja (optional)" placeholder="0744123456" value={manualForm.customer_phone} onChange={(e: any) => setManualForm({ ...manualForm, customer_phone: e.target.value })} />
+                  <Input label={t('customer_phone_optional')} placeholder="0744123456" value={manualForm.customer_phone} onChange={(e: any) => setManualForm({ ...manualForm, customer_phone: e.target.value })} />
                   <div>
-                    <Input label="Code ya Maalum (acha tupu = random)" placeholder="ABCD1234" value={manualForm.custom_code} onChange={(e: any) => setManualForm({ ...manualForm, custom_code: e.target.value })} />
-                    {!manualForm.custom_code && <p style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>Preview code: <strong style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{makeCode()}</strong></p>}
+                    <Input label={t('custom_code_label')} placeholder="ABCD1234" value={manualForm.custom_code} onChange={(e: any) => setManualForm({ ...manualForm, custom_code: e.target.value })} />
+                    {!manualForm.custom_code && <p style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>{t('preview_code_label')}: <strong style={{ fontFamily: 'monospace', letterSpacing: 1 }}>{makeCode()}</strong></p>}
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Rangi ya Voucher (Print)</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>{t('voucher_color_label')}</label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {COLOR_THEMES.map(th => (
-                        <button key={th.id} onClick={() => setPrintTheme(th.id as ThemeId)} title={th.name}
+                        <button key={th.id} onClick={() => setPrintTheme(th.id as ThemeId)} title={t(th.name)}
                           style={{ width: 28, height: 28, borderRadius: 7, background: th.bg, border: printTheme === th.id ? `3px solid ${th.accent}` : '2px solid transparent', cursor: 'pointer', boxShadow: printTheme === th.id ? `0 0 0 2px ${th.accent}40` : 'none', transition: 'all 0.15s' }} />
                       ))}
                     </div>
                   </div>
                   <Button onClick={handleManualCreate} disabled={saving || !manualForm.router_id || !manualForm.profile} icon={<Icons.Sparkle />}>
-                    {saving ? 'Inaunda...' : 'Unda Voucher'}
+                    {saving ? t('creating') : t('create_voucher_btn')}
                   </Button>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Preview ya Voucher</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>{t('preview_voucher_label')}</label>
                   {manualForm.router_id && manualForm.profile ? (
                     <VoucherPrintCard
                       voucher={{ code: manualForm.custom_code || makeCode(), package_name: manualForm.profile, customer_phone: manualForm.customer_phone, duration: '—', speed: '—' }}
@@ -757,7 +759,7 @@ export function VoucherManagementPage() {
                     />
                   ) : (
                     <div style={{ border: '2px dashed var(--gray-200)', borderRadius: 12, padding: '2rem', textAlign: 'center', color: 'var(--gray-400)' }}>
-                      <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icons.Voucher /></div>Chagua router na profile
+                      <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icons.Voucher /></div>{t('choose_router_profile_prompt')}
                     </div>
                   )}
                 </div>
@@ -770,41 +772,41 @@ export function VoucherManagementPage() {
         {tab === 'batch' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '1.25rem' }}>
             <Card>
-              <CardHeader title="Unda Vouchers Nyingi (Batch)" />
+              <CardHeader title={t('create_batch_title')} />
               <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} />
-                <Select label="Router (lazima iwe online) *" value={batchForm.router_id} onChange={(e: any) => handleBatchRouterChange(e.target.value)}>
-                  <option value="">— Chagua Router —</option>
+                <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} t={t} />
+                <Select label={t('router_online_required')} value={batchForm.router_id} onChange={(e: any) => handleBatchRouterChange(e.target.value)}>
+                  <option value="">— {t('choose_router')} —</option>
                   {routers.map(r => <option key={r.id} value={r.id}>{r.name} ({r.host})</option>)}
                 </Select>
                 <ProfileDropdown routerId={batchForm.router_id} value={batchForm.profile} onChange={v => setBatchForm(prev => ({ ...prev, profile: v }))} />
-                <Input label="Idadi ya Vouchers (1–200) *" type="number" min="1" max="200" placeholder="10" value={batchForm.quantity} onChange={(e: any) => setBatchForm({ ...batchForm, quantity: e.target.value })} />
+                <Input label={t('quantity_label')} type="number" min="1" max="200" placeholder="10" value={batchForm.quantity} onChange={(e: any) => setBatchForm({ ...batchForm, quantity: e.target.value })} />
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Rangi ya Vouchers (Print)</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>{t('vouchers_color_label')}</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
                     {COLOR_THEMES.map(th => (
                       <button key={th.id} onClick={() => setSelectedTheme(th.id as ThemeId)}
                         style={{ padding: '8px 4px', borderRadius: 8, border: `2px solid ${selectedTheme === th.id ? th.accent : 'transparent'}`, background: th.bg, cursor: 'pointer', transition: 'all 0.15s', boxShadow: selectedTheme === th.id ? `0 0 0 3px ${th.accent}40` : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                         <span style={{ color: th.text }}><Icons.Palette /></span>
-                        <span style={{ fontSize: 10, color: th.text, fontWeight: 600 }}>{th.name}</span>
+                        <span style={{ fontSize: 10, color: th.text, fontWeight: 600 }}>{t(th.name)}</span>
                       </button>
                     ))}
                   </div>
                 </div>
                 {batchForm.profile && (
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Preview</label>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>{t('preview_label')}</label>
                     <div style={{ transform: 'scale(0.65)', transformOrigin: 'left top', marginBottom: -90 }}>
                       <VoucherPrintCard voucher={{ code: makeCode(), package_name: batchForm.profile, duration: '—', speed: '—' }} business_name={business_name} theme={theme} />
                     </div>
                   </div>
                 )}
                 <Button onClick={handleBatchCreate} disabled={saving || !batchForm.router_id || !batchForm.profile} icon={<Icons.Zap />}>
-                  {saving ? 'Inaunda...' : `Unda Vouchers ${batchForm.quantity || 0}`}
+                  {saving ? t('creating') : `${t('create_batch_btn_prefix')} ${batchForm.quantity || 0}`}
                 </Button>
                 {saving && (
                   <div style={{ textAlign: 'center', color: 'var(--gray-500)', fontSize: 13 }}>
-                    <div style={{ marginBottom: 6 }}>Inaunda vouchers kwenye MikroTik...</div>
+                    <div style={{ marginBottom: 6 }}>{t('creating_on_mikrotik')}</div>
                     <div style={{ height: 5, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
                       <div style={{ height: '100%', background: 'var(--primary)', borderRadius: 3, animation: 'pulse 1.5s infinite', width: '60%' }} />
                     </div>
@@ -815,8 +817,8 @@ export function VoucherManagementPage() {
 
             {batchResult.length > 0 && (
               <Card>
-                <CardHeader title={`Vouchers ${batchResult.length} Zimeundwa!`}
-                  action={<Button size="sm" variant="success" onClick={() => { setPrintVouchers(batchResult); setShowPrintModal(true) }} icon={<Icons.Printer />}>Chapisha Zote</Button>} />
+                <CardHeader title={`${t('vouchers_created_prefix')} ${batchResult.length} ${t('vouchers_created_suffix')}`}
+                  action={<Button size="sm" variant="success" onClick={() => { setPrintVouchers(batchResult); setShowPrintModal(true) }} icon={<Icons.Printer />}>{t('print_all')}</Button>} />
                 <div style={{ maxHeight: 350, overflowY: 'auto' }}>
                   {batchResult.map((v, i) => (
                     <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 16px', borderBottom: '1px solid var(--gray-50)' }}>
@@ -837,13 +839,13 @@ export function VoucherManagementPage() {
             <div style={{ background: '#fff', borderRadius: 16, maxWidth: 900, width: '100%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
               <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Icons.Printer /> Chapisha Vouchers ({printVouchers.length})
+                  <Icons.Printer /> {t('print_modal_title_prefix')} ({printVouchers.length})
                 </h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: 12, color: 'var(--gray-500)' }}>Rangi:</label>
+                  <label style={{ fontSize: 12, color: 'var(--gray-500)' }}>{t('color_label')}:</label>
                   <div style={{ display: 'flex', gap: 5 }}>
                     {COLOR_THEMES.map(th => (
-                      <button key={th.id} onClick={() => setPrintTheme(th.id as ThemeId)} title={th.name}
+                      <button key={th.id} onClick={() => setPrintTheme(th.id as ThemeId)} title={t(th.name)}
                         style={{ width: 22, height: 22, borderRadius: 5, background: th.bg, border: printTheme === th.id ? `2px solid ${th.accent}` : '2px solid transparent', cursor: 'pointer' }} />
                     ))}
                   </div>
@@ -860,8 +862,8 @@ export function VoucherManagementPage() {
                 </div>
               </div>
               <div style={{ padding: '0.875rem', borderTop: '1px solid var(--gray-100)', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                <Button variant="ghost" onClick={() => setShowPrintModal(false)}>Funga</Button>
-                <Button variant="success" onClick={handlePrint} icon={<Icons.Printer />}>Chapisha Sasa</Button>
+                <Button variant="ghost" onClick={() => setShowPrintModal(false)}>{t('close')}</Button>
+                <Button variant="success" onClick={handlePrint} icon={<Icons.Printer />}>{t('print_now')}</Button>
               </div>
             </div>
           </div>
@@ -871,10 +873,10 @@ export function VoucherManagementPage() {
           <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: '#fff', borderRadius: 12, padding: '1rem 1.25rem', boxShadow: 'var(--card-shadow-lg)', border: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 200, animation: 'fadeIn 0.3s ease' }}>
             <div style={{ color: '#10b981' }}><Icons.Celebrate /></div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>Vouchers {batchResult.length} zimeundwa!</div>
-              <div style={{ fontSize: 12, color: 'var(--gray-500)' }}>Unataka kuzipiga print?</div>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{t('vouchers_created_prefix')} {batchResult.length} {t('vouchers_created_suffix')}</div>
+              <div style={{ fontSize: 12, color: 'var(--gray-500)' }}>{t('print_question')}</div>
             </div>
-            <Button size="sm" variant="success" onClick={() => { setShowBatchPrint(false); setShowPrintModal(true) }} icon={<Icons.Printer />}>Print</Button>
+            <Button size="sm" variant="success" onClick={() => { setShowBatchPrint(false); setShowPrintModal(true) }} icon={<Icons.Printer />}>{t('print')}</Button>
             <button onClick={() => setShowBatchPrint(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', alignItems: 'center' }}>
               <Icons.Close />
             </button>
