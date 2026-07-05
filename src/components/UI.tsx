@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-
+import { Icons } from './Icons';
 
 export function StatCard({ title, value, subtitle, icon, color }: { title: string; value: string|number; subtitle?: string; icon: string | React.ReactNode; color: string }) {
   return (
@@ -21,7 +21,7 @@ export function Table({ headers, rows, emptyMessage='Hakuna data', loading }: { 
         </thead>
         <tbody>
           {loading ? <tr><td colSpan={headers.length} style={{ textAlign:'center', padding:'3rem', color:'var(--gray-400)' }}><Spinner /></td></tr>
-          : rows.length===0 ? <tr><td colSpan={headers.length} style={{ textAlign:'center', padding:'3rem', color:'var(--gray-400)' }}><div style={{ fontSize:28, marginBottom:8 }}>📭</div>{emptyMessage}</td></tr>
+          : rows.length===0 ? <tr><td colSpan={headers.length} style={{ textAlign:'center', padding:'3rem', color:'var(--gray-400)' }}><div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}><Icons.Inbox size={28} /></div>{emptyMessage}</td></tr>
           : rows.map((row,i) => (
             <tr key={i} style={{ borderBottom:'1px solid var(--gray-50)', transition:'background 0.1s' }}
               onMouseEnter={e => (e.currentTarget.style.background='#fafaff')}
@@ -81,10 +81,10 @@ const BVM: Record<BV, React.CSSProperties> = {
   warning:{background:'linear-gradient(135deg,#f59e0b,#d97706)',color:'#fff',boxShadow:'0 2px 8px rgba(245,158,11,0.3)',border:'none'},
   ghost:{background:'#fff',color:'var(--gray-700)',border:'1px solid var(--gray-200)'},
 }
-export function Button({ children, onClick, type='button', variant='primary', disabled, size='md', icon, style }: { children: ReactNode; onClick?: () => void; type?: 'button'|'submit'; variant?: BV; disabled?: boolean; size?: 'sm'|'md'; icon?: string; style?: React.CSSProperties }) {
+export function Button({ children, onClick, type='button', variant='primary', disabled, size='md', icon, style }: { children: ReactNode; onClick?: () => void; type?: 'button'|'submit'; variant?: BV; disabled?: boolean; size?: 'sm'|'md'; icon?: ReactNode; style?: React.CSSProperties }) {
   return (
     <button type={type} onClick={onClick} disabled={disabled} style={{ padding:size==='sm'?'5px 12px':'9px 18px', borderRadius:8, fontSize:size==='sm'?12:14, fontWeight:600, cursor:disabled?'not-allowed':'pointer', opacity:disabled?0.65:1, display:'inline-flex', alignItems:'center', gap:5, transition:'all 0.15s', whiteSpace:'nowrap', ...BVM[variant], ...style }}>
-      {icon && <span style={{ fontSize:size==='sm'?13:15 }}>{icon}</span>}{children}
+      {icon && <span style={{ display:'inline-flex', alignItems:'center', fontSize:size==='sm'?13:15 }}>{icon}</span>}{children}
     </button>
   )
 }
@@ -115,7 +115,7 @@ export function Modal({ open, onClose, title, children, width=480 }: { open: boo
       <div style={{ background:'#fff', borderRadius:16, width:'100%', maxWidth:width, maxHeight:'92vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.2)', animation:'modalIn 0.2s ease' }}>
         <div style={{ padding:'1.1rem 1.25rem', borderBottom:'1px solid var(--gray-100)', display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, background:'#fff', zIndex:1 }}>
           <h3 style={{ fontSize:15, fontWeight:700, color:'var(--gray-900)' }}>{title}</h3>
-          <button onClick={onClose} style={{ width:28, height:28, background:'var(--gray-100)', border:'none', borderRadius:7, cursor:'pointer', fontSize:14, color:'var(--gray-500)', display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+          <button onClick={onClose} style={{ width:28, height:28, background:'var(--gray-100)', border:'none', borderRadius:7, cursor:'pointer', fontSize:14, color:'var(--gray-500)', display:'flex', alignItems:'center', justifyContent:'center' }}><Icons.X size={14} /></button>
         </div>
         <div style={{ padding:'1.25rem' }}>{children}</div>
       </div>
@@ -124,8 +124,13 @@ export function Modal({ open, onClose, title, children, width=480 }: { open: boo
 }
 
 export function Alert({ type, message }: { type: 'success'|'error'|'warning'|'info'; message: string }) {
-  const s = { success:{bg:'var(--success-light)',color:'#065f46',icon:'✅'}, error:{bg:'var(--danger-light)',color:'#991b1b',icon:'❌'}, warning:{bg:'var(--warning-light)',color:'#92400e',icon:'⚠️'}, info:{bg:'var(--info-light)',color:'#1e40af',icon:'ℹ️'} }[type]
-  return <div style={{ background:s.bg, color:s.color, padding:'10px 13px', borderRadius:8, fontSize:13, display:'flex', alignItems:'flex-start', gap:8, animation:'fadeIn 0.2s ease' }}><span style={{ flexShrink:0 }}>{s.icon}</span>{message}</div>
+  const s = {
+    success:{bg:'var(--success-light)',color:'#065f46',icon:<Icons.CheckCircle size={16} />},
+    error:{bg:'var(--danger-light)',color:'#991b1b',icon:<Icons.XCircle size={16} />},
+    warning:{bg:'var(--warning-light)',color:'#92400e',icon:<Icons.AlertTriangle size={16} />},
+    info:{bg:'var(--info-light)',color:'#1e40af',icon:<Icons.Info size={16} />},
+  }[type]
+  return <div style={{ background:s.bg, color:s.color, padding:'10px 13px', borderRadius:8, fontSize:13, display:'flex', alignItems:'flex-start', gap:8, animation:'fadeIn 0.2s ease' }}><span style={{ flexShrink:0, display:'flex', alignItems:'center' }}>{s.icon}</span>{message}</div>
 }
 
 export function Spinner({ size=18 }: { size?: number }) {
@@ -140,12 +145,12 @@ export function FormActions({ children }: { children: ReactNode }) {
   return <div style={{ display:'flex', gap:8, justifyContent:'flex-end', marginTop:8, flexWrap:'wrap' }}>{children}</div>
 }
 
-export function Tabs({ tabs, active, onChange }: { tabs:{key:string;label:string;icon?:string}[]; active:string; onChange:(k:string)=>void }) {
+export function Tabs({ tabs, active, onChange }: { tabs:{key:string;label:string;icon?:ReactNode}[]; active:string; onChange:(k:string)=>void }) {
   return (
     <div style={{ display:'flex', gap:4, borderBottom:'2px solid var(--gray-100)', marginBottom:'1.25rem', overflowX:'auto', flexShrink:0 }}>
       {tabs.map(tab => (
         <button key={tab.key} onClick={() => onChange(tab.key)} style={{ padding:'8px 14px', border:'none', background:'transparent', fontSize:13, fontWeight:600, cursor:'pointer', borderBottom:`2px solid ${active===tab.key?'var(--primary)':'transparent'}`, color:active===tab.key?'var(--primary)':'var(--gray-500)', marginBottom:-2, whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5, transition:'all 0.15s' }}>
-          {tab.icon && <span>{tab.icon}</span>}{tab.label}
+          {tab.icon && <span style={{ display:'flex', alignItems:'center' }}>{tab.icon}</span>}{tab.label}
         </button>
       ))}
     </div>
@@ -166,7 +171,9 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, danger
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100, padding:'1rem' }}>
       <div style={{ background:'#fff', borderRadius:14, padding:'1.5rem', maxWidth:380, width:'100%', boxShadow:'0 20px 60px rgba(0,0,0,0.2)', animation:'modalIn 0.2s ease' }}>
-        <div style={{ fontSize:32, textAlign:'center', marginBottom:12 }}>{danger ? '⚠️' : '❓'}</div>
+        <div style={{ display:'flex', justifyContent:'center', marginBottom:12 }}>
+          {danger ? <Icons.AlertTriangle size={32} /> : <Icons.HelpCircle size={32} />}
+        </div>
         <h3 style={{ fontSize:16, fontWeight:700, color:'var(--gray-900)', textAlign:'center', marginBottom:8 }}>{title}</h3>
         <p style={{ fontSize:14, color:'var(--gray-600)', textAlign:'center', marginBottom:'1.5rem', lineHeight:1.6 }}>{message}</p>
         <div style={{ display:'flex', gap:10 }}>

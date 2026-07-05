@@ -200,9 +200,9 @@ export function LanguageSwitcher({ dark = true }: { dark?: boolean }) {
   ]
   const activeIndex = lang === 'sw' ? 0 : 1
 
-  const trackBg = dark ? 'rgba(255,255,255,0.08)' : 'var(--gray-100)'
-  const trackBorder = dark ? '1px solid rgba(255,255,255,0.1)' : '1px solid var(--gray-200)'
-  const inactiveColor = dark ? 'rgba(255,255,255,0.55)' : 'var(--gray-500)'
+  const trackBg = dark ? 'rgba(255,255,255,0.14)' : 'var(--gray-100)'
+  const trackBorder = dark ? '1px solid rgba(255,255,255,0.22)' : '1px solid var(--gray-200)'
+  const inactiveColor = dark ? 'rgba(255,255,255,0.75)' : 'var(--gray-500)'
   const activeColor = '#fff'
   const pillBg = dark
     ? 'linear-gradient(135deg,#6366f1 0%,#4f46e5 100%)'
@@ -224,6 +224,8 @@ export function LanguageSwitcher({ dark = true }: { dark?: boolean }) {
         width: 118,
         height: 32,
         boxSizing: 'border-box',
+        overflow: 'hidden',
+        boxShadow: dark ? 'inset 0 1px 3px rgba(0,0,0,0.25)' : 'inset 0 1px 2px rgba(0,0,0,0.04)',
       }}
     >
       {/* Sliding active pill */}
