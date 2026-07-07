@@ -15,6 +15,7 @@ const Icon = {
   Devices: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>,
   Analysis: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/><circle cx="7" cy="15" r="1" fill="currentColor"/><circle cx="11" cy="10" r="1" fill="currentColor"/><circle cx="14" cy="13" r="1" fill="currentColor"/><circle cx="19" cy="6" r="1" fill="currentColor"/></svg>,
   Withdraw: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/><path d="M15 15l3 3 3-3"/><path d="M18 12v6"/></svg>,
+  Requests: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>,
   Logout: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
   Globe: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
   Check: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
@@ -25,16 +26,38 @@ const Icon = {
   ChevronDown: () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>,
 }
 
+// ── LOCAL TRANSLATIONS (for labels not yet in LangContext) ──
+const LOCAL_TR: Record<string, { sw: string; en: string }> = {
+  analysis:      { sw: 'Uchambuzi',        en: 'Analysis' },
+  withdraw:      { sw: 'Toa Fedha',        en: 'Withdraw' },
+  mikrotik:      { sw: 'Simamia MikroTik', en: 'Manage MikroTik' },
+  requests:      { sw: 'Maombi',           en: 'Requests' },
+  super_admin:   { sw: 'Msimamizi Mkuu',   en: 'Super Admin' },
+  client:        { sw: 'Mteja',            en: 'Client' },
+  notifications: { sw: 'Arifa',            en: 'Notifications' },
+  mark_all_read: { sw: 'Weka zote kama zimesomwa', en: 'Mark all read' },
+  no_notifications: { sw: 'Hakuna arifa',  en: 'No notifications' },
+  settings:      { sw: 'Mipangilio',       en: 'Settings' },
+  logout:        { sw: 'Toka',             en: 'Logout' },
+  version:       { sw: 'toleo',             en: 'version' },
+}
+
+function trLocal(key: keyof typeof LOCAL_TR, lang: string) {
+  const entry = LOCAL_TR[key]
+  if (!entry) return key
+  return lang === 'sw' ? entry.sw : entry.en
+}
+
 // ── TOOLTIP ICON BUTTON (used for Logout everywhere) ───────
 function TooltipIconButton({
-  icon, label, onClick, tone = 'danger', block = false,
-}: { icon: React.ReactNode; label: string; onClick: () => void; tone?: 'danger' | 'neutral'; block?: boolean }) {
+  icon, label, onClick, tone = 'danger', block = false, direction = 'right',
+}: { icon: React.ReactNode; label: string; onClick: () => void; tone?: 'danger' | 'neutral'; block?: boolean; direction?: 'right' | 'up' }) {
   const colors = tone === 'danger'
     ? { fg: '#ef4444', bg: '#fef2f2', bgHover: '#fee2e2', border: '#fecaca' }
     : { fg: '#374151', bg: '#f8fafc', bgHover: '#eef2ff', border: '#e5e7eb' }
 
   return (
-    <div className="tooltip-wrap" style={{ position: 'relative', display: block ? 'block' : 'inline-flex', width: block ? '100%' : undefined }}>
+    <div className={`tooltip-wrap tooltip-${direction}`} style={{ position: 'relative', display: block ? 'block' : 'inline-flex', width: block ? '100%' : undefined }}>
       <button
         onClick={onClick}
         aria-label={label}
@@ -118,7 +141,7 @@ function LangSwitcher({ dark = false }: { dark?: boolean }) {
 
 // ── TOPBAR (desktop only — hidden on small screens) ────────
 function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number; displayName: string; isAdmin: boolean; initials: string }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -140,14 +163,15 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
     const path = location.pathname
     if (path.includes('dashboard')) return t('dashboard')
     if (path.includes('routers')) return t('routers')
-    if (path.includes('mikrotik')) return 'Manage MikroTik'
+    if (path.includes('mikrotik')) return trLocal('mikrotik', lang)
     if (path.includes('packages')) return t('packages')
     if (path.includes('vouchers')) return t('vouchers')
     if (path.includes('payments')) return t('payments')
     if (path.includes('clients')) return t('clients')
     if (path.includes('devices')) return t('devices')
-    if (path.includes('analysis')) return 'Analysis'
-    if (path.includes('withdraw')) return 'Withdraw'
+    if (path.includes('analysis')) return trLocal('analysis', lang)
+    if (path.includes('withdraw')) return trLocal('withdraw', lang)
+    if (path.includes('requests')) return trLocal('requests', lang)
     return 'NetSafi'
   }
 
@@ -189,14 +213,14 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
           {notifOpen && (
             <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, width: 'min(300px, calc(100vw - 24px))', zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.12)', overflow: 'hidden', animation: 'dropDown 0.18s ease' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>Notifications</span>
-                <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600, cursor: 'pointer' }}>Mark all read</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{trLocal('notifications', lang)}</span>
+                <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600, cursor: 'pointer' }}>{trLocal('mark_all_read', lang)}</span>
               </div>
               <div style={{ padding: '12px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', color: '#d1d5db' }}>
                   <Icon.Bell />
                 </div>
-                Hakuna notifications
+                {trLocal('no_notifications', lang)}
               </div>
             </div>
           )}
@@ -213,7 +237,7 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
             </div>
             <div className="topbar-profile-text" style={{ textAlign: 'left', minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
-              <div style={{ fontSize: 10, color: '#9ca3af' }}>{isAdmin ? 'Super Admin' : 'Client'}</div>
+              <div style={{ fontSize: 10, color: '#9ca3af' }}>{isAdmin ? trLocal('super_admin', lang) : trLocal('client', lang)}</div>
             </div>
             <div style={{ color: '#9ca3af', marginLeft: 2, flexShrink: 0 }}><Icon.ChevronDown /></div>
           </button>
@@ -225,7 +249,7 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
                   {initials}
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
-                <div style={{ fontSize: 11, color: '#6b7280' }}>{isAdmin ? 'Super Admin' : 'Client'}</div>
+                <div style={{ fontSize: 11, color: '#6b7280' }}>{isAdmin ? trLocal('super_admin', lang) : trLocal('client', lang)}</div>
               </div>
 
               <button onClick={() => setProfileOpen(false)}
@@ -233,7 +257,7 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
                 <span style={{ color: '#6b7280' }}><Icon.Settings /></span>
-                Settings
+                {trLocal('settings', lang)}
               </button>
 
               <div style={{ height: 1, background: '#f3f4f6', margin: '4px 0' }} />
@@ -242,7 +266,7 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
               <div style={{ padding: '4px 16px 8px' }}>
                 <TooltipIconButton
                   icon={<Icon.Logout />}
-                  label="Logout"
+                  label={trLocal('logout', lang)}
                   onClick={() => { logout(); navigate('/login'); setProfileOpen(false) }}
                 />
               </div>
@@ -254,10 +278,15 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
   )
 }
 
+// module-level flags so sidebar entrance animation only plays ONCE per
+// browser session, not every time a page mounts a fresh <Layout>.
+let sidebarHasAnimated = false
+let navItemsHaveAnimated = false
+
 // ── MAIN LAYOUT ────────────────────────────────────────────
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, clientInfo, isSuperAdmin, logout } = useAuth()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const location = useLocation()
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
@@ -268,6 +297,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const sidebarW = collapsed ? 64 : 220
   const TOPBAR_H = 60
 
+  // Only true the very first time ANY Layout mounts in this browser tab.
+  const [skipEntranceAnim] = useState(() => sidebarHasAnimated)
+  const [skipNavAnim] = useState(() => navItemsHaveAnimated)
+  useEffect(() => {
+    sidebarHasAnimated = true
+    navItemsHaveAnimated = true
+  }, [])
+
   const adminLinks = [
     { to: '/admin/dashboard', label: t('dashboard'), icon: <Icon.Dashboard /> },
     { to: '/admin/clients',   label: t('clients'),   icon: <Icon.Clients /> },
@@ -275,18 +312,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { to: '/admin/devices',   label: t('devices'),   icon: <Icon.Devices /> },
     { to: '/admin/payments',  label: t('payments'),  icon: <Icon.Payments /> },
     { to: '/admin/vouchers',  label: t('vouchers'),  icon: <Icon.Vouchers /> },
-    { to: '/admin/analysis',  label: 'Analysis',     icon: <Icon.Analysis /> },
-    { to: '/admin/withdraw',  label: 'Withdraw',     icon: <Icon.Withdraw /> },
+    { to: '/admin/requests',  label: trLocal('requests', lang), icon: <Icon.Requests /> },
+    { to: '/admin/withdraw',  label: trLocal('withdraw', lang), icon: <Icon.Withdraw /> },
   ]
   const clientLinks = [
-    { to: '/client/dashboard', label: t('dashboard'),    icon: <Icon.Dashboard /> },
-    { to: '/client/routers',   label: t('routers'),      icon: <Icon.Routers /> },
-    { to: '/client/mikrotik',  label: 'Manage MikroTik', icon: <Icon.MikroTik /> },
-    { to: '/client/packages',  label: t('packages'),     icon: <Icon.Packages /> },
-    { to: '/client/vouchers',  label: t('vouchers'),     icon: <Icon.Vouchers /> },
-    { to: '/client/payments',  label: t('payments'),     icon: <Icon.Payments /> },
-    { to: '/client/analysis',  label: 'Analysis',        icon: <Icon.Analysis /> },
-    { to: '/client/withdraw',  label: 'Withdraw',        icon: <Icon.Withdraw /> },
+    { to: '/client/dashboard', label: t('dashboard'),               icon: <Icon.Dashboard /> },
+    { to: '/client/routers',   label: t('routers'),                 icon: <Icon.Routers /> },
+    { to: '/client/mikrotik',  label: trLocal('mikrotik', lang),    icon: <Icon.MikroTik /> },
+    { to: '/client/packages',  label: t('packages'),                icon: <Icon.Packages /> },
+    { to: '/client/vouchers',  label: t('vouchers'),                icon: <Icon.Vouchers /> },
+    { to: '/client/payments',  label: t('payments'),                icon: <Icon.Payments /> },
+    { to: '/client/analysis',  label: trLocal('analysis', lang),    icon: <Icon.Analysis /> },
+    { to: '/client/withdraw',  label: trLocal('withdraw', lang),    icon: <Icon.Withdraw /> },
   ]
   const links = isAdmin ? adminLinks : clientLinks
 
@@ -295,11 +332,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const Logo = ({ collapsedLogo }: { collapsedLogo: boolean }) => (
     <div style={{ padding: collapsedLogo ? '18px 0' : '18px 16px', display: 'flex', alignItems: 'center', gap: 10, justifyContent: collapsedLogo ? 'center' : 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: 6 }}>
-      <div className="netsafi-logo-wrap" style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #818cf8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(99,102,241,0.4)', overflow: 'hidden', animation: 'logoPop 0.5s cubic-bezier(0.34,1.56,0.64,1)' }}>
-        <img src="/netsafi2.png" alt="NetSafi" className="netsafi-logo-img" style={{ width: '78%', height: '78%', objectFit: 'contain', transition: 'transform 0.35s ease' }} />
+      <div className="netsafi-logo-wrap" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: skipEntranceAnim ? 'none' : 'logoPop 0.5s cubic-bezier(0.34,1.56,0.64,1)' }}>
+        <img src="/netsafi2.png" alt="NetSafi" className="netsafi-logo-img" style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 0.35s ease', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.35))' }} />
       </div>
       {!collapsedLogo && (
-        <div style={{ animation: 'fadeSlideIn 0.4s ease 0.1s both' }}>
+        <div style={{ animation: skipEntranceAnim ? 'none' : 'fadeSlideIn 0.4s ease 0.1s both' }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>NetSafi</div>
           <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>Hotspot Management</div>
         </div>
@@ -313,7 +350,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         const active = location.pathname === link.to || location.pathname.startsWith(link.to + '/')
         return (
           <Link key={link.to} to={link.to} onClick={onNavigate}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: collapsedNav ? '10px 0' : '9px 12px', justifyContent: collapsedNav ? 'center' : 'flex-start', borderRadius: 10, marginBottom: 2, background: active ? 'rgba(99,102,241,0.18)' : 'transparent', color: active ? '#a5b4fc' : 'rgba(255,255,255,0.55)', textDecoration: 'none', fontSize: 13, fontWeight: active ? 700 : 500, transition: 'all 0.15s', position: 'relative', animation: `navItemIn 0.3s ease ${i * 0.035}s both` }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: collapsedNav ? '10px 0' : '9px 12px', justifyContent: collapsedNav ? 'center' : 'flex-start', borderRadius: 10, marginBottom: 2, background: active ? 'rgba(99,102,241,0.18)' : 'transparent', color: active ? '#a5b4fc' : 'rgba(255,255,255,0.55)', textDecoration: 'none', fontSize: 13, fontWeight: active ? 700 : 500, transition: 'all 0.15s', position: 'relative', animation: skipNavAnim ? 'none' : `navItemIn 0.3s ease ${i * 0.035}s both` }}
             onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.07)'; (e.currentTarget as HTMLElement).style.color = '#e2e8f0' } }}
             onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.55)' } }}>
             {active && <div style={{ position: 'absolute', left: 0, top: '20%', bottom: '20%', width: 3, background: '#6366f1', borderRadius: '0 3px 3px 0' }} />}
@@ -345,14 +382,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const path = location.pathname
     if (path.includes('dashboard')) return t('dashboard')
     if (path.includes('routers')) return t('routers')
-    if (path.includes('mikrotik')) return 'Manage MikroTik'
+    if (path.includes('mikrotik')) return trLocal('mikrotik', lang)
     if (path.includes('packages')) return t('packages')
     if (path.includes('vouchers')) return t('vouchers')
     if (path.includes('payments')) return t('payments')
     if (path.includes('clients')) return t('clients')
     if (path.includes('devices')) return t('devices')
-    if (path.includes('analysis')) return 'Analysis'
-    if (path.includes('withdraw')) return 'Withdraw'
+    if (path.includes('analysis')) return trLocal('analysis', lang)
+    if (path.includes('withdraw')) return trLocal('withdraw', lang)
+    if (path.includes('requests')) return trLocal('requests', lang)
     return 'NetSafi'
   }
 
@@ -360,35 +398,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Logo collapsedLogo={false} />
 
-      {/* Greeting + page title (moved from topbar) */}
-      <div style={{ padding: '4px 16px 12px', animation: 'fadeSlideIn 0.35s ease 0.05s both' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>
+      {/* Greeting + quick actions grouped into one coherent card */}
+      <div style={{ margin: '0 12px 12px', padding: '14px', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', animation: skipEntranceAnim ? 'none' : 'fadeSlideIn 0.35s ease 0.05s both' }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {t('welcome_client')}, <span style={{ color: '#a5b4fc' }}>{displayName}</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#818cf8', animation: 'pulseDot 2s ease-in-out infinite' }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500 }}>{getMobileTitle()}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 12 }}>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#818cf8', animation: 'pulseDot 2s ease-in-out infinite', flexShrink: 0 }} />
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getMobileTitle()}</span>
         </div>
-      </div>
 
-      {/* Quick actions: language + notifications */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px 14px', animation: 'fadeSlideIn 0.35s ease 0.1s both' }}>
-        <LangSwitcher dark />
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => setMobileNotifOpen(o => !o)}
-            style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#e2e8f0', position: 'relative', transition: 'all 0.18s' }}>
-            <Icon.Bell />
-            <div style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #1e1b4b', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
-          </button>
+        {/* Quick actions: language + notifications */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <LangSwitcher dark />
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setMobileNotifOpen(o => !o)}
+              style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#e2e8f0', position: 'relative', transition: 'all 0.18s' }}>
+              <Icon.Bell />
+              <div style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #1e1b4b', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      {mobileNotifOpen && (
-        <div style={{ margin: '0 16px 14px', padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', animation: 'dropDown 0.18s ease' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 6 }}>Notifications</div>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>Hakuna notifications</div>
-        </div>
-      )}
+        {mobileNotifOpen && (
+          <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', animation: 'dropDown 0.18s ease' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 6 }}>{trLocal('notifications', lang)}</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{trLocal('no_notifications', lang)}</div>
+          </div>
+        )}
+      </div>
 
       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '0 0 6px' }} />
 
@@ -401,11 +439,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{isAdmin ? 'Super Admin' : 'Client'}</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{isAdmin ? trLocal('super_admin', lang) : trLocal('client', lang)}</div>
         </div>
         <TooltipIconButton
           icon={<Icon.Logout />}
-          label="Logout"
+          label={trLocal('logout', lang)}
+          direction="up"
           onClick={() => { logout(); navigate('/login'); setMobileOpen(false) }}
         />
       </div>
@@ -426,24 +465,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         @keyframes logoPop { from{opacity:0;transform:scale(0.6) rotate(-8deg)} to{opacity:1;transform:scale(1) rotate(0)} }
 
         .sidebar-link { transition: all 0.15s; }
-        .layout-sidebar { animation: sidebarIn 0.35s ease; }
+        .layout-sidebar { animation: ${skipEntranceAnim ? 'none' : 'sidebarIn 0.35s ease'}; }
         .mobile-menu-btn { display: none; }
 
-        .netsafi-logo-wrap:hover .netsafi-logo-img { transform: scale(1.15) rotate(-4deg); }
+        .netsafi-logo-wrap:hover .netsafi-logo-img { transform: scale(1.1); }
 
         /* Tooltip for icon-only buttons (e.g. Logout) */
         .tooltip-wrap .tooltip-label {
-          position: absolute; top: 50%; left: calc(100% + 8px); transform: translateY(-50%) translateX(-4px);
-          background: #111827; color: #fff; font-size: 11px; font-weight: 600;
+          position: absolute; background: #111827; color: #fff; font-size: 11px; font-weight: 600;
           padding: 5px 9px; border-radius: 6px; white-space: nowrap;
           opacity: 0; pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease;
           z-index: 50;
         }
-        .tooltip-wrap .tooltip-label::before {
+        .tooltip-right .tooltip-label {
+          top: 50%; left: calc(100% + 8px); transform: translateY(-50%) translateX(-4px);
+        }
+        .tooltip-right .tooltip-label::before {
           content: ''; position: absolute; top: 50%; right: 100%; transform: translateY(-50%);
           border: 5px solid transparent; border-right-color: #111827;
         }
-        .tooltip-wrap:hover .tooltip-label { opacity: 1; transform: translateY(-50%) translateX(0); }
+        .tooltip-right:hover .tooltip-label { transform: translateY(-50%) translateX(0); }
+
+        .tooltip-up .tooltip-label {
+          bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px);
+          right: auto;
+        }
+        .tooltip-up .tooltip-label::before {
+          content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+          border: 5px solid transparent; border-top-color: #111827;
+        }
+        .tooltip-up:hover .tooltip-label { transform: translateX(-50%) translateY(0); }
+
+        .tooltip-wrap:hover .tooltip-label { opacity: 1; }
 
         /* Tablet & below: hide desktop topbar + desktop sidebar entirely */
         @media (max-width: 768px) {
@@ -480,8 +533,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {mobileOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, animation: 'overlayIn 0.2s ease' }}>
           <div onClick={() => setMobileOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)' }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 260, maxWidth: '85vw', background: 'linear-gradient(180deg, #1e1b4b 0%, #13103a 100%)', animation: 'sidebarIn 0.25s ease', boxShadow: '4px 0 24px rgba(0,0,0,0.3)', overflowY: 'auto' }}>
-            <MobileSidebar />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 260, maxWidth: '85vw', background: 'linear-gradient(180deg, #1e1b4b 0%, #13103a 100%)', animation: 'sidebarIn 0.25s ease', boxShadow: '4px 0 24px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              <MobileSidebar />
+            </div>
           </div>
         </div>
       )}
@@ -495,7 +550,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main Content */}
-      <main className="layout-main" style={{ marginLeft: sidebarW, flex: 1, minHeight: '100vh', paddingTop: TOPBAR_H, transition: 'margin-left 0.25s ease', animation: 'contentIn 0.4s ease' }}>
+      <main className="layout-main" style={{ marginLeft: sidebarW, flex: 1, minHeight: '100vh', paddingTop: TOPBAR_H, transition: 'margin-left 0.25s ease', animation: skipEntranceAnim ? 'none' : 'contentIn 0.4s ease' }}>
         {children}
       </main>
     </div>
