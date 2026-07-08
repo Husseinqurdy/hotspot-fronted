@@ -89,14 +89,36 @@ const LANGS = [
 function LangSwitcher({ dark = false }: { dark?: boolean }) {
   const { lang, setLang } = useLang()
   const [open, setOpen] = useState(false)
+  const [coords, setCoords] = useState<{ top: number; right: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
   const current = LANGS.find(l => l.code === lang) || LANGS[0]
 
   useEffect(() => {
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
   }, [])
+
+  // Reposition on open/scroll/resize — dropdown renders as position:fixed
+  // (anchored via viewport coords) so it can never be clipped by a parent's
+  // overflow:hidden/auto (this was the cause of it "disappearing" on mobile).
+  useEffect(() => {
+    if (!open) return
+    const update = () => {
+      const r = btnRef.current?.getBoundingClientRect()
+      if (r) setCoords({ top: r.bottom + 6, right: Math.max(8, window.innerWidth - r.right) })
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update, true)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update, true)
+    }
+  }, [open])
 
   const btnStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 6,
@@ -111,7 +133,7 @@ function LangSwitcher({ dark = false }: { dark?: boolean }) {
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <button style={btnStyle} onClick={() => setOpen(o => !o)}
+      <button ref={btnRef} style={btnStyle} onClick={() => setOpen(o => !o)}
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = dark ? 'rgba(255,255,255,0.14)' : '#f1f5f9'; (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = dark ? 'rgba(255,255,255,0.08)' : '#f8fafc'; (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}>
         <Icon.Globe />
@@ -121,8 +143,8 @@ function LangSwitcher({ dark = false }: { dark?: boolean }) {
         </span>
       </button>
 
-      {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.12)', minWidth: 160, width: 'max-content', maxWidth: 'calc(100vw - 24px)', animation: 'dropDown 0.18s ease' }}>
+      {open && coords && (
+        <div style={{ position: 'fixed', top: coords.top, right: coords.right, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', zIndex: 9999, boxShadow: '0 8px 28px rgba(0,0,0,0.18)', minWidth: 160, width: 'max-content', maxWidth: 'calc(100vw - 24px)', animation: 'dropDown 0.18s ease' }}>
           {LANGS.map(l => (
             <button key={l.code} onClick={() => { setLang(l.code as any); setOpen(false) }}
               style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: lang === l.code ? '#eef2ff' : 'transparent', border: 'none', cursor: 'pointer', color: lang === l.code ? '#4338ca' : '#374151', fontSize: 13, fontWeight: lang === l.code ? 700 : 500, textAlign: 'left', transition: 'background 0.12s' }}
@@ -313,7 +335,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { to: '/admin/payments',  label: t('payments'),  icon: <Icon.Payments /> },
     { to: '/admin/vouchers',  label: t('vouchers'),  icon: <Icon.Vouchers /> },
     { to: '/admin/requests',  label: trLocal('requests', lang), icon: <Icon.Requests /> },
-    { to: '/admin/withdraw',  label: trLocal('withdraw', lang), icon: <Icon.Withdraw /> },
   ]
   const clientLinks = [
     { to: '/client/dashboard', label: t('dashboard'),               icon: <Icon.Dashboard /> },
@@ -332,8 +353,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const Logo = ({ collapsedLogo }: { collapsedLogo: boolean }) => (
     <div style={{ padding: collapsedLogo ? '18px 0' : '18px 16px', display: 'flex', alignItems: 'center', gap: 10, justifyContent: collapsedLogo ? 'center' : 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.08)', marginBottom: 6 }}>
-      <div className="netsafi-logo-wrap" style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: skipEntranceAnim ? 'none' : 'logoPop 0.5s cubic-bezier(0.34,1.56,0.64,1)' }}>
-        <img src="/netsafi2.png" alt="NetSafi" className="netsafi-logo-img" style={{ width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 0.35s ease', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.35))' }} />
+      <div className="netsafi-logo-wrap" style={{ width: 40, height: 40, borderRadius: 11, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: skipEntranceAnim ? 'none' : 'logoPop 0.5s cubic-bezier(0.34,1.56,0.64,1)' }}>
+        <img src="/netsafi2.png" alt="NetSafi" className="netsafi-logo-img" style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.35s ease' }} />
       </div>
       {!collapsedLogo && (
         <div style={{ animation: skipEntranceAnim ? 'none' : 'fadeSlideIn 0.4s ease 0.1s both' }}>
