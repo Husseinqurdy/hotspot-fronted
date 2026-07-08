@@ -39,6 +39,33 @@ const PRINT_STYLE = `
   }
 `
 
+// ── Responsive (on-screen) styles — only affects small viewports, never printing ──
+const RESPONSIVE_STYLE = `
+  @media (max-width: 640px) {
+    .vm-container { padding: 0.75rem !important; }
+    .vm-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+    .vm-stats-grid > div { padding: 0.65rem !important; }
+    .vm-list-toolbar { flex-direction: column !important; align-items: stretch !important; }
+    .vm-list-filters { width: 100% !important; }
+    .vm-list-actions { width: 100% !important; flex-wrap: wrap !important; }
+    .vm-list-actions > select,
+    .vm-list-actions > button { flex: 1 1 auto !important; }
+    .vm-table-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+    .vm-table-scroll table { min-width: 680px !important; }
+    .vm-manual-grid, .vm-batch-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+    .vm-code-type-row { flex-wrap: wrap !important; }
+    .vm-batch-theme-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    .vm-print-modal { max-width: 100% !important; width: 100% !important; height: 100% !important; max-height: 100% !important; border-radius: 0 !important; }
+    .vm-print-modal-header { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+    .vm-print-modal-header > div { width: 100% !important; justify-content: space-between !important; }
+    .vm-print-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+    .vm-batch-toast { left: 0.75rem !important; right: 0.75rem !important; bottom: 0.75rem !important; flex-wrap: wrap !important; }
+  }
+  @media (max-width: 400px) {
+    .vm-print-grid { grid-template-columns: 1fr !important; }
+  }
+`
+
 // ── Real SVG icon set (replaces all emoji in this page) ───────────────
 const Icons = {
   Settings: () => (
@@ -203,7 +230,7 @@ function CodeSettingsPanel({ settings, onChange, t }: { settings: CodeSettings; 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div>
           <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>{t('char_type_label')}</label>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div className="vm-code-type-row" style={{ display: 'flex', gap: 6 }}>
             {TYPE_OPTS.map(opt => (
               <button key={opt.v} onClick={() => onChange({ ...settings, type: opt.v as any })}
                 style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, border: '1.5px solid', borderColor: settings.type === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: settings.type === opt.v ? 'var(--primary-light)' : '#fff', color: settings.type === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
@@ -215,7 +242,7 @@ function CodeSettingsPanel({ settings, onChange, t }: { settings: CodeSettings; 
         {settings.type !== 'numbers' && (
           <div>
             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-600)', display: 'block', marginBottom: 5 }}>{t('char_case_label')}</label>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div className="vm-code-type-row" style={{ display: 'flex', gap: 6 }}>
               {CASE_OPTS.map(opt => (
                 <button key={opt.v} onClick={() => onChange({ ...settings, case: opt.v as any })}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, border: '1.5px solid', borderColor: settings.case === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: settings.case === opt.v ? 'var(--primary-light)' : '#fff', color: settings.case === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
@@ -649,12 +676,13 @@ export function VoucherManagementPage() {
   return (
     <Layout>
       <style>{PRINT_STYLE}</style>
-      <div style={{ padding: '1.25rem', maxWidth: 1100, margin: '0 auto' }}>
+      <style>{RESPONSIVE_STYLE}</style>
+      <div className="vm-container" style={{ padding: '1.25rem', maxWidth: 1100, margin: '0 auto' }}>
         <PageHeader title={t('vouchers')} subtitle={t('voucher_page_subtitle')} />
 
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
+        <div className="vm-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[
             { l: t('all'), v: stats?.total || 0, c: '#6366f1', Ico: Icons.Voucher },
             { l: t('active'), v: stats?.active || 0, c: '#10b981', Ico: Icons.CheckCircle },
@@ -674,8 +702,8 @@ export function VoucherManagementPage() {
         {/* ── LIST ── */}
         {tab === 'list' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+            <div className="vm-list-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
+              <div className="vm-list-filters" style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 {FILTERS.map(f => (
                   <button key={f.k} onClick={() => setFilter(f.k)}
                     style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: filter === f.k ? 'var(--primary)' : 'var(--gray-200)', background: filter === f.k ? 'var(--primary-light)' : '#fff', color: filter === f.k ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -683,7 +711,7 @@ export function VoucherManagementPage() {
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div className="vm-list-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {selectedForPrint.size > 0 && (
                   <>
                     <select value={printTheme} onChange={e => setPrintTheme(e.target.value as ThemeId)}
@@ -700,20 +728,22 @@ export function VoucherManagementPage() {
               </div>
             </div>
             <Card>
-              <Table loading={loading}
-                headers={['', t('code'), t('package_name'), t('price'), t('customer_phone'), t('status'), t('created_at'), '']}
-                rows={vouchers.map((v, i) => [
-                  <input type="checkbox" checked={selectedForPrint.has(i)} onChange={() => toggleSelect(i)} style={{ width: 15, height: 15, cursor: 'pointer' }} />,
-                  <code style={{ fontWeight: 800, fontSize: 13, color: 'var(--primary)', letterSpacing: '0.08em' }}>{v.code}</code>,
-                  v.package_name || '—',
-                  `TZS ${Number(v.package_price || 0).toLocaleString()}`,
-                  v.customer_phone || '—',
-                  <Badge text={v.status_display || v.status} color={vs[v.status] || 'gray'} />,
-                  new Date(v.created_at).toLocaleString(dateLocale),
-                  <Button size="sm" variant="ghost" onClick={() => { setPrintVouchers([enrichVoucherForPrint(v)]); setShowPrintModal(true) }} icon={<Icons.Printer />}>{t('print')}</Button>,
-                ])}
-                emptyMessage={t('no_vouchers')}
-              />
+              <div className="vm-table-scroll">
+                <Table loading={loading}
+                  headers={['', t('code'), t('package_name'), t('price'), t('customer_phone'), t('status'), t('created_at'), '']}
+                  rows={vouchers.map((v, i) => [
+                    <input type="checkbox" checked={selectedForPrint.has(i)} onChange={() => toggleSelect(i)} style={{ width: 15, height: 15, cursor: 'pointer' }} />,
+                    <code style={{ fontWeight: 800, fontSize: 13, color: 'var(--primary)', letterSpacing: '0.08em' }}>{v.code}</code>,
+                    v.package_name || '—',
+                    `TZS ${Number(v.package_price || 0).toLocaleString()}`,
+                    v.customer_phone || '—',
+                    <Badge text={v.status_display || v.status} color={vs[v.status] || 'gray'} />,
+                    new Date(v.created_at).toLocaleString(dateLocale),
+                    <Button size="sm" variant="ghost" onClick={() => { setPrintVouchers([enrichVoucherForPrint(v)]); setShowPrintModal(true) }} icon={<Icons.Printer />}>{t('print')}</Button>,
+                  ])}
+                  emptyMessage={t('no_vouchers')}
+                />
+              </div>
             </Card>
           </div>
         )}
@@ -723,7 +753,7 @@ export function VoucherManagementPage() {
           <Card>
             <CardHeader title={t('create_manual_title')} />
             <div style={{ padding: '1.25rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1.5rem' }}>
+              <div className="vm-manual-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <CodeSettingsPanel settings={codeSettings} onChange={setCodeSettings} t={t} />
                   <Select label={t('router_online_required')} value={manualForm.router_id} onChange={(e: any) => handleManualRouterChange(e.target.value)}>
@@ -770,7 +800,7 @@ export function VoucherManagementPage() {
 
         {/* ── BATCH ── */}
         {tab === 'batch' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '1.25rem' }}>
+          <div className="vm-batch-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '1.25rem' }}>
             <Card>
               <CardHeader title={t('create_batch_title')} />
               <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -783,7 +813,7 @@ export function VoucherManagementPage() {
                 <Input label={t('quantity_label')} type="number" min="1" max="200" placeholder="10" value={batchForm.quantity} onChange={(e: any) => setBatchForm({ ...batchForm, quantity: e.target.value })} />
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>{t('vouchers_color_label')}</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+                  <div className="vm-batch-theme-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
                     {COLOR_THEMES.map(th => (
                       <button key={th.id} onClick={() => setSelectedTheme(th.id as ThemeId)}
                         style={{ padding: '8px 4px', borderRadius: 8, border: `2px solid ${selectedTheme === th.id ? th.accent : 'transparent'}`, background: th.bg, cursor: 'pointer', transition: 'all 0.15s', boxShadow: selectedTheme === th.id ? `0 0 0 3px ${th.accent}40` : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
@@ -836,8 +866,8 @@ export function VoucherManagementPage() {
         {/* ── PRINT MODAL ── */}
         {showPrintModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-            <div style={{ background: '#fff', borderRadius: 16, maxWidth: 900, width: '100%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-              <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div className="vm-print-modal" style={{ background: '#fff', borderRadius: 16, maxWidth: 900, width: '100%', maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+              <div className="vm-print-modal-header" style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                 <h3 style={{ fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Icons.Printer /> {t('print_modal_title_prefix')} ({printVouchers.length})
                 </h3>
@@ -855,7 +885,7 @@ export function VoucherManagementPage() {
                 </div>
               </div>
               <div id="voucher-print-area" style={{ flex: 1, overflowY: 'auto', padding: '1rem', background: '#f9fafb' }}>
-                <div className="voucher-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                <div className="voucher-grid vm-print-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
                   {printVouchers.map((v, i) => (
                     <VoucherPrintCard key={i} voucher={v} business_name={business_name} theme={printThemeObj} />
                   ))}
@@ -870,7 +900,7 @@ export function VoucherManagementPage() {
         )}
 
         {showBatchPrint && (
-          <div style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: '#fff', borderRadius: 12, padding: '1rem 1.25rem', boxShadow: 'var(--card-shadow-lg)', border: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 200, animation: 'fadeIn 0.3s ease' }}>
+          <div className="vm-batch-toast" style={{ position: 'fixed', bottom: '1.5rem', right: '1.5rem', background: '#fff', borderRadius: 12, padding: '1rem 1.25rem', boxShadow: 'var(--card-shadow-lg)', border: '1px solid var(--gray-200)', display: 'flex', alignItems: 'center', gap: 12, zIndex: 200, animation: 'fadeIn 0.3s ease' }}>
             <div style={{ color: '#10b981' }}><Icons.Celebrate /></div>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>{t('vouchers_created_prefix')} {batchResult.length} {t('vouchers_created_suffix')}</div>
