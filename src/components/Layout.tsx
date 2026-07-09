@@ -479,7 +479,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9', overflowX: 'hidden', width: '100%' }}>
       <style>{`
         @keyframes dropDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
         @keyframes sidebarIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
@@ -525,11 +525,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         .tooltip-wrap:hover .tooltip-label { opacity: 1; }
 
-        /* Tablet & below: hide desktop topbar + desktop sidebar entirely */
+        /* Tablet & below: hide desktop topbar + desktop sidebar entirely,
+           and push content down far enough to clear the floating hamburger
+           (fixed at top:14 / left:14, 44px tall → bottom edge sits at 58px).
+           20px was NOT enough, which is why page titles were rendering
+           directly underneath the button. */
         @media (max-width: 768px) {
           .layout-sidebar { display: none !important; }
           .layout-topbar { display: none !important; }
-          .layout-main { margin-left: 0 !important; padding-top: 20px !important; }
+          .layout-main {
+            margin-left: 0 !important;
+            padding-top: 74px !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+          }
           .mobile-fab { display: flex !important; }
         }
       `}</style>
@@ -577,7 +587,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main Content */}
-      <main className="layout-main" style={{ marginLeft: sidebarW, flex: 1, minHeight: '100vh', paddingTop: TOPBAR_H, transition: 'margin-left 0.25s ease', animation: skipEntranceAnim ? 'none' : 'contentIn 0.4s ease' }}>
+      <main className="layout-main" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, minHeight: '100vh', paddingTop: TOPBAR_H, transition: 'margin-left 0.25s ease', animation: skipEntranceAnim ? 'none' : 'contentIn 0.4s ease' }}>
         {children}
       </main>
     </div>
