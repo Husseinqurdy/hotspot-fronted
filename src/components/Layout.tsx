@@ -39,8 +39,10 @@ const LOCAL_TR: Record<string, { sw: string; en: string }> = {
   mark_all_read: { sw: 'Weka zote kama zimesomwa', en: 'Mark all read' },
   no_notifications: { sw: 'Hakuna arifa',  en: 'No notifications' },
   settings:      { sw: 'Mipangilio',       en: 'Settings' },
+  settings_soon: { sw: 'Mipangilio inakuja hivi karibuni', en: 'Settings coming soon' },
   logout:        { sw: 'Toka',             en: 'Logout' },
   version:       { sw: 'toleo',             en: 'version' },
+  hi:            { sw: 'Habari',           en: 'Hi' },
 }
 
 function trLocal(key: keyof typeof LOCAL_TR, lang: string) {
@@ -87,7 +89,7 @@ const LANGS = [
   { code: 'en', label: 'English',   short: 'EN', flag: '🇬🇧' },
 ]
 
-function LangSwitcher({ dark = false }: { dark?: boolean }) {
+function LangSwitcher({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
   const { lang, setLang } = useLang()
   const [open, setOpen] = useState(false)
   const [coords, setCoords] = useState<{ top: number; right: number } | null>(null)
@@ -126,8 +128,11 @@ function LangSwitcher({ dark = false }: { dark?: boolean }) {
   }, [open])
 
   const btnStyle: React.CSSProperties = {
-    display: 'flex', alignItems: 'center', gap: 6,
-    padding: '6px 10px', borderRadius: 9, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', gap: compact ? 0 : 6,
+    padding: compact ? 0 : '6px 10px',
+    width: compact ? 36 : undefined, height: compact ? 36 : undefined,
+    justifyContent: compact ? 'center' : 'flex-start',
+    borderRadius: compact ? 10 : 9, cursor: 'pointer',
     border: dark ? '1px solid rgba(255,255,255,0.14)' : '1px solid #e5e7eb',
     background: dark ? 'rgba(255,255,255,0.08)' : '#f8fafc',
     color: dark ? '#e2e8f0' : '#374151',
@@ -142,10 +147,12 @@ function LangSwitcher({ dark = false }: { dark?: boolean }) {
         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = dark ? 'rgba(255,255,255,0.14)' : '#f1f5f9'; (e.currentTarget as HTMLElement).style.transform = 'scale(1.04)' }}
         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = dark ? 'rgba(255,255,255,0.08)' : '#f8fafc'; (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}>
         <Icon.Globe />
-        <span className="lang-short-label" style={{ fontSize: 11, letterSpacing: '0.05em' }}>{current.short}</span>
-        <span style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', opacity: 0.6 }}>
-          <Icon.ChevronDown />
-        </span>
+        {!compact && <span className="lang-short-label" style={{ fontSize: 11, letterSpacing: '0.05em' }}>{current.short}</span>}
+        {!compact && (
+          <span style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', opacity: 0.6 }}>
+            <Icon.ChevronDown />
+          </span>
+        )}
       </button>
 
       {open && coords && createPortal(
@@ -306,20 +313,110 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
   )
 }
 
+// ── MOBILE TOPBAR (persistent — logo, hamburger, greeting, lang,
+//    notifications, settings, logout all live here now) ─────
+function MobileTopBar({
+  displayName, onMenuClick, menuOpen,
+}: { displayName: string; onMenuClick: () => void; menuOpen: boolean }) {
+  const { lang } = useLang()
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+  const settingsRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setSettingsOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
+  const iconBtnStyle: React.CSSProperties = {
+    width: 36, height: 36, borderRadius: 10, border: '1px solid #e5e7eb', background: '#f8fafc',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+    color: '#6b7280', flexShrink: 0, position: 'relative',
+  }
+
+  return (
+    <div className="layout-mobile-topbar" style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 58, background: '#fff', borderBottom: '1px solid #e5e7eb', zIndex: 95, boxShadow: '0 1px 8px rgba(0,0,0,0.06)', display: 'none', alignItems: 'center', padding: '0 10px', gap: 8, boxSizing: 'border-box' }}>
+
+      {/* Hamburger — fixed inside topbar, opens dropdown menu below */}
+      <button onClick={onMenuClick} aria-label="Menu"
+        style={{ width: 36, height: 36, borderRadius: 10, background: menuOpen ? '#eef2ff' : '#1e1b4b', border: 'none', color: menuOpen ? '#4338ca' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+        <Icon.Menu />
+      </button>
+
+      {/* Logo */}
+      <div style={{ width: 30, height: 30, borderRadius: 8, overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/netsafi2.png" alt="NetSafi" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+
+      {/* Greeting */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {trLocal('hi', lang)}, {displayName}
+        </div>
+      </div>
+
+      {/* Language switcher — compact (icon only) */}
+      <LangSwitcher compact />
+
+      {/* Notifications */}
+      <div ref={notifRef} style={{ position: 'relative' }}>
+        <button onClick={() => { setNotifOpen(o => !o); setSettingsOpen(false) }} style={iconBtnStyle} aria-label={trLocal('notifications', lang)}>
+          <Icon.Bell />
+          <div style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #fff' }} />
+        </button>
+        {notifOpen && (
+          <div style={{ position: 'fixed', top: 62, right: 10, left: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.14)', overflow: 'hidden', animation: 'dropDown 0.18s ease' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{trLocal('notifications', lang)}</span>
+              <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600 }}>{trLocal('mark_all_read', lang)}</span>
+            </div>
+            <div style={{ padding: '14px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>{trLocal('no_notifications', lang)}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Settings */}
+      <div ref={settingsRef} style={{ position: 'relative' }}>
+        <button onClick={() => { setSettingsOpen(o => !o); setNotifOpen(false) }} style={iconBtnStyle} aria-label={trLocal('settings', lang)}>
+          <Icon.Settings />
+        </button>
+        {settingsOpen && (
+          <div style={{ position: 'fixed', top: 62, right: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.14)', padding: '10px 14px', width: 'min(220px, calc(100vw - 20px))', animation: 'dropDown 0.18s ease' }}>
+            <div style={{ fontSize: 12, color: '#6b7280' }}>{trLocal('settings_soon', lang)}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Logout */}
+      <button onClick={() => { logout(); navigate('/login') }} aria-label={trLocal('logout', lang)}
+        style={{ ...iconBtnStyle, background: '#fef2f2', borderColor: '#fecaca', color: '#ef4444' }}>
+        <Icon.Logout />
+      </button>
+    </div>
+  )
+}
+
 // module-level flags so sidebar entrance animation only plays ONCE per
 // browser session, not every time a page mounts a fresh <Layout>.
 let sidebarHasAnimated = false
 let navItemsHaveAnimated = false
 
+const MOBILE_TOPBAR_H = 58
+
 // ── MAIN LAYOUT ────────────────────────────────────────────
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { user, clientInfo, isSuperAdmin, logout } = useAuth()
+  const { user, clientInfo, isSuperAdmin } = useAuth()
   const { t, lang } = useLang()
   const location = useLocation()
-  const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [mobileNotifOpen, setMobileNotifOpen] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const isAdmin = isSuperAdmin
   const sidebarW = collapsed ? 64 : 220
@@ -332,6 +429,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     sidebarHasAnimated = true
     navItemsHaveAnimated = true
   }, [])
+
+  // Close the mobile nav dropdown on route change
+  useEffect(() => { setMobileNavOpen(false) }, [location.pathname])
 
   const adminLinks = [
     { to: '/admin/dashboard', label: t('dashboard'), icon: <Icon.Dashboard /> },
@@ -404,85 +504,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </div>
   )
 
-  // Mobile sidebar — carries everything the topbar used to show
-  const getMobileTitle = () => {
-    const path = location.pathname
-    if (path.includes('dashboard')) return t('dashboard')
-    if (path.includes('routers')) return t('routers')
-    if (path.includes('mikrotik')) return trLocal('mikrotik', lang)
-    if (path.includes('packages')) return t('packages')
-    if (path.includes('vouchers')) return t('vouchers')
-    if (path.includes('payments')) return t('payments')
-    if (path.includes('clients')) return t('clients')
-    if (path.includes('devices')) return t('devices')
-    if (path.includes('analysis')) return trLocal('analysis', lang)
-    if (path.includes('withdraw')) return trLocal('withdraw', lang)
-    if (path.includes('requests')) return trLocal('requests', lang)
-    return 'NetSafi'
-  }
-
-  const MobileSidebar = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Logo collapsedLogo={false} />
-
-      {/* Greeting + quick actions grouped into one coherent card */}
-      <div style={{ margin: '0 12px 12px', padding: '14px', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', animation: skipEntranceAnim ? 'none' : 'fadeSlideIn 0.35s ease 0.05s both' }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {t('welcome_client')}, <span style={{ color: '#a5b4fc' }}>{displayName}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 12 }}>
-          <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#818cf8', animation: 'pulseDot 2s ease-in-out infinite', flexShrink: 0 }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getMobileTitle()}</span>
-        </div>
-
-        {/* Quick actions: language + notifications */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <LangSwitcher dark />
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setMobileNotifOpen(o => !o)}
-              style={{ width: 38, height: 38, borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#e2e8f0', position: 'relative', transition: 'all 0.18s' }}>
-              <Icon.Bell />
-              <div style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #1e1b4b', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
-            </button>
-          </div>
-        </div>
-
-        {mobileNotifOpen && (
-          <div style={{ marginTop: 10, padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', animation: 'dropDown 0.18s ease' }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 6 }}>{trLocal('notifications', lang)}</div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>{trLocal('no_notifications', lang)}</div>
-          </div>
-        )}
-      </div>
-
-      <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '0 0 6px' }} />
-
-      <NavLinks collapsedNav={false} onNavigate={() => setMobileOpen(false)} />
-
-      {/* Profile + Logout (icon only, tooltip on hover/press) */}
-      <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-          {initials}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{isAdmin ? trLocal('super_admin', lang) : trLocal('client', lang)}</div>
-        </div>
-        <TooltipIconButton
-          icon={<Icon.Logout />}
-          label={trLocal('logout', lang)}
-          direction="up"
-          onClick={() => { logout(); navigate('/login'); setMobileOpen(false) }}
-        />
-      </div>
-    </div>
-  )
-
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9', overflowX: 'hidden', width: '100%' }}>
       <style>{`
         @keyframes dropDown { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
         @keyframes sidebarIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes navDropIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes topbarSlide { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
         @keyframes fadeSlideIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
         @keyframes navItemIn { from{opacity:0;transform:translateX(-6px)} to{opacity:1;transform:translateX(0)} }
@@ -493,7 +520,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         .sidebar-link { transition: all 0.15s; }
         .layout-sidebar { animation: ${skipEntranceAnim ? 'none' : 'sidebarIn 0.35s ease'}; }
-        .mobile-menu-btn { display: none; }
 
         .netsafi-logo-wrap:hover .netsafi-logo-img { transform: scale(1.1); }
 
@@ -525,22 +551,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         .tooltip-wrap:hover .tooltip-label { opacity: 1; }
 
-        /* Tablet & below: hide desktop topbar + desktop sidebar entirely,
-           and push content down far enough to clear the floating hamburger
-           (fixed at top:14 / left:14, 44px tall → bottom edge sits at 58px).
-           20px was NOT enough, which is why page titles were rendering
-           directly underneath the button. */
+        /* Tablet & below: hide the desktop sidebar + desktop topbar,
+           show the persistent mobile topbar instead, and push content
+           down just enough to clear it. */
         @media (max-width: 768px) {
           .layout-sidebar { display: none !important; }
           .layout-topbar { display: none !important; }
+          .layout-mobile-topbar { display: flex !important; }
           .layout-main {
             margin-left: 0 !important;
-            padding-top: 74px !important;
+            padding-top: ${MOBILE_TOPBAR_H + 12}px !important;
             overflow-x: hidden !important;
             width: 100% !important;
             max-width: 100vw !important;
           }
-          .mobile-fab { display: flex !important; }
         }
       `}</style>
 
@@ -557,25 +581,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <DesktopSidebar />
       </div>
 
-      {/* Floating hamburger — mobile only (topbar is hidden on mobile) */}
-      <button
-        className="mobile-fab"
-        onClick={() => setMobileOpen(true)}
-        style={{ display: 'none', position: 'fixed', top: 14, left: 14, width: 44, height: 44, borderRadius: 12, background: '#1e1b4b', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', zIndex: 90, boxShadow: '0 4px 16px rgba(0,0,0,0.25)' }}
-      >
-        <Icon.Menu />
-      </button>
+      {/* Persistent mobile topbar */}
+      <MobileTopBar displayName={displayName} menuOpen={mobileNavOpen} onMenuClick={() => setMobileNavOpen(o => !o)} />
 
-      {/* Mobile sidebar overlay (drawer holds everything the topbar used to show) */}
-      {mobileOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, animation: 'overlayIn 0.2s ease' }}>
-          <div onClick={() => setMobileOpen(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(3px)' }} />
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 260, maxWidth: '85vw', background: 'linear-gradient(180deg, #1e1b4b 0%, #13103a 100%)', animation: 'sidebarIn 0.25s ease', boxShadow: '4px 0 24px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              <MobileSidebar />
+      {/* Compact nav dropdown — opens BELOW the mobile topbar, narrow width, not a full drawer */}
+      {mobileNavOpen && (
+        <>
+          <div onClick={() => setMobileNavOpen(false)}
+            style={{ position: 'fixed', top: MOBILE_TOPBAR_H, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.45)', zIndex: 98, animation: 'overlayIn 0.15s ease' }} />
+          <div style={{ position: 'fixed', top: MOBILE_TOPBAR_H, left: 0, width: 200, maxWidth: '72vw', maxHeight: `calc(100vh - ${MOBILE_TOPBAR_H}px)`, background: 'linear-gradient(180deg, #1e1b4b 0%, #13103a 100%)', zIndex: 99, boxShadow: '4px 6px 24px rgba(0,0,0,0.3)', borderRadius: '0 0 14px 0', overflow: 'hidden', display: 'flex', flexDirection: 'column', animation: 'navDropIn 0.18s ease' }}>
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <NavLinks collapsedNav={false} onNavigate={() => setMobileNavOpen(false)} />
+            </div>
+            <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 10, color: 'rgba(255,255,255,0.25)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              v1.0.0
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Top Bar — desktop only */}
