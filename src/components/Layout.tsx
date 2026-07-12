@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useLang } from '../contexts/LangContext'
+import api from '../lib/api'
 
 // ── SVG ICONS ──────────────────────────────────────────────
 const Icon = {
@@ -49,6 +50,82 @@ function trLocal(key: keyof typeof LOCAL_TR, lang: string) {
   const entry = LOCAL_TR[key]
   if (!entry) return key
   return lang === 'sw' ? entry.sw : entry.en
+}
+
+// ── NOTIFICATIONS: shared helpers ───────────────────────────
+type NotificationItem = {
+  id: number
+  title: string
+  message: string
+  level: 'info' | 'success' | 'warning' | 'error'
+  link: string
+  is_read: boolean
+  created_at: string
+}
+
+const NOTIF_LEVEL_COLOR: Record<string, string> = {
+  info: '#6366f1',
+  success: '#10b981',
+  warning: '#f59e0b',
+  error: '#ef4444',
+}
+
+function notifTimeAgo(iso: string, lang: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  if (mins < 1) return lang === 'sw' ? 'Sasa hivi' : 'Just now'
+  if (mins < 60) return lang === 'sw' ? `Dakika ${mins} zilizopita` : `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return lang === 'sw' ? `Saa ${hrs} zilizopita` : `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return lang === 'sw' ? `Siku ${days} zilizopita` : `${days}d ago`
+}
+
+// ── NOTIFICATIONS: shared dropdown body (used by both desktop & mobile) ──
+function NotificationList({
+  notifications, loading, lang, onMarkAllRead, onItemClick,
+}: {
+  notifications: NotificationItem[]
+  loading: boolean
+  lang: string
+  onMarkAllRead: () => void
+  onItemClick: (n: NotificationItem) => void
+}) {
+  return (
+    <>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{trLocal('notifications', lang)}</span>
+        {notifications.some(n => !n.is_read) && (
+          <span onClick={onMarkAllRead} style={{ fontSize: 11, color: '#6366f1', fontWeight: 600, cursor: 'pointer' }}>
+            {trLocal('mark_all_read', lang)}
+          </span>
+        )}
+      </div>
+      <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+        {loading ? (
+          <div style={{ padding: '18px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 12 }}>…</div>
+        ) : notifications.length === 0 ? (
+          <div style={{ padding: '18px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>
+            {trLocal('no_notifications', lang)}
+          </div>
+        ) : (
+          notifications.map(n => (
+            <div key={n.id} onClick={() => onItemClick(n)}
+              style={{ display: 'flex', gap: 9, padding: '10px 16px', borderBottom: '1px solid #f9fafb', cursor: 'pointer', background: n.is_read ? 'transparent' : '#f8faff', transition: 'background 0.12s' }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f3f4f6'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = n.is_read ? 'transparent' : '#f8faff'}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: NOTIF_LEVEL_COLOR[n.level] || '#6366f1', flexShrink: 0, marginTop: 5 }} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 12.5, fontWeight: n.is_read ? 500 : 700, color: '#111827' }}>{n.title}</div>
+                <div style={{ fontSize: 11.5, color: '#6b7280', marginTop: 2, lineHeight: 1.4 }}>{n.message}</div>
+                <div style={{ fontSize: 10, color: '#b0b6c0', marginTop: 3 }}>{notifTimeAgo(n.created_at, lang)}</div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  )
 }
 
 // ── TOOLTIP ICON BUTTON (used for Logout everywhere) ───────
@@ -175,7 +252,14 @@ function LangSwitcher({ dark = false, compact = false }: { dark?: boolean; compa
 }
 
 // ── TOPBAR (desktop only — hidden on small screens) ────────
-function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number; displayName: string; isAdmin: boolean; initials: string }) {
+function TopBar({
+  sidebarW, displayName, isAdmin, initials,
+  notifications, notifLoading, unreadCount, onMarkAllRead, onNotifItemClick,
+}: {
+  sidebarW: number; displayName: string; isAdmin: boolean; initials: string
+  notifications: NotificationItem[]; notifLoading: boolean; unreadCount: number
+  onMarkAllRead: () => void; onNotifItemClick: (n: NotificationItem) => void
+}) {
   const { t, lang } = useLang()
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -242,21 +326,20 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#eef2ff'; (e.currentTarget as HTMLElement).style.borderColor = '#c7d2fe'; (e.currentTarget as HTMLElement).style.color = '#6366f1'; (e.currentTarget as HTMLElement).style.transform = 'scale(1.06)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#f8fafc'; (e.currentTarget as HTMLElement).style.borderColor = '#e5e7eb'; (e.currentTarget as HTMLElement).style.color = '#6b7280'; (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}>
             <Icon.Bell />
-            <div style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #fff', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
+            {unreadCount > 0 && (
+              <div style={{ position: 'absolute', top: 8, right: 8, width: 7, height: 7, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #fff', animation: 'pulseDot 1.8s ease-in-out infinite' }} />
+            )}
           </button>
 
           {notifOpen && (
-            <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, width: 'min(300px, calc(100vw - 24px))', zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.12)', overflow: 'hidden', animation: 'dropDown 0.18s ease' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{trLocal('notifications', lang)}</span>
-                <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600, cursor: 'pointer' }}>{trLocal('mark_all_read', lang)}</span>
-              </div>
-              <div style={{ padding: '12px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 8px', color: '#d1d5db' }}>
-                  <Icon.Bell />
-                </div>
-                {trLocal('no_notifications', lang)}
-              </div>
+            <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, width: 'min(320px, calc(100vw - 24px))', zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.12)', overflow: 'hidden', animation: 'dropDown 0.18s ease' }}>
+              <NotificationList
+                notifications={notifications}
+                loading={notifLoading}
+                lang={lang}
+                onMarkAllRead={() => { onMarkAllRead(); setNotifOpen(false) }}
+                onItemClick={(n) => { onNotifItemClick(n); setNotifOpen(false) }}
+              />
             </div>
           )}
         </div>
@@ -317,7 +400,12 @@ function TopBar({ sidebarW, displayName, isAdmin, initials }: { sidebarW: number
 //    notifications, settings, logout all live here now) ─────
 function MobileTopBar({
   displayName, onMenuClick, menuOpen,
-}: { displayName: string; onMenuClick: () => void; menuOpen: boolean }) {
+  notifications, notifLoading, unreadCount, onMarkAllRead, onNotifItemClick,
+}: {
+  displayName: string; onMenuClick: () => void; menuOpen: boolean
+  notifications: NotificationItem[]; notifLoading: boolean; unreadCount: number
+  onMarkAllRead: () => void; onNotifItemClick: (n: NotificationItem) => void
+}) {
   const { lang } = useLang()
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -369,15 +457,19 @@ function MobileTopBar({
       <div ref={notifRef} style={{ position: 'relative' }}>
         <button onClick={() => { setNotifOpen(o => !o); setSettingsOpen(false) }} style={iconBtnStyle} aria-label={trLocal('notifications', lang)}>
           <Icon.Bell />
-          <div style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #fff' }} />
+          {unreadCount > 0 && (
+            <div style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #fff' }} />
+          )}
         </button>
         {notifOpen && (
           <div style={{ position: 'fixed', top: 62, right: 10, left: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.14)', overflow: 'hidden', animation: 'dropDown 0.18s ease' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{trLocal('notifications', lang)}</span>
-              <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600 }}>{trLocal('mark_all_read', lang)}</span>
-            </div>
-            <div style={{ padding: '14px 16px', textAlign: 'center', color: '#9ca3af', fontSize: 13 }}>{trLocal('no_notifications', lang)}</div>
+            <NotificationList
+              notifications={notifications}
+              loading={notifLoading}
+              lang={lang}
+              onMarkAllRead={() => { onMarkAllRead(); setNotifOpen(false) }}
+              onItemClick={(n) => { onNotifItemClick(n); setNotifOpen(false) }}
+            />
           </div>
         )}
       </div>
@@ -415,8 +507,49 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, clientInfo, isSuperAdmin } = useAuth()
   const { t, lang } = useLang()
   const location = useLocation()
+  const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  // ── Notifications: hifadhi hapa juu ili TopBar (desktop) na
+  //    MobileTopBar zote mbili zitumie data ile ile bila kufetch mara mbili ──
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [notifLoading, setNotifLoading] = useState(true)
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await api.get('/notifications/')
+      const list = res.data.results || res.data
+      setNotifications(list)
+      setUnreadCount(list.filter((n: NotificationItem) => !n.is_read).length)
+    } catch {
+      // Kimya — bell haitaonyesha chochote kipya, haizuii app kufanya kazi
+    } finally {
+      setNotifLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 45000) // poll kila sekunde 45
+    return () => clearInterval(interval)
+  }, [fetchNotifications])
+
+  const handleMarkAllRead = async () => {
+    try {
+      await api.post('/notifications/mark-all-read/')
+      fetchNotifications()
+    } catch {}
+  }
+
+  const handleNotifItemClick = async (n: NotificationItem) => {
+    if (!n.is_read) {
+      try { await api.post(`/notifications/${n.id}/mark-read/`) } catch {}
+      fetchNotifications()
+    }
+    if (n.link) navigate(n.link)
+  }
 
   const isAdmin = isSuperAdmin
   const sidebarW = collapsed ? 64 : 220
@@ -582,7 +715,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Persistent mobile topbar */}
-      <MobileTopBar displayName={displayName} menuOpen={mobileNavOpen} onMenuClick={() => setMobileNavOpen(o => !o)} />
+      <MobileTopBar
+        displayName={displayName}
+        menuOpen={mobileNavOpen}
+        onMenuClick={() => setMobileNavOpen(o => !o)}
+        notifications={notifications}
+        notifLoading={notifLoading}
+        unreadCount={unreadCount}
+        onMarkAllRead={handleMarkAllRead}
+        onNotifItemClick={handleNotifItemClick}
+      />
 
       {/* Compact nav dropdown — opens BELOW the mobile topbar, narrow width, not a full drawer */}
       {mobileNavOpen && (
@@ -606,6 +748,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         displayName={displayName}
         isAdmin={!!isAdmin}
         initials={initials}
+        notifications={notifications}
+        notifLoading={notifLoading}
+        unreadCount={unreadCount}
+        onMarkAllRead={handleMarkAllRead}
+        onNotifItemClick={handleNotifItemClick}
       />
 
       {/* Main Content */}
