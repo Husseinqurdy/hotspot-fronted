@@ -9,6 +9,7 @@ import {
 import { AdminMikroTikPage, ClientMikroTikPage } from './pages/MikroTikManager'
 import { VoucherManagementPage } from './pages/VoucherManagement'
 import type { JSX } from 'react'
+import { AnalysisPage } from './pages/AnalysisPage'
 
 function Guard({ children, role }: { children: JSX.Element; role: string }) {
   const { user, isLoading } = useAuth()
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/admin/mikrotik" element={<Guard role="superadmin"><AdminMikroTikPage /></Guard>} />
             <Route path="/admin/payments" element={<Guard role="superadmin"><AdminPayments /></Guard>} />
             <Route path="/admin/vouchers" element={<Guard role="superadmin"><AdminVouchers /></Guard>} />
+            
 
             {/* Client */}
             <Route path="/client/dashboard" element={<Guard role="client"><ClientDashboard /></Guard>} />
@@ -57,6 +59,7 @@ export default function App() {
             <Route path="/client/packages" element={<Guard role="client"><ClientPackages /></Guard>} />
             <Route path="/client/vouchers" element={<Guard role="client"><VoucherManagementPage /></Guard>} />
             <Route path="/client/payments" element={<Guard role="client"><ClientPayments /></Guard>} />
+            <Route path="/client/analysis" element={<Guard role="client"><AnalysisPage /></Guard>} />
 
             <Route path="/" element={<Redirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
