@@ -42,7 +42,7 @@ const Icons = {
     </svg>
   ),
   Trash: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" />
     </svg>
   ),
@@ -51,6 +51,46 @@ const Icons = {
       <path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
     </svg>
   ),
+}
+
+// ── Tafsiri za ndani (haitegemei LangContext — inaepuka bug ya keys
+//    zisizopo kuonekana ghafi kwenye screen, mfano "analysis_subtitle") ──
+const LOCAL_TR: Record<string, { sw: string; en: string }> = {
+  analysis:             { sw: 'Uchambuzi',                                    en: 'Analysis' },
+  analysis_subtitle:    { sw: 'Ripoti ya mauzo na historia ya vocha',          en: 'Sales report and voucher history' },
+  sales_report_tab:     { sw: 'Ripoti ya Mauzo',                              en: 'Sales Report' },
+  voucher_history_tab:  { sw: 'Historia ya Vocha',                            en: 'Voucher History' },
+  today_revenue:        { sw: 'Mauzo ya Leo',                                 en: "Today's Revenue" },
+  today_vouchers:       { sw: 'Vocha za Leo',                                 en: 'Vouchers Today' },
+  total_period:         { sw: 'Jumla',                                        en: 'Total' },
+  avg_daily:            { sw: 'Wastani/Siku',                                 en: 'Avg / Day' },
+  sales_trend:          { sw: 'Mwenendo wa Mauzo',                            en: 'Sales Trend' },
+  last_7_days:          { sw: 'Siku 7',                                       en: '7 Days' },
+  last_14_days:         { sw: 'Siku 14',                                      en: '14 Days' },
+  last_30_days:         { sw: 'Siku 30',                                      en: '30 Days' },
+  loading:              { sw: 'Inapakia...',                                  en: 'Loading...' },
+  no_sales_data:        { sw: 'Hakuna data ya mauzo bado',                    en: 'No sales data yet' },
+  no_sales_data_hint:   { sw: 'Hakuna ripoti bado — itaonekana hapa baada ya saa 23:30', en: 'No reports yet — will appear here after 11:30 PM' },
+  daily_breakdown:      { sw: 'Muhtasari wa Kila Siku',                       en: 'Daily Breakdown' },
+  vouchers:             { sw: 'vocha',                                        en: 'vouchers' },
+  pdf_history:          { sw: 'Historia ya PDF za Vocha',                     en: 'Voucher PDF History' },
+  no_pdf_history:       { sw: 'Bado hujaunda vocha — PDF zitaonekana hapa',   en: "You haven't created vouchers yet — PDFs will appear here" },
+  unit_price:           { sw: 'Bei',                                          en: 'Price' },
+  open_pdf:             { sw: 'Fungua PDF',                                   en: 'Open PDF' },
+  delete:                { sw: 'Futa',                                        en: 'Delete' },
+  delete_pdf_title:      { sw: 'Futa PDF',                                    en: 'Delete PDF' },
+  delete_pdf_confirm:    { sw: 'Una uhakika unataka kufuta PDF hii? Hatua hii haiwezi kurudishwa.', en: 'Are you sure you want to delete this PDF? This action cannot be undone.' },
+  pdf_deleted_success:   { sw: 'PDF imefutwa',                                en: 'PDF deleted' },
+  error:                 { sw: 'Hitilafu imetokea',                          en: 'An error occurred' },
+}
+
+function useL() {
+  const { lang } = useLang()
+  return (key: keyof typeof LOCAL_TR) => {
+    const entry = LOCAL_TR[key]
+    if (!entry) return key
+    return lang === 'sw' ? entry.sw : entry.en
+  }
 }
 
 const money = (n: any) => `TZS ${Number(n || 0).toLocaleString()}`
@@ -67,10 +107,31 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   )
 }
 
+// ── Icon-only button na tooltip inayotokea taratibu (fade + slide) ────
+function IconTipButton({
+  icon, label, onClick, tone = 'neutral',
+}: { icon: React.ReactNode; label: string; onClick: () => void; tone?: 'neutral' | 'danger' }) {
+  const colors = tone === 'danger'
+    ? { fg: '#ef4444', bg: '#fef2f2', bgHover: '#fee2e2', border: '#fecaca' }
+    : { fg: '#6b7280', bg: '#f8fafc', bgHover: '#eef2ff', border: '#e5e7eb' }
+  return (
+    <div className="an-tip-wrap" style={{ position: 'relative', display: 'inline-flex' }}>
+      <button onClick={onClick} aria-label={label} className="an-icon-btn"
+        style={{ width: 32, height: 32, borderRadius: 9, border: `1px solid ${colors.border}`, background: colors.bg, color: colors.fg, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = colors.bgHover; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)' }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = colors.bg; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}>
+        {icon}
+      </button>
+      <span className="an-tip">{label}</span>
+    </div>
+  )
+}
+
 type AnalysisTab = 'report' | 'history'
 
 export function AnalysisPage() {
-  const { t, lang } = useLang()
+  const L = useL()
+  const { lang } = useLang()
   const dateLocale = lang === 'sw' ? 'sw-TZ' : 'en-US'
 
   const [tab, setTab] = useState<AnalysisTab>('report')
@@ -107,11 +168,11 @@ export function AnalysisPage() {
     if (!deleteTarget) return
     try {
       await api.delete(`/vouchers/print-batches/${deleteTarget.id}/`)
-      showAlrt('success', t('pdf_deleted_success') || 'PDF imefutwa')
+      showAlrt('success', L('pdf_deleted_success'))
       setDeleteTarget(null)
       fetchBatches()
     } catch {
-      showAlrt('error', t('error') || 'Hitilafu imetokea')
+      showAlrt('error', L('error'))
     }
   }
 
@@ -128,30 +189,49 @@ export function AnalysisPage() {
   }))
 
   const TABS = [
-    { key: 'report', label: t('sales_report_tab') || 'Ripoti ya Mauzo', icon: <Icons.Report /> },
-    { key: 'history', label: t('voucher_history_tab') || 'Historia ya Vocha', icon: <Icons.History /> },
+    { key: 'report', label: L('sales_report_tab'), icon: <Icons.Report /> },
+    { key: 'history', label: L('voucher_history_tab'), icon: <Icons.History /> },
   ] as const
 
   const DAY_OPTS = [
-    { v: 7, l: t('last_7_days') || 'Siku 7' },
-    { v: 14, l: t('last_14_days') || 'Siku 14' },
-    { v: 30, l: t('last_30_days') || 'Siku 30' },
+    { v: 7, l: L('last_7_days') },
+    { v: 14, l: L('last_14_days') },
+    { v: 30, l: L('last_30_days') },
   ]
 
   return (
     <Layout>
+      <style>{`
+        .an-tip-wrap .an-tip {
+          position: absolute; bottom: calc(100% + 7px); left: 50%;
+          transform: translateX(-50%) translateY(4px);
+          white-space: nowrap; background: #1e293b; color: #fff;
+          font-size: 11px; font-weight: 600; padding: 4px 10px;
+          border-radius: 7px; pointer-events: none; z-index: 20;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+          opacity: 0; transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .an-tip-wrap .an-tip::after {
+          content: ''; position: absolute; top: 100%; left: 50%;
+          transform: translateX(-50%);
+          border: 5px solid transparent; border-top-color: #1e293b;
+        }
+        .an-tip-wrap:hover .an-tip {
+          opacity: 1; transform: translateX(-50%) translateY(0);
+        }
+      `}</style>
       <div style={{ padding: '1.25rem', maxWidth: 1100, margin: '0 auto' }}>
-        <PageHeader title={t('analysis') || 'Uchambuzi'} subtitle={t('analysis_subtitle') || 'Ripoti ya mauzo na historia ya vocha'} />
+        <PageHeader title={L('analysis')} subtitle={L('analysis_subtitle')} />
 
         {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
         {/* ── Stat cards ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: '0.75rem', marginBottom: '1.25rem' }}>
           {[
-            { l: t('today_revenue') || 'Mauzo ya Leo', v: money(todayReport?.total_revenue || 0), c: '#10b981', Ico: Icons.Today },
-            { l: t('today_vouchers') || 'Vocha za Leo', v: todayReport?.total_vouchers_sold || 0, c: '#6366f1', Ico: Icons.Voucher },
-            { l: `${t('total_period') || 'Jumla'} (${days}d)`, v: money(periodRevenue), c: '#f59e0b', Ico: Icons.Money },
-            { l: t('avg_daily') || 'Wastani/Siku', v: money(Math.round(avgDaily)), c: '#8b5cf6', Ico: Icons.Report },
+            { l: L('today_revenue'), v: money(todayReport?.total_revenue || 0), c: '#10b981', Ico: Icons.Today },
+            { l: L('today_vouchers'), v: todayReport?.total_vouchers_sold || 0, c: '#6366f1', Ico: Icons.Voucher },
+            { l: `${L('total_period')} (${days}d)`, v: money(periodRevenue), c: '#f59e0b', Ico: Icons.Money },
+            { l: L('avg_daily'), v: money(Math.round(avgDaily)), c: '#8b5cf6', Ico: Icons.Report },
           ].map((s, i) => (
             <div key={i} style={{ background: '#fff', border: '1px solid var(--gray-100)', borderRadius: 12, padding: '0.9rem', borderLeft: `4px solid ${s.c}`, boxShadow: 'var(--card-shadow)' }}>
               <div style={{ marginBottom: 6, color: s.c }}><s.Ico /></div>
@@ -168,7 +248,7 @@ export function AnalysisPage() {
           <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <Card>
               <CardHeader
-                title={t('sales_trend') || 'Mwenendo wa Mauzo'}
+                title={L('sales_trend')}
                 action={
                   <div style={{ display: 'flex', gap: 5 }}>
                     {DAY_OPTS.map(opt => (
@@ -183,12 +263,12 @@ export function AnalysisPage() {
               <div style={{ padding: '1rem' }}>
                 {reportsLoading ? (
                   <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)', fontSize: 13 }}>
-                    {t('loading') || 'Inapakia...'}
+                    {L('loading')}
                   </div>
                 ) : chartData.length === 0 ? (
                   <div style={{ height: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)', gap: 8 }}>
                     <Icons.Empty />
-                    <span style={{ fontSize: 13 }}>{t('no_sales_data') || 'Hakuna data ya mauzo bado'}</span>
+                    <span style={{ fontSize: 13 }}>{L('no_sales_data')}</span>
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
@@ -213,13 +293,13 @@ export function AnalysisPage() {
             </Card>
 
             <Card>
-              <CardHeader title={t('daily_breakdown') || 'Muhtasari wa Kila Siku'} action={<Badge text={`${reports.length}`} color="indigo" />} />
+              <CardHeader title={L('daily_breakdown')} action={<Badge text={`${reports.length}`} color="indigo" />} />
               {reportsLoading ? (
-                <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--gray-400)', fontSize: 13 }}>{t('loading') || 'Inapakia...'}</div>
+                <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--gray-400)', fontSize: 13 }}>{L('loading')}</div>
               ) : reports.length === 0 ? (
                 <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--gray-400)' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Empty /></div>
-                  <span style={{ fontSize: 13 }}>{t('no_sales_data') || 'Hakuna ripoti bado — itaonekana hapa baada ya saa 23:30'}</span>
+                  <span style={{ fontSize: 13 }}>{L('no_sales_data_hint')}</span>
                 </div>
               ) : (
                 <div>
@@ -241,7 +321,7 @@ export function AnalysisPage() {
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontWeight: 800, fontSize: 15, color: '#059669' }}>{money(r.total_revenue)}</div>
-                        <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{r.total_vouchers_sold} {t('vouchers') || 'vocha'}</div>
+                        <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{r.total_vouchers_sold} {L('vouchers')}</div>
                       </div>
                     </div>
                   ))}
@@ -255,13 +335,13 @@ export function AnalysisPage() {
         {tab === 'history' && (
           <div style={{ marginTop: '1rem' }}>
             <Card>
-              <CardHeader title={t('pdf_history') || 'Historia ya PDF za Vocha'} action={<Badge text={`${batches.length}`} color="indigo" />} />
+              <CardHeader title={L('pdf_history')} action={<Badge text={`${batches.length}`} color="indigo" />} />
               {batchesLoading ? (
-                <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--gray-400)', fontSize: 13 }}>{t('loading') || 'Inapakia...'}</div>
+                <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--gray-400)', fontSize: 13 }}>{L('loading')}</div>
               ) : batches.length === 0 ? (
                 <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--gray-400)' }}>
                   <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Empty /></div>
-                  <span style={{ fontSize: 13 }}>{t('no_pdf_history') || 'Bado hujaunda vocha — PDF zitaonekana hapa'}</span>
+                  <span style={{ fontSize: 13 }}>{L('no_pdf_history')}</span>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 12, padding: '1rem' }}>
@@ -277,16 +357,14 @@ export function AnalysisPage() {
                         <Badge text={`x${b.quantity}`} color="indigo" />
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 10 }}>
-                        {t('unit_price') || 'Bei'}: <strong style={{ color: '#059669' }}>{money(b.unit_price)}</strong>
+                        {L('unit_price')}: <strong style={{ color: '#059669' }}>{money(b.unit_price)}</strong>
                       </div>
-                      <div style={{ display: 'flex', gap: 6, borderTop: '1px solid var(--gray-50)', paddingTop: 10 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', borderTop: '1px solid var(--gray-50)', paddingTop: 10 }}>
                         <Button size="sm" variant="success" disabled={!b.pdf_url}
                           onClick={() => b.pdf_url && window.open(b.pdf_url, '_blank')} icon={<Icons.Open />}>
-                          {t('open_pdf') || 'Fungua PDF'}
+                          {L('open_pdf')}
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(b)} icon={<Icons.Trash />}>
-                          {t('delete') || 'Futa'}
-                        </Button>
+                        <IconTipButton icon={<Icons.Trash />} label={L('delete')} tone="danger" onClick={() => setDeleteTarget(b)} />
                       </div>
                     </div>
                   ))}
@@ -300,8 +378,8 @@ export function AnalysisPage() {
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleDeleteBatch}
-          title={t('delete_pdf_title') || 'Futa PDF'}
-          message={`${t('delete_pdf_confirm') || 'Una uhakika unataka kufuta PDF hii? Hatua hii haiwezi kurudishwa.'}`}
+          title={L('delete_pdf_title')}
+          message={L('delete_pdf_confirm')}
           danger
         />
       </div>
