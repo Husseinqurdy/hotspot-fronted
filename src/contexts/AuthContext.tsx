@@ -7,16 +7,72 @@ interface AuthCtx { user: User|null; clientInfo: ClientInfo|null; login:(u:strin
 
 const AuthContext = createContext<AuthCtx|null>(null)
 
+// Muda wa kutokuwa na shughuli kabla ya auto-logout (dakika 15)
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User|null>(null)
   const [clientInfo, setClientInfo] = useState<ClientInfo|null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  const logout = () => {
+    ['ns_access','ns_refresh','ns_user','ns_client'].forEach(k => localStorage.removeItem(k))
+    setUser(null); setClientInfo(null); window.location.href = '/login'
+  }
+
+  // 1) Wakati wa mount: usiamini localStorage tu, thibitisha na server
   useEffect(() => {
-    const u = localStorage.getItem('ns_user'); const c = localStorage.getItem('ns_client')
-    if (u && localStorage.getItem('ns_access')) { setUser(JSON.parse(u)); if (c) setClientInfo(JSON.parse(c)) }
-    setIsLoading(false)
+    const verifySession = async () => {
+      const u = localStorage.getItem('ns_user')
+      const token = localStorage.getItem('ns_access')
+
+      if (u && token) {
+        try {
+          const { data } = await api.get('/auth/me/')
+          setUser(data.user)
+          localStorage.setItem('ns_user', JSON.stringify(data.user))
+
+          if (data.client) {
+            setClientInfo(data.client)
+            localStorage.setItem('ns_client', JSON.stringify(data.client))
+          } else {
+            setClientInfo(null)
+            localStorage.removeItem('ns_client')
+          }
+        } catch {
+          // Token si halali au imeisha muda -> futa kila kitu
+          ;['ns_access','ns_refresh','ns_user','ns_client'].forEach(k => localStorage.removeItem(k))
+          setUser(null)
+          setClientInfo(null)
+        }
+      }
+      setIsLoading(false)
+    }
+    verifySession()
   }, [])
+
+  // 2) Auto-logout endapo hakuna shughuli kwa muda mrefu
+  useEffect(() => {
+    if (!user) return
+
+    let timer: ReturnType<typeof setTimeout>
+
+    const resetTimer = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        logout()
+      }, INACTIVITY_TIMEOUT_MS)
+    }
+
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll']
+    events.forEach(ev => window.addEventListener(ev, resetTimer))
+    resetTimer()
+
+    return () => {
+      clearTimeout(timer)
+      events.forEach(ev => window.removeEventListener(ev, resetTimer))
+    }
+  }, [user])
 
   const login = async (username: string, password: string) => {
     const { data } = await api.post('/auth/login/', { username, password })
@@ -24,11 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('ns_user', JSON.stringify(data.user))
     if (data.client) { localStorage.setItem('ns_client', JSON.stringify(data.client)); setClientInfo(data.client) }
     setUser(data.user)
-  }
-
-  const logout = () => {
-    ['ns_access','ns_refresh','ns_user','ns_client'].forEach(k => localStorage.removeItem(k))
-    setUser(null); setClientInfo(null); window.location.href = '/login'
   }
 
   return (
