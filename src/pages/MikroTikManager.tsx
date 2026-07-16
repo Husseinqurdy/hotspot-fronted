@@ -176,7 +176,7 @@ function DetailRow({ label, value, mono = false, full = false }: {
 }) {
   if (!value && value !== 0 && value !== false) return null
   return (
-    <div style={{
+    <div className="mtk-detail-row" style={{
       display: 'flex',
       flexDirection: full ? 'column' : 'row',
       justifyContent: full ? undefined : 'space-between',
@@ -184,13 +184,14 @@ function DetailRow({ label, value, mono = false, full = false }: {
       padding: '8px 0',
       borderBottom: '1px solid var(--gray-50)',
       gap: full ? 4 : 8,
+      flexWrap: 'wrap',
     }}>
       <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600, minWidth: full ? undefined : 140, flexShrink: 0 }}>
         {label}
       </span>
       <span style={{
         fontSize: 13, color: 'var(--gray-800)', fontFamily: mono ? 'monospace' : undefined,
-        wordBreak: 'break-all', textAlign: full ? 'left' : 'right',
+        wordBreak: 'break-all', textAlign: full ? 'left' : 'right', minWidth: 0,
       }}>
         {value}
       </span>
@@ -211,7 +212,7 @@ function EditRow({ label, name, value, onChange, mono = false, type = 'text', pl
       <input
         type={type} value={value ?? ''} placeholder={placeholder}
         onChange={e => onChange(name, e.target.value)}
-        style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, fontFamily: mono ? 'monospace' : undefined, outline: 'none', color: 'var(--gray-800)', background: '#fff', transition: 'border-color 0.15s' }}
+        style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, fontFamily: mono ? 'monospace' : undefined, outline: 'none', color: 'var(--gray-800)', background: '#fff', transition: 'border-color 0.15s', width: '100%', boxSizing: 'border-box' }}
         onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
         onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
       />
@@ -230,7 +231,7 @@ function EditSelectRow({ label, name, value, options, onChange }: {
         {label}
       </label>
       <select value={value ?? ''} onChange={e => onChange(name, e.target.value)}
-        style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, outline: 'none', color: 'var(--gray-800)', background: '#fff', cursor: 'pointer' }}>
+        style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, outline: 'none', color: 'var(--gray-800)', background: '#fff', cursor: 'pointer', width: '100%', boxSizing: 'border-box' }}>
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
@@ -248,7 +249,7 @@ function EditTextareaRow({ label, name, value, onChange, placeholder = '', minHe
         {label}
       </label>
       <textarea value={value ?? ''} placeholder={placeholder} onChange={e => onChange(name, e.target.value)}
-        style={{ padding: '8px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 12, fontFamily: 'monospace', outline: 'none', color: 'var(--gray-800)', background: '#fff', resize: 'vertical', minHeight, lineHeight: 1.6, transition: 'border-color 0.15s' }}
+        style={{ padding: '8px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 12, fontFamily: 'monospace', outline: 'none', color: 'var(--gray-800)', background: '#fff', resize: 'vertical', minHeight, lineHeight: 1.6, transition: 'border-color 0.15s', width: '100%', boxSizing: 'border-box' }}
         onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
         onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
       />
@@ -260,10 +261,10 @@ function DetailTabs({ tabs, active, onChange }: {
   tabs: { key: string; label: string }[]; active: string; onChange: (k: string) => void
 }) {
   return (
-    <div style={{ display: 'flex', borderBottom: '2px solid var(--gray-100)', marginBottom: '1rem' }}>
+    <div style={{ display: 'flex', borderBottom: '2px solid var(--gray-100)', marginBottom: '1rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       {tabs.map(t => (
         <button key={t.key} onClick={() => onChange(t.key)}
-          style={{ padding: '8px 16px', border: 'none', background: 'none', fontSize: 13, fontWeight: active === t.key ? 700 : 500, color: active === t.key ? 'var(--primary)' : 'var(--gray-500)', borderBottom: active === t.key ? '2px solid var(--primary)' : '2px solid transparent', marginBottom: -2, cursor: 'pointer', transition: 'all 0.15s' }}>
+          style={{ padding: '8px 16px', border: 'none', background: 'none', fontSize: 13, fontWeight: active === t.key ? 700 : 500, color: active === t.key ? 'var(--primary)' : 'var(--gray-500)', borderBottom: active === t.key ? '2px solid var(--primary)' : '2px solid transparent', marginBottom: -2, cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap', flexShrink: 0 }}>
           {t.label}
         </button>
       ))}
@@ -275,7 +276,7 @@ function EditModeToggle({ editing, onToggle }: { editing: boolean; onToggle: () 
   return (
     <Tooltip label={editing ? 'Angalia tu (View)' : 'Hariri (Edit)'}>
       <button onClick={onToggle}
-        style={{ padding: '4px 10px', borderRadius: 7, border: `1.5px solid ${editing ? 'var(--primary)' : 'var(--gray-200)'}`, background: editing ? 'var(--primary-light)' : '#fff', color: editing ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s' }}>
+        style={{ padding: '4px 10px', borderRadius: 7, border: `1.5px solid ${editing ? 'var(--primary)' : 'var(--gray-200)'}`, background: editing ? 'var(--primary-light)' : '#fff', color: editing ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s', whiteSpace: 'nowrap', flexShrink: 0 }}>
         {editing ? <Icons.Eye size={13} /> : <Icons.Edit size={13} />} {editing ? 'View' : 'Edit'}
       </button>
     </Tooltip>
@@ -473,10 +474,11 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
       <style>{`
         @media (max-width: 720px) {
           .mt-terminal-grid { grid-template-columns: 1fr !important; }
+          .mt-terminal-screen { min-width: 0 !important; }
         }
       `}</style>
       {/* Quick Commands Sidebar */}
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--gray-100)', overflow: 'hidden' }}>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--gray-100)', overflow: 'hidden', minWidth: 0 }}>
         <div style={{ padding: '10px 14px', background: 'var(--primary-light)', borderBottom: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icons.Zap size={13} />
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>Quick Commands</div>
@@ -514,9 +516,9 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
       </div>
 
       {/* Terminal Screen */}
-      <div style={{ background: '#0f172a', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>
+      <div className="mt-terminal-screen" style={{ background: '#0f172a', borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.3)', minWidth: 0 }}>
         {/* Title bar */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: '#1e293b', borderBottom: '1px solid #334155' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', background: '#1e293b', borderBottom: '1px solid #334155', flexWrap: 'wrap', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex', gap: 5 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
@@ -545,7 +547,7 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
 
         {/* Output area */}
         <div ref={terminalRef}
-          style={{ height: 380, overflowY: 'auto', padding: '12px 16px', fontFamily: "'Courier New', monospace", fontSize: 13, lineHeight: 1.7, cursor: 'text' }}
+          style={{ height: 380, overflowY: 'auto', overflowX: 'auto', padding: '12px 16px', fontFamily: "'Courier New', monospace", fontSize: 13, lineHeight: 1.7, cursor: 'text' }}
           onClick={() => inputRef.current?.focus()}>
           {lines.map((line, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -574,17 +576,17 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
             onKeyDown={handleKeyDown}
             disabled={running}
             placeholder="Andika command... (mfano: /ip/address/print)"
-            style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: '#f1f5f9', fontFamily: "'Courier New', monospace", fontSize: 13, caretColor: '#60a5fa' }}
+            style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: '#f1f5f9', fontFamily: "'Courier New', monospace", fontSize: 13, caretColor: '#60a5fa' }}
             autoFocus
           />
           <button onClick={handleSubmit} disabled={running || !input.trim()}
-            style={{ padding: '5px 14px', borderRadius: 7, border: 'none', background: running || !input.trim() ? '#334155' : '#3b82f6', color: running || !input.trim() ? '#64748b' : '#fff', fontSize: 12, fontWeight: 700, cursor: running || !input.trim() ? 'not-allowed' : 'pointer', fontFamily: 'monospace', transition: 'background 0.15s' }}>
+            style={{ padding: '5px 14px', borderRadius: 7, border: 'none', background: running || !input.trim() ? '#334155' : '#3b82f6', color: running || !input.trim() ? '#64748b' : '#fff', fontSize: 12, fontWeight: 700, cursor: running || !input.trim() ? 'not-allowed' : 'pointer', fontFamily: 'monospace', transition: 'background 0.15s', flexShrink: 0 }}>
             Run ↵
           </button>
         </div>
 
         {/* Footer hint */}
-        <div style={{ padding: '5px 16px 8px', background: '#0f172a', display: 'flex', gap: 16 }}>
+        <div style={{ padding: '5px 16px 8px', background: '#0f172a', display: 'flex', gap: 16, flexWrap: 'wrap', overflowX: 'auto' }}>
           {[
             { k: '/system/clock/print', l: 'clock' },
             { k: '/ip/address/print', l: 'ip' },
@@ -592,7 +594,7 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
             { k: '/system/resource/print', l: 'resources' },
           ].map(hint => (
             <button key={hint.k} onClick={() => { setInput(hint.k); inputRef.current?.focus() }}
-              style={{ background: 'none', border: 'none', color: '#475569', fontSize: 11, cursor: 'pointer', fontFamily: 'monospace', padding: 0, textDecoration: 'underline dotted' }}>
+              style={{ background: 'none', border: 'none', color: '#475569', fontSize: 11, cursor: 'pointer', fontFamily: 'monospace', padding: 0, textDecoration: 'underline dotted', whiteSpace: 'nowrap' }}>
               {hint.l}
             </button>
           ))}
@@ -631,17 +633,17 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
   const tabs = [{ key: 'general', label: 'General' }, { key: 'scripts', label: 'Scripts' }]
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-      <div style={{ background: '#fff', borderRadius: 14, maxWidth: 520, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
-        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div className="mtk-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+      <div className="mtk-modal-box" style={{ background: '#fff', borderRadius: 14, maxWidth: 520, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
+        <div className="mtk-modal-header" style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <Icons.Clipboard size={16} />
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 700 }}>Hotspot User Profile</div>
-              <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginTop: 2 }}>{profile.name}</div>
+              <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginTop: 2, wordBreak: 'break-all' }}>{profile.name}</div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
             <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
           </div>
@@ -692,7 +694,7 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
                     <EditTextareaRow label={label} name={key} value={form[key] || ''} onChange={handleChange} placeholder={`# Script ya ${label.toLowerCase()}`} minHeight={120} />
                   ) : (
                     form[key] ? (
-                      <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '10px 14px' }}>
+                      <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '10px 14px', overflowX: 'auto' }}>
                         <pre style={{ fontSize: 12, color: '#e0e7ff', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace' }}>{form[key]}</pre>
                       </div>
                     ) : (
@@ -704,7 +706,7 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
             </div>
           )}
         </div>
-        <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'flex-end', gap: 8, flexShrink: 0 }}>
+        <div className="mtk-modal-footer" style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'flex-end', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
           <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
@@ -753,17 +755,17 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-        <div style={{ background: '#fff', borderRadius: 14, maxWidth: 480, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
-          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="mtk-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div className="mtk-modal-box" style={{ background: '#fff', borderRadius: 14, maxWidth: 480, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
+          <div className="mtk-modal-header" style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <Icons.User size={16} />
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>Hotspot User</div>
-                <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, marginTop: 2, fontFamily: 'monospace' }}>{user.name}</div>
+                <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, marginTop: 2, fontFamily: 'monospace', wordBreak: 'break-all' }}>{user.name}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
               <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
             </div>
@@ -776,7 +778,7 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <div style={{ padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
                     <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Name</div>
-                    <div style={{ padding: '7px 10px', background: 'var(--gray-50)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', color: 'var(--gray-500)', border: '1.5px solid var(--gray-100)' }}>
+                    <div style={{ padding: '7px 10px', background: 'var(--gray-50)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', color: 'var(--gray-500)', border: '1.5px solid var(--gray-100)', wordBreak: 'break-all' }}>
                       {form.name} <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>(haiwezi kubadilika)</span>
                     </div>
                   </div>
@@ -823,9 +825,9 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
               </div>
             )}
           </div>
-          <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+          <div className="mtk-modal-footer" style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
             <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>Remove</Button>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Button variant="ghost" onClick={onClose}>Cancel</Button>
               {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
               <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
@@ -891,20 +893,20 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-        <div style={{ background: '#fff', borderRadius: 14, maxWidth: 540, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
-          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="mtk-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div className="mtk-modal-box" style={{ background: '#fff', borderRadius: 14, maxWidth: 540, width: '100%', maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease' }}>
+          <div className="mtk-modal-header" style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <Icons.Clock size={16} />
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>Scheduler</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                  <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700 }}>{scheduler.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, wordBreak: 'break-all' }}>{scheduler.name}</span>
                   <Badge text={isDisabled ? 'Disabled' : 'Running'} color={isDisabled ? 'red' : 'green'} />
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
               <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
             </div>
@@ -922,7 +924,7 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
                     <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interval</label>
                     <input value={form.interval || ''} onChange={e => handleChange('interval', e.target.value)} placeholder="00:00:00"
-                      style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', outline: 'none' }}
+                      style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', outline: 'none', width: '100%', boxSizing: 'border-box' }}
                       onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
                       onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')} />
                     <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 2 }}>
@@ -968,7 +970,7 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
                           { l: 'Reboot router', v: '/system reboot' },
                         ].map((ex, i) => (
                           <button key={i} onClick={() => handleChange('on-event', ex.v)}
-                            style={{ textAlign: 'left', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', color: '#e0e7ff', fontSize: 11 }}>
+                            style={{ textAlign: 'left', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', color: '#e0e7ff', fontSize: 11, overflowX: 'auto' }}>
                             <span style={{ color: '#818cf8' }}>{ex.l}:</span> <code>{ex.v}</code>
                           </button>
                         ))}
@@ -979,7 +981,7 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
                   <>
                     <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 8 }}>On Event Script</div>
                     {form['on-event'] ? (
-                      <div style={{ background: '#1e1b4b', borderRadius: 10, padding: '14px 16px' }}>
+                      <div style={{ background: '#1e1b4b', borderRadius: 10, padding: '14px 16px', overflowX: 'auto' }}>
                         <pre style={{ fontSize: 13, color: '#e0e7ff', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace', lineHeight: 1.6 }}>{form['on-event']}</pre>
                       </div>
                     ) : (
@@ -990,14 +992,14 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
               </div>
             )}
           </div>
-          <div style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 6 }}>
+          <div className="mtk-modal-footer" style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>Remove</Button>
               <Button variant={isDisabled ? 'success' : 'warning'} size="sm" onClick={() => { onToggle(scheduler); onClose() }} icon={isDisabled ? <Icons.Play size={12} /> : <Icons.Pause size={12} />}>
                 {isDisabled ? 'Enable' : 'Disable'}
               </Button>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <Button variant="ghost" onClick={onClose}>Cancel</Button>
               {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
               <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
@@ -1071,7 +1073,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
   if (visibleTabs.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--gray-400)' }}>
+      <div style={{ textAlign: 'center', padding: '4rem 1.25rem', color: 'var(--gray-400)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Icons.Lock size={40} /></div>
         <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Huna ruhusa ya kufikia MikroTik Manager</div>
         <div style={{ fontSize: 13 }}>Wasiliana na admin wako kukupa ruhusa.</div>
@@ -1297,39 +1299,47 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   }
   const modalBox: React.CSSProperties = {
     background: '#fff', borderRadius: 14, padding: '1.5rem',
-    maxWidth: 440, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease',
+    maxWidth: 440, width: '100%', maxHeight: '90vh', overflowY: 'auto',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'modalIn 0.2s ease', boxSizing: 'border-box',
   }
-  const modalBoxLg: React.CSSProperties = { ...modalBox, maxWidth: 560, maxHeight: '90vh', overflowY: 'auto' }
+  const modalBoxLg: React.CSSProperties = { ...modalBox, maxWidth: 560 }
   const modalHeader = (title: string, onClose: () => void) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-      <h3 style={{ fontSize: 15, fontWeight: 700 }}>{title}</h3>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: 10 }}>
+      <h3 style={{ fontSize: 15, fontWeight: 700, minWidth: 0, wordBreak: 'break-word' }}>{title}</h3>
       <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
     </div>
   )
   const selectStyle: React.CSSProperties = {
     padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8,
-    fontSize: 14, outline: 'none', width: '100%', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer',
+    fontSize: 14, outline: 'none', width: '100%', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer', boxSizing: 'border-box',
   }
   const labelStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', marginBottom: 5, display: 'block' }
   const textareaStyle: React.CSSProperties = {
     padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8,
     fontSize: 13, outline: 'none', width: '100%', background: '#fff',
-    color: 'var(--gray-800)', fontFamily: 'monospace', resize: 'vertical', minHeight: 100,
+    color: 'var(--gray-800)', fontFamily: 'monospace', resize: 'vertical', minHeight: 100, boxSizing: 'border-box',
   }
 
   const LiveBadge = () => (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#16a34a', fontWeight: 600 }}>
+    <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#16a34a', fontWeight: 600, whiteSpace: 'nowrap' }}>
       <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', display: 'inline-block', animation: 'livepulse 1.5s infinite' }} />
       Live · {countdown}s
     </span>
   )
 
+  // Reusable horizontally-scrollable wrapper so tables never break the layout on small screens
+  const TableScroll = ({ children }: { children: ReactNode }) => (
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '0 -0.5px' }}>{children}</div>
+  )
+
   return (
-    <div>
+    <div className="mtk-page">
       {alert && <div style={{ marginBottom: '1rem' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
-        <Tabs tabs={visibleTabs as any} active={tab} onChange={(k) => setTab(k as Tab)} />
+      <div className="mtk-toolbar-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
+          <Tabs tabs={visibleTabs as any} active={tab} onChange={(k) => setTab(k as Tab)} />
+        </div>
         {tab !== 'terminal' && (
           <Button size="sm" variant="ghost" onClick={() => fetchTab(tab)} icon={<Icons.Refresh size={13} />}>{t('refresh')}</Button>
         )}
@@ -1338,7 +1348,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* ── TERMINAL ── */}
       {tab === 'terminal' && (
         <div>
-          <div style={{ marginBottom: '1rem', padding: '10px 14px', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe', fontSize: 13, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ marginBottom: '1rem', padding: '10px 14px', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe', fontSize: 13, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <Icons.Terminal size={16} /> <strong>MikroTik Terminal</strong> — Tekeleza commands moja kwa moja kwenye router yako.
             Commands zinatumwa salama kupitia API.
           </div>
@@ -1352,12 +1362,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {!loading && tab === 'servers' && (
         <Card>
           <CardHeader title={`Hotspot Servers (${d?.count || 0})`} />
+          <TableScroll>
           <Table headers={['Name', 'Interface', 'Address Pool', 'Profile', 'Idle Timeout', 'Status']}
             rows={(d?.servers || []).map((s: any) => [
               <strong>{s.name || '—'}</strong>, s.interface || '—', s['address-pool'] || '—',
               <Badge text={s.profile || 'default'} color="indigo" />, s['idle-timeout'] || '—',
               <Badge text={s.disabled === 'true' ? 'Disabled' : 'Running'} color={s.disabled === 'true' ? 'red' : 'green'} />,
             ])} emptyMessage="Hakuna hotspot servers" />
+          </TableScroll>
         </Card>
       )}
 
@@ -1368,6 +1380,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
           <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Icons.Bulb size={13} /> Bonyeza profile yoyote kuona na kuhariri maelezo yake (General, Scripts)
           </div>
+          <TableScroll>
           <Table headers={['Name', 'Rate Limit', 'Session Timeout', 'Shared Users', 'On Login Script', '']}
             rows={(d?.profiles || []).map((p: any) => [
               <strong style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => setSelectedProfile(p)}>{p.name}</strong>,
@@ -1377,6 +1390,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               p['on-login'] ? <Badge text="Ipo" color="green" /> : <Badge text="Hakuna" color="gray" />,
               <IconButton icon={<Icons.Edit size={14} />} label="Hariri Profile" onClick={() => setSelectedProfile(p)} />,
             ])} emptyMessage="Hakuna server profiles" />
+          </TableScroll>
         </Card>
       )}
 
@@ -1392,7 +1406,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
                 placeholder="Tafuta kwa username, comment au profile..."
-                style={{ width: '100%', padding: '8px 12px 8px 32px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, outline: 'none', transition: 'border-color 0.15s' }}
+                style={{ width: '100%', padding: '8px 12px 8px 32px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, outline: 'none', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
                 onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
                 onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
               />
@@ -1432,7 +1446,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                     })
                   }
                 }}
-                style={{ cursor: 'pointer', width: 15, height: 15 }}
+                style={{ cursor: 'pointer', width: 15, height: 15, flexShrink: 0 }}
               />
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>
                 {allFilteredSelected ? 'Ondoa uchaguzi wote' : `Chagua wote (${filteredUsers.length})`}
@@ -1444,6 +1458,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             <Icons.Bulb size={13} /> Bonyeza jina la user kuona na kuhariri maelezo yake
           </div>
 
+          <TableScroll>
           <Table
             headers={['', 'Name', 'Profile', 'Limit Uptime', 'Uptime / Hali', 'Comment', 'Status', '']}
             rows={filteredUsers.map((u: any) => {
@@ -1455,26 +1470,26 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               let usageBadge: any
               if (neverUsed) {
                 usageBadge = (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>
                     <Icons.Circle size={6} /> Haijatumika
                   </span>
                 )
               } else if (hasStarted) {
                 usageBadge = (
                   <div>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>
                       <Icons.Play size={9} /> {currentUptime}
                     </span>
-                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>Login: {lastLogin}</div>}
+                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2, whiteSpace: 'nowrap' }}>Login: {lastLogin}</div>}
                   </div>
                 )
               } else {
                 usageBadge = (
                   <div>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>
                       <Icons.Pause size={9} /> Nje
                     </span>
-                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2 }}>Mwisho: {lastLogin}</div>}
+                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2, whiteSpace: 'nowrap' }}>Mwisho: {lastLogin}</div>}
                   </div>
                 )
               }
@@ -1486,12 +1501,12 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                   onChange={() => toggleSelectUser(u.name)}
                   style={{ cursor: 'pointer', width: 15, height: 15 }}
                 />,
-                <code style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted' }} onClick={() => setSelectedUser(u)}>
+                <code style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer', textDecoration: 'underline dotted', whiteSpace: 'nowrap' }} onClick={() => setSelectedUser(u)}>
                   {u.name}
                 </code>,
                 <Badge text={u.profile || 'default'} color="indigo" />,
                 u['limit-uptime']
-                  ? <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-700)', fontWeight: 600 }}>{u['limit-uptime']}</span>
+                  ? <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-700)', fontWeight: 600, whiteSpace: 'nowrap' }}>{u['limit-uptime']}</span>
                   : <span style={{ color: 'var(--gray-300)', fontSize: 12 }}>unlimited</span>,
                 usageBadge,
                 <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
@@ -1501,6 +1516,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             })}
             emptyMessage={userSearch ? `Hakuna user inayofanana na "${userSearch}"` : 'Hakuna users'}
           />
+          </TableScroll>
         </Card>
       )}
 
@@ -1510,14 +1526,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
           <CardHeader title={`Active (${d?.count || 0})`} action={<LiveBadge />} />
           {(d?.sessions || []).length === 0
             ? <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--gray-400)' }}><div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Circle size={30} /></div>Hakuna active sessions</div>
-            : <Table headers={['User', 'MAC Address', 'IP Address', 'Uptime', 'TX Bytes', 'RX Bytes', 'Server', '']}
+            : <TableScroll><Table headers={['User', 'MAC Address', 'IP Address', 'Uptime', 'TX Bytes', 'RX Bytes', 'Server', '']}
                 rows={(d?.sessions || []).map((s: any) => [
                   <strong>{s.user || '—'}</strong>,
                   <code style={{ fontSize: 11 }}>{s['mac-address'] || '—'}</code>,
                   <code style={{ fontSize: 11 }}>{s.address || '—'}</code>,
                   s.uptime || '—', s['bytes-out'] || '0', s['bytes-in'] || '0', s.server || '—',
                   <IconButton icon={<Icons.X size={14} />} label="Kata Connection" variant="danger" onClick={() => setConfirmDisconnect(s['.id'])} />,
-                ])} emptyMessage="Hakuna active sessions" />
+                ])} emptyMessage="Hakuna active sessions" /></TableScroll>
           }
         </Card>
       )}
@@ -1526,6 +1542,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {!loading && tab === 'hosts' && (
         <Card>
           <CardHeader title={`Hosts (${d?.count || 0})`} action={<LiveBadge />} />
+          <TableScroll>
           <Table headers={['MAC Address', 'IP Address', 'Hostname', 'Server', 'Bridge', 'Status']}
             rows={(d?.hosts || []).map((h: any) => [
               <code style={{ fontSize: 11 }}>{h['mac-address'] || '—'}</code>,
@@ -1534,6 +1551,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               h.server || '—', h.bridge || '—',
               <Badge text={h.authorized === 'true' ? 'authorized' : 'unauthorized'} color={h.authorized === 'true' ? 'green' : 'gray'} />,
             ])} emptyMessage="Hakuna hosts" />
+          </TableScroll>
         </Card>
       )}
 
@@ -1541,6 +1559,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {!loading && tab === 'ip_bindings' && (
         <Card>
           <CardHeader title={`IP Bindings (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddBinding(true)} icon={<Icons.Plus size={13} />}>Add Binding</Button>} />
+          <TableScroll>
           <Table headers={['MAC Address', 'IP Address', 'Type', 'Comment', '']}
             rows={(d?.bindings || []).map((b: any) => [
               <code style={{ fontSize: 11 }}>{b['mac-address'] || '—'}</code>,
@@ -1549,6 +1568,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{b.comment || '—'}</span>,
               <IconButton icon={<Icons.Trash size={14} />} label="Futa Binding" variant="danger" onClick={() => setConfirmDeleteBinding(b['.id'])} />,
             ])} emptyMessage="Hakuna IP Bindings" />
+          </TableScroll>
         </Card>
       )}
 
@@ -1559,6 +1579,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
           <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Icons.Globe size={13} /> Tovuti zinazoweza kufikiwa <strong>bila login</strong> (HTTP)
           </div>
+          <TableScroll>
           <Table headers={['Dst Host', 'Action', 'Server', 'Path', 'Comment', '']}
             rows={(d?.entries || []).map((e: any) => [
               <code style={{ fontSize: 12, color: 'var(--primary)' }}>{e['dst-host'] || '—'}</code>,
@@ -1568,6 +1589,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{e.comment || '—'}</span>,
               <IconButton icon={<Icons.Trash size={14} />} label="Futa Entry" variant="danger" onClick={() => setConfirmDeleteWG(e['.id'])} />,
             ])} emptyMessage="Hakuna Walled Garden entries" />
+          </TableScroll>
         </Card>
       )}
 
@@ -1578,6 +1600,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
           <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Icons.Globe2 size={13} /> IP addresses zinazoweza kufikiwa <strong>bila login</strong> (HTTPS/IP direct)
           </div>
+          <TableScroll>
           <Table headers={['Dst Address', 'Action', 'Protocol', 'Server', 'Comment', '']}
             rows={(d?.entries || []).map((e: any) => [
               <code style={{ fontSize: 12, color: 'var(--primary)' }}>{e['dst-address'] || '—'}</code>,
@@ -1587,6 +1610,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{e.comment || '—'}</span>,
               <IconButton icon={<Icons.Trash size={14} />} label="Futa IP" variant="danger" onClick={() => setConfirmDeleteWGIP(e['.id'])} />,
             ])} emptyMessage="Hakuna Walled Garden IP entries" />
+          </TableScroll>
         </Card>
       )}
 
@@ -1600,6 +1624,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
           <div style={{ padding: '8px 16px', background: '#fff7ed', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Icons.Cookie size={13} /> Login cookies — ruhusu mtumiaji kuingia <strong>bila password</strong> tena
           </div>
+          <TableScroll>
           <Table headers={['User', 'MAC Address', 'IP Address', 'Expires At', '']}
             rows={(d?.cookies || []).map((c: any) => [
               <strong>{c.user || '—'}</strong>,
@@ -1608,6 +1633,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               c['expires-at'] || '—',
               <IconButton icon={<Icons.Trash size={14} />} label="Futa Cookie" variant="danger" onClick={() => setConfirmDeleteCookie(c['.id'])} />,
             ])} emptyMessage="Hakuna cookies" />
+          </TableScroll>
         </Card>
       )}
 
@@ -1618,6 +1644,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
           <div style={{ padding: '8px 16px', background: '#f0fdf4', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Icons.Clock size={13} /> Bonyeza scheduler kuona na kuhariri script yake kamili
           </div>
+          <TableScroll>
           <Table
             headers={['Name', 'Start Date', 'Start Time', 'Interval', 'Run Count', 'Next Run', 'Status', '']}
             rows={(d?.schedulers || []).map((s: any) => [
@@ -1625,11 +1652,11 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary)', textDecoration: 'underline dotted' }}>{s.name}</div>
                 {s.comment && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 1 }}>{s.comment}</div>}
               </div>,
-              s['start-date'] ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)' }}>{s['start-date']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
-              s['start-time'] ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)' }}>{s['start-time']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
+              s['start-date'] ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)', whiteSpace: 'nowrap' }}>{s['start-date']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
+              s['start-time'] ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)', whiteSpace: 'nowrap' }}>{s['start-time']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
               s.interval && s.interval !== '00:00:00' ? <Badge text={s.interval} color="blue" /> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>once</span>,
               <span style={{ fontWeight: 700, color: (s['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)', fontSize: 13 }}>{s['run-count'] || '0'}</span>,
-              s['next-run'] ? <span style={{ fontSize: 11, color: 'var(--gray-600)' }}>{s['next-run']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
+              s['next-run'] ? <span style={{ fontSize: 11, color: 'var(--gray-600)', whiteSpace: 'nowrap' }}>{s['next-run']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
               <Badge text={s.disabled === 'true' ? 'Disabled' : 'Running'} color={s.disabled === 'true' ? 'red' : 'green'} />,
               <div style={{ display: 'flex', gap: 2 }}>
                 <IconButton icon={<Icons.Edit size={14} />} label="Hariri Scheduler" onClick={() => openEditScheduler(s)} />
@@ -1639,6 +1666,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             ])}
             emptyMessage="Hakuna schedulers"
           />
+          </TableScroll>
         </Card>
       )}
 
@@ -1662,7 +1690,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
       {/* ── ADD USER MODAL ── */}
       {showAddUser && (
-        <div style={modalOverlay}><div style={modalBox}>
+        <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
           {modalHeader(t('add_user'), () => setShowAddUser(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label="Username *" placeholder="mtumiaji001" value={newUser.username} onChange={(e: any) => setNewUser({ ...newUser, username: e.target.value })} />
@@ -1686,7 +1714,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
       {/* ── ADD BINDING MODAL ── */}
       {showAddBinding && (
-        <div style={modalOverlay}><div style={modalBox}>
+        <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
           {modalHeader('Add IP Binding', () => setShowAddBinding(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label="MAC Address *" placeholder="AA:BB:CC:DD:EE:FF" value={newBinding.mac_address} onChange={(e: any) => setNewBinding({ ...newBinding, mac_address: e.target.value })} />
@@ -1710,7 +1738,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
       {/* ── ADD WALLED GARDEN MODAL ── */}
       {showAddWG && (
-        <div style={modalOverlay}><div style={modalBox}>
+        <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
           {modalHeader('Add Walled Garden Entry', () => setShowAddWG(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label="Dst Host *" placeholder="example.com au *.example.com" value={newWG.dst_host} onChange={(e: any) => setNewWG({ ...newWG, dst_host: e.target.value })} />
@@ -1732,7 +1760,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
       {/* ── ADD WALLED GARDEN IP MODAL ── */}
       {showAddWGIP && (
-        <div style={modalOverlay}><div style={modalBox}>
+        <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
           {modalHeader('Add Walled Garden IP', () => setShowAddWGIP(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label="Dst Address *" placeholder="8.8.8.8 au 192.168.1.0/24" value={newWGIP.dst_address} onChange={(e: any) => setNewWGIP({ ...newWGIP, dst_address: e.target.value })} />
@@ -1754,25 +1782,25 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 
       {/* ── ADD/EDIT SCHEDULER MODAL ── */}
       {showAddScheduler && (
-        <div style={modalOverlay}><div style={modalBoxLg}>
+        <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBoxLg}>
           {modalHeader(editScheduler ? `Edit: ${editScheduler.name}` : 'Add Scheduler', () => setShowAddScheduler(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label="Name *" placeholder="mfano: cleanup-daily" value={newScheduler.name} onChange={(e: any) => setNewScheduler({ ...newScheduler, name: e.target.value })} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
                 <label style={labelStyle}>Start Date</label>
-                <input value={newScheduler.start_date} onChange={(e: any) => setNewScheduler({ ...newScheduler, start_date: e.target.value })} placeholder="jan/01/1970" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
+                <input value={newScheduler.start_date} onChange={(e: any) => setNewScheduler({ ...newScheduler, start_date: e.target.value })} placeholder="jan/01/1970" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
                 <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>Format: jan/01/1970</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
                 <label style={labelStyle}>Start Time</label>
-                <input value={newScheduler.start_time} onChange={(e: any) => setNewScheduler({ ...newScheduler, start_time: e.target.value })} placeholder="00:00:00" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
+                <input value={newScheduler.start_time} onChange={(e: any) => setNewScheduler({ ...newScheduler, start_time: e.target.value })} placeholder="00:00:00" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
                 <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>Format: HH:MM:SS</span>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <label style={labelStyle}>Interval (00:00:00 = mara moja tu)</label>
-              <input value={newScheduler.interval} onChange={(e: any) => setNewScheduler({ ...newScheduler, interval: e.target.value })} placeholder="00:00:00" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
+              <input value={newScheduler.interval} onChange={(e: any) => setNewScheduler({ ...newScheduler, interval: e.target.value })} placeholder="00:00:00" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
                 {[{ l: 'Kila dakika', v: '00:01:00' }, { l: 'Kila saa', v: '01:00:00' }, { l: 'Kila saa 6', v: '06:00:00' }, { l: 'Kila siku', v: '1d 00:00:00' }, { l: 'Kila wiki', v: '7d 00:00:00' }].map(opt => (
                   <button key={opt.v} onClick={() => setNewScheduler({ ...newScheduler, interval: opt.v })}
@@ -1795,7 +1823,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <label style={labelStyle}>On Event (Script) *</label>
               <textarea value={newScheduler.on_event} onChange={(e: any) => setNewScheduler({ ...newScheduler, on_event: e.target.value })}
                 placeholder={`# Mfano:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`} style={textareaStyle} />
-              <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#a5b4fc' }}>
+              <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#a5b4fc', overflowX: 'auto' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icons.Bulb size={12} /> Mifano:</span>
                 <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {[{ l: 'Log message', v: ':log info "Scheduler imefanya kazi"' }, { l: 'Futa used users', v: '/ip hotspot user remove [find comment~"used"]' }, { l: 'Reboot router', v: '/system reboot' }].map((ex, i) => (
@@ -1810,7 +1838,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             <Input label="Comment (optional)" placeholder="Maelezo ya scheduler" value={newScheduler.comment} onChange={(e: any) => setNewScheduler({ ...newScheduler, comment: e.target.value })} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <label style={labelStyle}>Hali ya Awali</label>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {[{ v: 'false', l: 'Enabled', Ico: Icons.Play }, { v: 'true', l: 'Disabled', Ico: Icons.Pause }].map(opt => (
                   <button key={opt.v} onClick={() => setNewScheduler({ ...newScheduler, disabled: opt.v })}
                     style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid', borderColor: newScheduler.disabled === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: newScheduler.disabled === opt.v ? 'var(--primary-light)' : '#fff', color: newScheduler.disabled === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1851,8 +1879,25 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }
         @keyframes tooltipIn { from { opacity:0; transform:translate(-50%,2px) } to { opacity:1; transform:translate(-50%,0) } }
 
+        .card-header-row { }
+
         @media (max-width: 640px) {
           .card-header-row { flex-direction: column; align-items: stretch !important; }
+        }
+
+        /* ── Mobile responsiveness pass ── */
+        @media (max-width: 640px) {
+          .mtk-toolbar-row { flex-direction: column; align-items: stretch !important; }
+          .mtk-toolbar-row > button { align-self: flex-start; }
+          .mtk-modal-overlay { padding: 0.5rem !important; align-items: flex-end !important; }
+          .mtk-modal-box { max-width: 100% !important; width: 100% !important; padding: 1rem !important; border-radius: 14px 14px 0 0 !important; max-height: 94vh !important; }
+          .mtk-modal-header { padding: 0.85rem 1rem !important; }
+          .mtk-modal-footer { padding: 0.75rem 1rem !important; }
+          .mtk-modal-footer > div { width: 100%; }
+        }
+
+        @media (max-width: 400px) {
+          .mtk-modal-footer button, .mtk-modal-footer > div { width: 100%; }
         }
       `}</style>
     </div>
@@ -1910,7 +1955,7 @@ export function ClientMikroTikPage() {
 
   return (
     <Layout>
-      <div style={{ padding: '1.25rem', maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ padding: '1.25rem', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
         {!selectedRouter ? (
           <>
             <PageHeader title={t('mikrotik_mgmt')} subtitle="IP → Hotspot (kama Winbox)" />
@@ -1929,7 +1974,7 @@ export function ClientMikroTikPage() {
             {loading
               ? <div style={{ textAlign: 'center', padding: '3rem' }}><Spinner size={32} /></div>
               : allowedTabs.length === 0
-                ? <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--gray-400)' }}>
+                ? <div style={{ textAlign: 'center', padding: '4rem 1.25rem', color: 'var(--gray-400)' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Icons.Lock size={40} /></div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Huna ruhusa ya MikroTik Manager</div>
                     <div style={{ fontSize: 13 }}>Wasiliana na admin kukupa ruhusa.</div>
@@ -1943,7 +1988,7 @@ export function ClientMikroTikPage() {
           </>
         ) : (
           <>
-            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>Rudi</Button>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{routers.find(r => r.id === selectedRouter)?.name}</span>
             </div>
@@ -1966,7 +2011,7 @@ export function AdminMikroTikPage() {
 
   return (
     <Layout>
-      <div style={{ padding: '1.25rem', maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ padding: '1.25rem', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
         {!selectedRouter ? (
           <>
             <PageHeader title={t('mikrotik_mgmt')} subtitle="Simamia routers zote za clients" />
@@ -1979,7 +2024,7 @@ export function AdminMikroTikPage() {
           </>
         ) : (
           <>
-            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>Rudi</Button>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{routers.find(r => r.id === selectedRouter)?.name}</span>
               <span style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}>{routers.find(r => r.id === selectedRouter)?.client_name}</span>
@@ -2017,15 +2062,15 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
       <div style={{ background: '#fff', borderRadius: 16, maxWidth: 520, width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', animation: 'modalIn 0.2s ease' }}>
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--gray-100)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 10, flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 0 }}>
               <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}><Icons.Shield size={15} /> MikroTik Permissions</h3>
               <p style={{ fontSize: 12, color: 'var(--gray-500)' }}>{client.business_name}</p>
             </div>
             <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
           </div>
           {alert && <Alert type={alert.type} message={alert.msg} />}
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <button onClick={() => setPermissions(ALL_FEATURES)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#166534', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'transform 0.1s' }}
               onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}>
               <Icons.Check size={12} /> Chagua Zote
@@ -2046,8 +2091,8 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
                 <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${checked ? '#6366f1' : 'var(--gray-300)'}`, background: checked ? '#6366f1' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s, border-color 0.15s' }}>
                   {checked && <span style={{ color: '#fff', display: 'flex' }}><Icons.Check size={12} /></span>}
                 </div>
-                <span style={{ display: 'flex', color: checked ? '#4338ca' : 'var(--gray-500)' }}>{f.icon}</span>
-                <div>
+                <span style={{ display: 'flex', color: checked ? '#4338ca' : 'var(--gray-500)', flexShrink: 0 }}>{f.icon}</span>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: checked ? '#4338ca' : 'var(--gray-700)' }}>{f.label}</div>
                   <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{f.desc}</div>
                 </div>
@@ -2055,7 +2100,7 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
             )
           })}
         </div>
-        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--gray-100)', flexShrink: 0, display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center', background: '#fafafa', borderRadius: '0 0 16px 16px' }}>
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--gray-100)', flexShrink: 0, display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center', background: '#fafafa', borderRadius: '0 0 16px 16px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{permissions.length} / {ALL_FEATURES.length} features zimechaguliwa</span>
           <div style={{ display: 'flex', gap: 10 }}>
             <Button variant="ghost" onClick={onClose}>Funga</Button>
