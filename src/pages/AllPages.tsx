@@ -131,7 +131,7 @@ const Icons = {
   IcoDelete: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>,
   IcoSpin:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation:'apSpin 0.8s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>,
   IcoLock:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-  IcoBal:    () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+  IcoBal:    () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.4" fill="currentColor" stroke="none"/></svg>,
   IcoMikro:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>,
   IcoOn:     () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64A9 9 0 1 1 5.64 17.36"/><line x1="12" y1="2" x2="12" y2="12"/></svg>,
   IcoPlus:   () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
@@ -177,26 +177,29 @@ const PrimaryBtn = ({ onClick, children, disabled = false }: { onClick: () => vo
   </button>
 )
 
-const DurationField = ({ form, setForm }: { form: any; setForm: any }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>Muda wa Package *</label>
-    <div style={{ display: 'flex', gap: 8 }}>
-      <input type="number" min="1" placeholder="1" value={form.duration_value || ''}
-        onChange={(e: any) => setForm({ ...form, duration_value: e.target.value })}
-        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none' }} />
-      <select value={form.duration_unit || 'hours'} onChange={(e: any) => setForm({ ...form, duration_unit: e.target.value })}
-        style={{ flex: 1, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer' }}>
-        <option value="hours">Masaa</option>
-        <option value="days">Siku</option>
-      </select>
+const DurationField = ({ form, setForm }: { form: any; setForm: any }) => {
+  const { t } = useLang()
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>{t('duration_of_package')} *</label>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <input type="number" min="1" placeholder="1" value={form.duration_value || ''}
+          onChange={(e: any) => setForm({ ...form, duration_value: e.target.value })}
+          style={{ flex: '1 1 90px', minWidth: 70, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+        <select value={form.duration_unit || 'hours'} onChange={(e: any) => setForm({ ...form, duration_unit: e.target.value })}
+          style={{ flex: '1 1 110px', minWidth: 100, padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', background: '#fff', color: 'var(--gray-800)', cursor: 'pointer', boxSizing: 'border-box' }}>
+          <option value="hours">{t('hours_unit')}</option>
+          <option value="days">{t('days_unit')}</option>
+        </select>
+      </div>
+      {(form.duration_value && form.duration_unit) && (
+        <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>
+          = {form.duration_unit === 'hours' ? `${form.duration_value * 60} ${t('minutes_unit')}` : `${form.duration_value * 1440} ${t('minutes_unit')} (${form.duration_value * 24} ${t('hours_unit').toLowerCase()})`}
+        </span>
+      )}
     </div>
-    {(form.duration_value && form.duration_unit) && (
-      <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>
-        = {form.duration_unit === 'hours' ? `${form.duration_value * 60} dakika` : `${form.duration_value * 1440} dakika (${form.duration_value * 24} masaa)`}
-      </span>
-    )}
-  </div>
-)
+  )
+}
 
 function VoucherPrintCard({ voucher, business_name, theme }: { voucher: any; business_name: string; theme: any }) {
   const price = Number(voucher.package_price || voucher.price || 0)
@@ -1205,6 +1208,7 @@ export function ClientPackages() {
   const [showDelete, setShowDelete] = useState<any>(null)
   const [syncingAll, setSyncingAll] = useState(false)
   const [syncingPkg, setSyncingPkg] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ name: '', price: '', duration_value: '1', duration_unit: 'hours', speed_up: '2', speed_down: '2', mikrotik_profile: '', shared_users: '1' })
 
   const fetchPackages = () => api.get('/packages/').then(r => setPackages(r.data.results || r.data))
@@ -1230,6 +1234,8 @@ export function ClientPackages() {
     setShowModal(true)
   }
   const handleSave = async () => {
+    if (!form.name || !form.price || !form.mikrotik_profile) { show('error', t('fill_required')); return }
+    setSaving(true)
     try {
       if (editPkg) { await api.patch(`/packages/${editPkg.id}/`, form); show('success', `${form.name} ${t('updated_success')}`) }
       else { await api.post('/packages/', { ...form, client: clientInfo?.id }); show('success', `${form.name} ${t('created_success')}`) }
@@ -1237,6 +1243,8 @@ export function ClientPackages() {
     } catch (e: any) {
       const err = e.response?.data
       show('error', typeof err === 'object' ? Object.values(err).flat().join(', ') : t('error'))
+    } finally {
+      setSaving(false)
     }
   }
   const handleDelete = async () => {
@@ -1261,7 +1269,7 @@ export function ClientPackages() {
         {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
         {identifier && (
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#166534', animation: 'apFadeUp 0.3s ease' }}>
-            Bei inayoonekana kwenye kadi ni bei ya msingi. Wateja wako watalipa <strong>bei + {identifier}</strong>. Mfano: TZS 500 → wateja watalipa <strong>TZS {500 + identifier}</strong>.
+            {t('base_price_note')} {t('customers_will_pay')} <strong>{t('price')} + {identifier}</strong>. {t('example_label')}: TZS 500 → <strong>TZS {500 + identifier}</strong>.
           </div>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '1rem' }}>
@@ -1294,7 +1302,7 @@ export function ClientPackages() {
             </div>
           )}
         </div>
-        <Modal open={showModal} onClose={() => setShowModal(false)} title={editPkg ? `${t('edit')}: ${editPkg.name}` : t('add_package')}>
+        <Modal open={showModal} onClose={() => !saving && setShowModal(false)} title={editPkg ? `${t('edit')}: ${editPkg.name}` : t('add_package')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('package_name')} *`} placeholder="Saa 1, Siku 1..." value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
             <FormRow>
@@ -1313,12 +1321,12 @@ export function ClientPackages() {
               </div>
             )}
             <FormActions>
-              <Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
-              <Button onClick={handleSave}>{editPkg ? t('save') : t('save_package')}</Button>
+              <Button variant="ghost" onClick={() => setShowModal(false)} disabled={saving}>{t('cancel')}</Button>
+              <Button onClick={handleSave} disabled={saving} loading={saving}>{saving ? t('saving_label') : (editPkg ? t('save') : t('save_package'))}</Button>
             </FormActions>
           </div>
         </Modal>
-        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={t('delete')} message={`Futa package "${showDelete?.name}"?`} danger />
+        <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={t('delete')} message={`${t('confirm_delete_package_prefix')} "${showDelete?.name}"?`} danger />
       </div>
     </Layout>
   )

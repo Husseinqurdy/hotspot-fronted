@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Icons } from './Icons';
+import { useLang } from '../contexts/LangContext';
 
 export function StatCard({ title, value, subtitle, icon, color }: { title: string; value: string|number; subtitle?: string; icon: string | React.ReactNode; color: string }) {
   return (
@@ -81,19 +82,25 @@ const BVM: Record<BV, React.CSSProperties> = {
   warning:{background:'linear-gradient(135deg,#f59e0b,#d97706)',color:'#fff',boxShadow:'0 2px 8px rgba(245,158,11,0.3)',border:'none'},
   ghost:{background:'#fff',color:'var(--gray-700)',border:'1px solid var(--gray-200)'},
 }
-export function Button({ children, onClick, type='button', variant='primary', disabled, size='md', icon, style }: { children: ReactNode; onClick?: () => void; type?: 'button'|'submit'; variant?: BV; disabled?: boolean; size?: 'sm'|'md'; icon?: ReactNode; style?: React.CSSProperties }) {
+export function Button({ children, onClick, type='button', variant='primary', disabled, loading, size='md', icon, style }: { children: ReactNode; onClick?: () => void; type?: 'button'|'submit'; variant?: BV; disabled?: boolean; loading?: boolean; size?: 'sm'|'md'; icon?: ReactNode; style?: React.CSSProperties }) {
+  const isDisabled = !!disabled || !!loading
+  const spinnerSize = size === 'sm' ? 12 : 14
   return (
-    <button type={type} onClick={onClick} disabled={disabled} style={{ padding:size==='sm'?'5px 12px':'9px 18px', borderRadius:8, fontSize:size==='sm'?12:14, fontWeight:600, cursor:disabled?'not-allowed':'pointer', opacity:disabled?0.65:1, display:'inline-flex', alignItems:'center', gap:5, transition:'all 0.15s', whiteSpace:'nowrap', ...BVM[variant], ...style }}>
-      {icon && <span style={{ display:'inline-flex', alignItems:'center', fontSize:size==='sm'?13:15 }}>{icon}</span>}{children}
+    <button type={type} onClick={onClick} disabled={isDisabled} style={{ padding:size==='sm'?'5px 12px':'9px 18px', borderRadius:8, fontSize:size==='sm'?12:14, fontWeight:600, cursor:isDisabled?'not-allowed':'pointer', opacity:isDisabled?0.7:1, display:'inline-flex', alignItems:'center', gap:5, transition:'all 0.15s', whiteSpace:'nowrap', ...BVM[variant], ...style }}>
+      {loading && (
+        <span style={{ width:spinnerSize, height:spinnerSize, border:'2px solid rgba(255,255,255,0.35)', borderTopColor:'currentColor', borderRadius:'50%', display:'inline-block', animation:'spin 0.7s linear infinite', flexShrink:0 }} />
+      )}
+      {!loading && icon && <span style={{ display:'inline-flex', alignItems:'center', fontSize:size==='sm'?13:15 }}>{icon}</span>}
+      {children}
     </button>
   )
 }
 
 export function Input({ label, error, ...props }: { label?: string; error?: string; [k: string]: any }) {
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:5, minWidth:0 }}>
       {label && <label style={{ fontSize:12, fontWeight:600, color:'var(--gray-700)' }}>{label}</label>}
-      <input {...props} style={{ padding:'9px 11px', border:`1.5px solid ${error?'var(--danger)':'var(--gray-200)'}`, borderRadius:8, fontSize:14, outline:'none', width:'100%', background:'#fff', color:'var(--gray-800)', transition:'border-color 0.15s', ...props.style }} onFocus={e => e.target.style.borderColor='var(--primary)'} onBlur={e => e.target.style.borderColor=error?'var(--danger)':'var(--gray-200)'} />
+      <input {...props} style={{ padding:'9px 11px', border:`1.5px solid ${error?'var(--danger)':'var(--gray-200)'}`, borderRadius:8, fontSize:14, outline:'none', width:'100%', boxSizing:'border-box', background:'#fff', color:'var(--gray-800)', transition:'border-color 0.15s', ...props.style }} onFocus={e => e.target.style.borderColor='var(--primary)'} onBlur={e => e.target.style.borderColor=error?'var(--danger)':'var(--gray-200)'} />
       {error && <span style={{ fontSize:11, color:'var(--danger)' }}>{error}</span>}
     </div>
   )
@@ -101,9 +108,9 @@ export function Input({ label, error, ...props }: { label?: string; error?: stri
 
 export function Select({ label, children, ...props }: { label?: string; children: ReactNode; [k: string]: any }) {
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:5, minWidth:0 }}>
       {label && <label style={{ fontSize:12, fontWeight:600, color:'var(--gray-700)' }}>{label}</label>}
-      <select {...props} style={{ padding:'9px 11px', border:'1.5px solid var(--gray-200)', borderRadius:8, fontSize:14, outline:'none', width:'100%', background:'#fff', color:'var(--gray-800)', ...props.style }}>{children}</select>
+      <select {...props} style={{ padding:'9px 11px', border:'1.5px solid var(--gray-200)', borderRadius:8, fontSize:14, outline:'none', width:'100%', boxSizing:'border-box', background:'#fff', color:'var(--gray-800)', ...props.style }}>{children}</select>
     </div>
   )
 }
@@ -137,8 +144,15 @@ export function Spinner({ size=18 }: { size?: number }) {
   return <span style={{ width:size, height:size, border:'2px solid var(--gray-200)', borderTopColor:'var(--primary)', borderRadius:'50%', display:'inline-block', animation:'spin 0.7s linear infinite', flexShrink:0 }} />
 }
 
+// Responsive form row: 2 columns on normal screens, stacks to 1 column
+// on narrow screens (small phones) so fields never get squeezed.
 export function FormRow({ children }: { children: ReactNode }) {
-  return <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>{children}</div>
+  return (
+    <>
+      <style>{`@media (max-width:480px){ .ns-form-row{ grid-template-columns:1fr !important } }`}</style>
+      <div className="ns-form-row" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>{children}</div>
+    </>
+  )
 }
 
 export function FormActions({ children }: { children: ReactNode }) {
@@ -167,6 +181,7 @@ export function InfoRow({ label, value }: { label: string; value: string|number 
 }
 
 export function ConfirmDialog({ open, onClose, onConfirm, title, message, danger=false }: { open:boolean; onClose:()=>void; onConfirm:()=>void; title:string; message:string; danger?:boolean }) {
+  const { t } = useLang()
   if (!open) return null
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1100, padding:'1rem' }}>
@@ -177,8 +192,8 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, message, danger
         <h3 style={{ fontSize:16, fontWeight:700, color:'var(--gray-900)', textAlign:'center', marginBottom:8 }}>{title}</h3>
         <p style={{ fontSize:14, color:'var(--gray-600)', textAlign:'center', marginBottom:'1.5rem', lineHeight:1.6 }}>{message}</p>
         <div style={{ display:'flex', gap:10 }}>
-          <Button variant="ghost" onClick={onClose} style={{ flex:1 }}>Ghairi</Button>
-          <Button variant={danger?'danger':'primary'} onClick={() => { onConfirm(); onClose() }} style={{ flex:1 }}>Thibitisha</Button>
+          <Button variant="ghost" onClick={onClose} style={{ flex:1 }}>{t('cancel')}</Button>
+          <Button variant={danger?'danger':'primary'} onClick={() => { onConfirm(); onClose() }} style={{ flex:1 }}>{t('confirm')}</Button>
         </div>
       </div>
     </div>

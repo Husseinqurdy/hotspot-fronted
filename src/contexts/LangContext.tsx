@@ -84,6 +84,7 @@ const T: Record<Language, Record<string, string>> = {
     business_summary_today: 'Muhtasari wa shughuli zako za biashara leo',
     payments_today: 'Malipo Leo',
     vouchers_today_chart: 'Vouchers za Leo',
+    no_vouchers_today: 'Hakuna vouchers zilizotolewa leo',
 
     // ── Voucher Management Page ──
     voucher_page_subtitle: 'Simamia, unda, na chapisha vouchers',
@@ -227,6 +228,31 @@ const T: Record<Language, Record<string, string>> = {
     mt_feature_desc_cookies: 'Simamia login cookies', mt_feature_desc_scheduler: 'Scripts za wakati maalum',
     mt_feature_desc_terminal: 'Run commands moja kwa moja',
     mt_funga: 'Funga', mt_hifadhi: 'Hifadhi',
+
+    // ── Generic UI (confirm dialogs, forms, save states) ──
+    confirm: 'Thibitisha',
+    saving_label: 'Inahifadhi...',
+    fill_required: 'Tafadhali jaza taarifa zote zinazohitajika',
+    updated_success: 'imesasishwa',
+    created_success: 'imeundwa',
+    deleted_success: 'imefutwa',
+
+    // ── Client Packages page ──
+    manage_packages_subtitle: 'Simamia vifurushi vyako vya intaneti',
+    sync_all: 'Sync Zote',
+    sync: 'Sync',
+    sync_all_success: 'Packages zote zime-sync kwa MikroTik',
+    sync_failed: 'Sync imeshindwa',
+    customers: 'Wateja',
+    customers_pay: 'Wateja watalipa',
+    base_price_note: 'Bei inayoonekana kwenye kadi ni bei ya msingi.',
+    customers_will_pay: 'Wateja wako watalipa',
+    example_label: 'Mfano',
+    duration_of_package: 'Muda wa Package',
+    hours_unit: 'Masaa',
+    days_unit: 'Siku',
+    minutes_unit: 'dakika',
+    confirm_delete_package_prefix: 'Futa package',
   },
   en: {
     login:'Login', logout:'Logout', username:'Username', password:'Password',
@@ -309,6 +335,7 @@ const T: Record<Language, Record<string, string>> = {
     business_summary_today: 'Summary of your business activities today',
     payments_today: 'Payments Today',
     vouchers_today_chart: "Today's Vouchers",
+    no_vouchers_today: 'No vouchers issued today',
 
     // ── Voucher Management Page ──
     voucher_page_subtitle: 'Manage, create, and print vouchers',
@@ -452,6 +479,31 @@ const T: Record<Language, Record<string, string>> = {
     mt_feature_desc_cookies: 'Manage login cookies', mt_feature_desc_scheduler: 'Scheduled scripts',
     mt_feature_desc_terminal: 'Run commands directly',
     mt_funga: 'Close', mt_hifadhi: 'Save',
+
+    // ── Generic UI (confirm dialogs, forms, save states) ──
+    confirm: 'Confirm',
+    saving_label: 'Saving...',
+    fill_required: 'Please fill in all required fields',
+    updated_success: 'updated successfully',
+    created_success: 'created successfully',
+    deleted_success: 'deleted successfully',
+
+    // ── Client Packages page ──
+    manage_packages_subtitle: 'Manage your internet packages',
+    sync_all: 'Sync All',
+    sync: 'Sync',
+    sync_all_success: 'All packages synced to MikroTik',
+    sync_failed: 'Sync failed',
+    customers: 'Customers',
+    customers_pay: 'Customers will pay',
+    base_price_note: 'The price shown on the card is the base price.',
+    customers_will_pay: 'Your customers will pay',
+    example_label: 'Example',
+    duration_of_package: 'Package Duration',
+    hours_unit: 'Hours',
+    days_unit: 'Days',
+    minutes_unit: 'minutes',
+    confirm_delete_package_prefix: 'Delete package',
   }
 }
 
