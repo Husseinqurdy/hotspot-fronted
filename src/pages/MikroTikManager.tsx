@@ -157,18 +157,20 @@ const ENDPOINTS: Record<Exclude<Tab, 'terminal'>, string> = {
   scheduler:        'scheduler/',
 }
 
+// Tab metadata now stores translation KEYS instead of hardcoded labels.
+// Labels are resolved with t(labelKey) wherever they're rendered.
 const ALL_TABS = [
-  { key: 'servers',          label: 'Servers',           icon: <Icons.Server size={14} /> },
-  { key: 'server_profiles',  label: 'Server Profiles',   icon: <Icons.Clipboard size={14} /> },
-  { key: 'users',            label: 'Users',             icon: <Icons.User size={14} /> },
-  { key: 'active',           label: 'Active',            icon: <Icons.Circle size={9} /> },
-  { key: 'hosts',            label: 'Hosts',             icon: <Icons.Monitor size={14} /> },
-  { key: 'ip_bindings',      label: 'IP Bindings',       icon: <Icons.Link size={14} /> },
-  { key: 'walled_garden',    label: 'Walled Garden',     icon: <Icons.Globe size={14} /> },
-  { key: 'walled_garden_ip', label: 'Walled Garden IP',  icon: <Icons.Globe2 size={14} /> },
-  { key: 'cookies',          label: 'Cookies',           icon: <Icons.Cookie size={14} /> },
-  { key: 'scheduler',        label: 'Scheduler',         icon: <Icons.Clock size={14} /> },
-  { key: 'terminal',         label: 'Terminal',          icon: <Icons.Terminal size={14} /> },
+  { key: 'servers',          labelKey: 'mtk_tab_servers',          icon: <Icons.Server size={14} /> },
+  { key: 'server_profiles',  labelKey: 'mtk_tab_server_profiles',  icon: <Icons.Clipboard size={14} /> },
+  { key: 'users',            labelKey: 'mtk_tab_users',            icon: <Icons.User size={14} /> },
+  { key: 'active',           labelKey: 'mtk_tab_active',           icon: <Icons.Circle size={9} /> },
+  { key: 'hosts',            labelKey: 'mtk_tab_hosts',            icon: <Icons.Monitor size={14} /> },
+  { key: 'ip_bindings',      labelKey: 'mtk_tab_ip_bindings',      icon: <Icons.Link size={14} /> },
+  { key: 'walled_garden',    labelKey: 'mtk_tab_walled_garden',    icon: <Icons.Globe size={14} /> },
+  { key: 'walled_garden_ip', labelKey: 'mtk_tab_walled_garden_ip', icon: <Icons.Globe2 size={14} /> },
+  { key: 'cookies',          labelKey: 'mtk_tab_cookies',          icon: <Icons.Cookie size={14} /> },
+  { key: 'scheduler',        labelKey: 'mtk_tab_scheduler',        icon: <Icons.Clock size={14} /> },
+  { key: 'terminal',         labelKey: 'mtk_tab_terminal',         icon: <Icons.Terminal size={14} /> },
 ] as const
 
 function DetailRow({ label, value, mono = false, full = false }: {
@@ -273,11 +275,12 @@ function DetailTabs({ tabs, active, onChange }: {
 }
 
 function EditModeToggle({ editing, onToggle }: { editing: boolean; onToggle: () => void }) {
+  const { t } = useLang()
   return (
-    <Tooltip label={editing ? 'Angalia tu (View)' : 'Hariri (Edit)'}>
+    <Tooltip label={editing ? t('mtk_view_mode_tooltip') : t('mtk_edit_mode_tooltip')}>
       <button onClick={onToggle}
         style={{ padding: '4px 10px', borderRadius: 7, border: `1.5px solid ${editing ? 'var(--primary)' : 'var(--gray-200)'}`, background: editing ? 'var(--primary-light)' : '#fff', color: editing ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'all 0.15s', whiteSpace: 'nowrap', flexShrink: 0 }}>
-        {editing ? <Icons.Eye size={13} /> : <Icons.Edit size={13} />} {editing ? 'View' : 'Edit'}
+        {editing ? <Icons.Eye size={13} /> : <Icons.Edit size={13} />} {editing ? t('mtk_view_label') : t('mtk_edit_label')}
       </button>
     </Tooltip>
   )
@@ -292,49 +295,53 @@ interface TerminalLine {
   timestamp: string
 }
 
-const QUICK_COMMANDS: { category: string; icon: ReactNode; commands: { label: string; cmd: string; params: Record<string, string> }[] }[] = [
+// Quick command definitions now carry translation KEYS (categoryKey / labelKey)
+// instead of hardcoded Swahili text — this array lives outside the component,
+// so translation happens at render time via t(key).
+const QUICK_COMMANDS: { categoryKey: string; icon: ReactNode; commands: { labelKey: string; cmd: string; params: Record<string, string> }[] }[] = [
   {
-    category: 'System',
+    categoryKey: 'mtk_cat_system',
     icon: <Icons.Settings size={14} />,
     commands: [
-      { label: 'Angalia Saa na Timezone', cmd: '/system/clock/print', params: {} },
-      { label: 'Weka Timezone Nairobi', cmd: '/system/clock/set', params: { 'time-zone-name': 'Africa/Nairobi' } },
-      { label: 'System Resources', cmd: '/system/resource/print', params: {} },
-      { label: 'Router Identity', cmd: '/system/identity/print', params: {} },
-      { label: 'RouterOS Version', cmd: '/system/routerboard/print', params: {} },
+      { labelKey: 'mtk_cmd_clock_tz', cmd: '/system/clock/print', params: {} },
+      { labelKey: 'mtk_cmd_set_tz_nairobi', cmd: '/system/clock/set', params: { 'time-zone-name': 'Africa/Nairobi' } },
+      { labelKey: 'mtk_cmd_sys_resources', cmd: '/system/resource/print', params: {} },
+      { labelKey: 'mtk_cmd_router_identity', cmd: '/system/identity/print', params: {} },
+      { labelKey: 'mtk_cmd_routeros_version', cmd: '/system/routerboard/print', params: {} },
     ]
   },
   {
-    category: 'Hotspot',
+    categoryKey: 'mtk_cat_hotspot',
     icon: <Icons.Router size={14} />,
     commands: [
-      { label: 'Hotspot Users (count)', cmd: '/ip/hotspot/user/print', params: {} },
-      { label: 'Active Sessions', cmd: '/ip/hotspot/active/print', params: {} },
-      { label: 'Schedulers Zote', cmd: '/system/scheduler/print', params: {} },
-      { label: 'Hotspot Servers', cmd: '/ip/hotspot/print', params: {} },
+      { labelKey: 'mtk_cmd_hotspot_users_count', cmd: '/ip/hotspot/user/print', params: {} },
+      { labelKey: 'mtk_cmd_active_sessions', cmd: '/ip/hotspot/active/print', params: {} },
+      { labelKey: 'mtk_cmd_all_schedulers', cmd: '/system/scheduler/print', params: {} },
+      { labelKey: 'mtk_cmd_hotspot_servers', cmd: '/ip/hotspot/print', params: {} },
     ]
   },
   {
-    category: 'Network',
+    categoryKey: 'mtk_cat_network',
     icon: <Icons.Globe size={14} />,
     commands: [
-      { label: 'IP Addresses', cmd: '/ip/address/print', params: {} },
-      { label: 'Interfaces', cmd: '/interface/print', params: {} },
-      { label: 'DNS Settings', cmd: '/ip/dns/print', params: {} },
-      { label: 'Routes', cmd: '/ip/route/print', params: {} },
+      { labelKey: 'mtk_cmd_ip_addresses', cmd: '/ip/address/print', params: {} },
+      { labelKey: 'mtk_cmd_interfaces', cmd: '/interface/print', params: {} },
+      { labelKey: 'mtk_cmd_dns_settings', cmd: '/ip/dns/print', params: {} },
+      { labelKey: 'mtk_cmd_routes', cmd: '/ip/route/print', params: {} },
     ]
   },
 ]
 
 function MikroTikTerminal({ routerId }: { routerId: number }) {
+  const { t } = useLang()
   const [lines, setLines] = useState<TerminalLine[]>([
-    { type: 'info', text: 'MikroTik Terminal — tayari kutumia', timestamp: new Date().toLocaleTimeString('sw-TZ') },
-    { type: 'info', text: 'Tumia quick commands au andika command mwenyewe hapa chini.', timestamp: '' },
+    { type: 'info', text: t('mtk_term_ready'), timestamp: new Date().toLocaleTimeString('sw-TZ') },
+    { type: 'info', text: t('mtk_term_intro'), timestamp: '' },
     { type: 'info', text: '─────────────────────────────────────────────────────', timestamp: '' },
   ])
   const [input, setInput] = useState('')
   const [running, setRunning] = useState(false)
-  const [activeCategory, setActiveCategory] = useState('System')
+  const [activeCategory, setActiveCategory] = useState('mtk_cat_system')
   const [history, setHistory] = useState<string[]>([])
   const [historyIdx, setHistoryIdx] = useState(-1)
   const terminalRef = useRef<HTMLDivElement>(null)
@@ -359,10 +366,10 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
   }
 
   const formatResult = (result: any): string => {
-    if (!result) return '(hakuna matokeo)'
+    if (!result) return `(${t('mtk_no_results')})`
     if (typeof result === 'string') return result
     if (Array.isArray(result)) {
-      if (result.length === 0) return '(orodha tupu)'
+      if (result.length === 0) return `(${t('mtk_empty_list')})`
       return result.map((item: any, i: number) => {
         if (typeof item === 'object') {
           const rows = Object.entries(item)
@@ -398,14 +405,14 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
           timestamp: i === 0 ? now() : '',
         }))
         if (data.count > 0) {
-          outputLines.unshift({ type: 'info' as const, text: `✓ Matokeo: ${data.count} item(s)`, timestamp: '' })
+          outputLines.unshift({ type: 'info' as const, text: `✓ ${t('mtk_results')}: ${data.count} ${t('mtk_items')}`, timestamp: '' })
         }
         addLines(outputLines)
       } else {
-        addLine({ type: 'error', text: `✗ ${data.error || 'Command imeshindwa'}`, timestamp: now() })
+        addLine({ type: 'error', text: `✗ ${data.error || t('mtk_command_failed')}`, timestamp: now() })
       }
     } catch (e: any) {
-      const msg = e.response?.data?.error || e.message || 'Hitilafu ya muunganiko'
+      const msg = e.response?.data?.error || e.message || t('mtk_connection_error')
       addLine({ type: 'error', text: `✗ ${msg}`, timestamp: now() })
     } finally {
       setRunning(false)
@@ -452,12 +459,12 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
     }
     if (e.key === 'l' && e.ctrlKey) {
       e.preventDefault()
-      setLines([{ type: 'info', text: 'Terminal imefutwa.', timestamp: now() }])
+      setLines([{ type: 'info', text: t('mtk_terminal_cleared'), timestamp: now() }])
     }
   }
 
   const clearTerminal = () => {
-    setLines([{ type: 'info', text: 'Terminal imesafishwa. Tayari kutumia.', timestamp: now() }])
+    setLines([{ type: 'info', text: t('mtk_terminal_cleared_ready'), timestamp: now() }])
   }
 
   const lineColor = (type: TerminalLine['type']) => {
@@ -467,7 +474,7 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
     return '#86efac'
   }
 
-  const currentCategory = QUICK_COMMANDS.find(c => c.category === activeCategory)
+  const currentCategory = QUICK_COMMANDS.find(c => c.categoryKey === activeCategory)
 
   return (
     <div className="mt-terminal-grid" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '1rem', alignItems: 'start' }}>
@@ -481,15 +488,15 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--gray-100)', overflow: 'hidden', minWidth: 0 }}>
         <div style={{ padding: '10px 14px', background: 'var(--primary-light)', borderBottom: '1px solid var(--gray-100)', display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icons.Zap size={13} />
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>Quick Commands</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>{t('mtk_quick_commands')}</div>
         </div>
         {/* Category tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--gray-100)' }}>
           {QUICK_COMMANDS.map(cat => (
-            <button key={cat.category} onClick={() => setActiveCategory(cat.category)}
-              style={{ flex: 1, padding: '7px 4px', border: 'none', background: activeCategory === cat.category ? 'var(--primary-light)' : '#fff', color: activeCategory === cat.category ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 10, fontWeight: 700, cursor: 'pointer', borderBottom: activeCategory === cat.category ? '2px solid var(--primary)' : '2px solid transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all 0.15s' }}>
+            <button key={cat.categoryKey} onClick={() => setActiveCategory(cat.categoryKey)}
+              style={{ flex: 1, padding: '7px 4px', border: 'none', background: activeCategory === cat.categoryKey ? 'var(--primary-light)' : '#fff', color: activeCategory === cat.categoryKey ? 'var(--primary-dark)' : 'var(--gray-500)', fontSize: 10, fontWeight: 700, cursor: 'pointer', borderBottom: activeCategory === cat.categoryKey ? '2px solid var(--primary)' : '2px solid transparent', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, transition: 'all 0.15s' }}>
               {cat.icon}
-              <div>{cat.category}</div>
+              <div>{t(cat.categoryKey)}</div>
             </button>
           ))}
         </div>
@@ -500,17 +507,17 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
               style={{ width: '100%', textAlign: 'left', padding: '8px 14px', border: 'none', background: 'none', fontSize: 12, color: running ? 'var(--gray-300)' : 'var(--gray-700)', cursor: running ? 'not-allowed' : 'pointer', lineHeight: 1.4, transition: 'background 0.1s' }}
               onMouseEnter={e => { if (!running) (e.currentTarget as HTMLElement).style.background = '#f0f4ff' }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none' }}>
-              {cmd.label}
+              {t(cmd.labelKey)}
             </button>
           ))}
         </div>
         {/* Help */}
         <div style={{ padding: '10px 14px', borderTop: '1px solid var(--gray-100)', background: '#fafafa' }}>
           <div style={{ fontSize: 10, color: 'var(--gray-400)', lineHeight: 1.6 }}>
-            <strong style={{ color: 'var(--gray-500)' }}>Keyboard:</strong><br />
-            ↑↓ — history<br />
-            Enter — run<br />
-            Ctrl+L — clear
+            <strong style={{ color: 'var(--gray-500)' }}>{t('mtk_keyboard_label')}</strong><br />
+            ↑↓ — {t('mtk_kb_history')}<br />
+            Enter — {t('mtk_kb_run')}<br />
+            Ctrl+L — {t('mtk_kb_clear')}
           </div>
         </div>
       </div>
@@ -525,21 +532,21 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
             </div>
-            <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>MikroTik Terminal</span>
+            <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>{t('mtk_terminal_titlebar')}</span>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {running && (
               <span style={{ fontSize: 11, color: '#60a5fa', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#60a5fa', display: 'inline-block', animation: 'livepulse 0.8s infinite' }} />
-                Inatekeleza...
+                {t('mtk_executing')}
               </span>
             )}
-            <Tooltip label="Futa skrini ya terminal">
+            <Tooltip label={t('mtk_clear_screen_tooltip')}>
               <button onClick={clearTerminal}
                 style={{ padding: '3px 10px', borderRadius: 6, border: '1px solid #334155', background: 'none', color: '#94a3b8', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'background 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                <Icons.Trash size={12} /> Clear
+                <Icons.Trash size={12} /> {t('mtk_clear_btn')}
               </button>
             </Tooltip>
           </div>
@@ -561,7 +568,7 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
           {running && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#60a5fa', marginTop: 4 }}>
               <span style={{ animation: 'pulse 1s infinite' }}>▌</span>
-              <span style={{ fontSize: 12 }}>Inasubiri jibu kutoka MikroTik...</span>
+              <span style={{ fontSize: 12 }}>{t('mtk_waiting_response')}</span>
             </div>
           )}
         </div>
@@ -575,27 +582,27 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={running}
-            placeholder="Andika command... (mfano: /ip/address/print)"
+            placeholder={t('mtk_terminal_input_placeholder')}
             style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: '#f1f5f9', fontFamily: "'Courier New', monospace", fontSize: 13, caretColor: '#60a5fa' }}
             autoFocus
           />
           <button onClick={handleSubmit} disabled={running || !input.trim()}
             style={{ padding: '5px 14px', borderRadius: 7, border: 'none', background: running || !input.trim() ? '#334155' : '#3b82f6', color: running || !input.trim() ? '#64748b' : '#fff', fontSize: 12, fontWeight: 700, cursor: running || !input.trim() ? 'not-allowed' : 'pointer', fontFamily: 'monospace', transition: 'background 0.15s', flexShrink: 0 }}>
-            Run ↵
+            {t('mtk_run_btn')} ↵
           </button>
         </div>
 
         {/* Footer hint */}
         <div style={{ padding: '5px 16px 8px', background: '#0f172a', display: 'flex', gap: 16, flexWrap: 'wrap', overflowX: 'auto' }}>
           {[
-            { k: '/system/clock/print', l: 'clock' },
-            { k: '/ip/address/print', l: 'ip' },
-            { k: '/interface/print', l: 'interfaces' },
-            { k: '/system/resource/print', l: 'resources' },
+            { k: '/system/clock/print', lKey: 'mtk_hint_clock' },
+            { k: '/ip/address/print', lKey: 'mtk_hint_ip' },
+            { k: '/interface/print', lKey: 'mtk_hint_interfaces' },
+            { k: '/system/resource/print', lKey: 'mtk_hint_resources' },
           ].map(hint => (
             <button key={hint.k} onClick={() => { setInput(hint.k); inputRef.current?.focus() }}
               style={{ background: 'none', border: 'none', color: '#475569', fontSize: 11, cursor: 'pointer', fontFamily: 'monospace', padding: 0, textDecoration: 'underline dotted', whiteSpace: 'nowrap' }}>
-              {hint.l}
+              {t(hint.lKey)}
             </button>
           ))}
         </div>
@@ -610,6 +617,7 @@ function MikroTikTerminal({ routerId }: { routerId: number }) {
 function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
   profile: any; routerId: number; onClose: () => void; onSaved: () => void
 }) {
+  const { t } = useLang()
   const [activeTab, setActiveTab] = useState('general')
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({ ...profile })
@@ -623,14 +631,14 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
     setSaving(true)
     try {
       await api.patch(`/mikrotik/${routerId}/hotspot/profiles/`, { profile_name: profile.name, ...form })
-      setAlert({ type: 'success', msg: 'Profile imesasishwa ✓' }); setDirty(false); onSaved()
-    } catch (e: any) { setAlert({ type: 'error', msg: e.response?.data?.error || 'Imeshindwa kuhifadhi' }) }
+      setAlert({ type: 'success', msg: `${t('mtk_profile_updated')} ✓` }); setDirty(false); onSaved()
+    } catch (e: any) { setAlert({ type: 'error', msg: e.response?.data?.error || t('mtk_save_failed') }) }
     finally { setSaving(false) }
   }
 
   const handleOK = async () => { if (dirty) await handleApply(); onClose() }
 
-  const tabs = [{ key: 'general', label: 'General' }, { key: 'scripts', label: 'Scripts' }]
+  const tabs = [{ key: 'general', label: t('mtk_tab_general') }, { key: 'scripts', label: t('mtk_tab_scripts') }]
 
   return (
     <div className="mtk-modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
@@ -639,13 +647,13 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
             <Icons.Clipboard size={16} />
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 700 }}>Hotspot User Profile</div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{t('mtk_profile_modal_title')}</div>
               <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 600, marginTop: 2, wordBreak: 'break-all' }}>{profile.name}</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
-            <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
+            <IconButton icon={<Icons.X size={14} />} label={t('mtk_close')} onClick={onClose} />
           </div>
         </div>
         {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
@@ -654,51 +662,51 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
           {activeTab === 'general' && (
             editing ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <EditRow label="Name" name="name" value={form.name} onChange={handleChange} mono />
-                <EditRow label="Rate Limit" name="rate-limit" value={form['rate-limit']} onChange={handleChange} mono placeholder="e.g. 2M/2M" />
-                <EditRow label="Session Timeout" name="session-timeout" value={form['session-timeout']} onChange={handleChange} placeholder="e.g. 1h / unlimited" />
-                <EditRow label="Idle Timeout" name="idle-timeout" value={form['idle-timeout']} onChange={handleChange} placeholder="e.g. 30m / unlimited" />
-                <EditRow label="Keepalive Timeout" name="keepalive-timeout" value={form['keepalive-timeout']} onChange={handleChange} />
-                <EditRow label="Shared Users" name="shared-users" value={form['shared-users']} onChange={handleChange} type="number" placeholder="1" />
-                <EditRow label="DNS Name" name="dns-name" value={form['dns-name']} onChange={handleChange} />
-                <EditRow label="HTML Directory" name="html-directory" value={form['html-directory']} onChange={handleChange} mono />
-                <EditRow label="HTTP Cookie Lifetime" name="http-cookie-lifetime" value={form['http-cookie-lifetime']} onChange={handleChange} />
-                <EditRow label="Status Auto-Refresh" name="status-autorefresh" value={form['status-autorefresh']} onChange={handleChange} />
-                <EditRow label="Address Pool" name="address-pool" value={form['address-pool']} onChange={handleChange} />
-                <EditRow label="MAC Cookie Timeout" name="mac-cookie-timeout" value={form['mac-cookie-timeout']} onChange={handleChange} />
+                <EditRow label={t('mtk_lbl_name')} name="name" value={form.name} onChange={handleChange} mono />
+                <EditRow label={t('mtk_lbl_rate_limit')} name="rate-limit" value={form['rate-limit']} onChange={handleChange} mono placeholder={t('mtk_ph_rate_limit')} />
+                <EditRow label={t('mtk_lbl_session_timeout')} name="session-timeout" value={form['session-timeout']} onChange={handleChange} placeholder={t('mtk_ph_timeout_1h')} />
+                <EditRow label={t('mtk_lbl_idle_timeout')} name="idle-timeout" value={form['idle-timeout']} onChange={handleChange} placeholder={t('mtk_ph_idle_timeout')} />
+                <EditRow label={t('mtk_lbl_keepalive_timeout')} name="keepalive-timeout" value={form['keepalive-timeout']} onChange={handleChange} />
+                <EditRow label={t('mtk_lbl_shared_users')} name="shared-users" value={form['shared-users']} onChange={handleChange} type="number" placeholder="1" />
+                <EditRow label={t('mtk_lbl_dns_name')} name="dns-name" value={form['dns-name']} onChange={handleChange} />
+                <EditRow label={t('mtk_lbl_html_directory')} name="html-directory" value={form['html-directory']} onChange={handleChange} mono />
+                <EditRow label={t('mtk_lbl_http_cookie_lifetime')} name="http-cookie-lifetime" value={form['http-cookie-lifetime']} onChange={handleChange} />
+                <EditRow label={t('mtk_lbl_status_autorefresh')} name="status-autorefresh" value={form['status-autorefresh']} onChange={handleChange} />
+                <EditRow label={t('mtk_lbl_address_pool')} name="address-pool" value={form['address-pool']} onChange={handleChange} />
+                <EditRow label={t('mtk_lbl_mac_cookie_timeout')} name="mac-cookie-timeout" value={form['mac-cookie-timeout']} onChange={handleChange} />
               </div>
             ) : (
               <div>
-                <DetailRow label="Name" value={form.name} mono />
-                <DetailRow label="Rate Limit" value={form['rate-limit'] || 'unlimited'} mono />
-                <DetailRow label="Session Timeout" value={form['session-timeout'] || 'unlimited'} />
-                <DetailRow label="Idle Timeout" value={form['idle-timeout'] || 'unlimited'} />
-                <DetailRow label="Keepalive Timeout" value={form['keepalive-timeout'] || '—'} />
-                <DetailRow label="Shared Users" value={form['shared-users'] || '1'} />
-                <DetailRow label="DNS Name" value={form['dns-name'] || '—'} />
-                <DetailRow label="HTML Directory" value={form['html-directory'] || '—'} mono />
-                <DetailRow label="HTTP Cookie Lifetime" value={form['http-cookie-lifetime'] || '—'} />
-                <DetailRow label="Status Auto-Refresh" value={form['status-autorefresh'] || '—'} />
-                <DetailRow label="Transparent Proxy" value={form['transparent-proxy'] || '—'} />
-                <DetailRow label="Address Pool" value={form['address-pool'] || '—'} />
-                <DetailRow label="MAC Cookie Timeout" value={form['mac-cookie-timeout'] || '—'} />
+                <DetailRow label={t('mtk_lbl_name')} value={form.name} mono />
+                <DetailRow label={t('mtk_lbl_rate_limit')} value={form['rate-limit'] || t('mtk_unlimited')} mono />
+                <DetailRow label={t('mtk_lbl_session_timeout')} value={form['session-timeout'] || t('mtk_unlimited')} />
+                <DetailRow label={t('mtk_lbl_idle_timeout')} value={form['idle-timeout'] || t('mtk_unlimited')} />
+                <DetailRow label={t('mtk_lbl_keepalive_timeout')} value={form['keepalive-timeout'] || '—'} />
+                <DetailRow label={t('mtk_lbl_shared_users')} value={form['shared-users'] || '1'} />
+                <DetailRow label={t('mtk_lbl_dns_name')} value={form['dns-name'] || '—'} />
+                <DetailRow label={t('mtk_lbl_html_directory')} value={form['html-directory'] || '—'} mono />
+                <DetailRow label={t('mtk_lbl_http_cookie_lifetime')} value={form['http-cookie-lifetime'] || '—'} />
+                <DetailRow label={t('mtk_lbl_status_autorefresh')} value={form['status-autorefresh'] || '—'} />
+                <DetailRow label={t('mtk_lbl_transparent_proxy')} value={form['transparent-proxy'] || '—'} />
+                <DetailRow label={t('mtk_lbl_address_pool')} value={form['address-pool'] || '—'} />
+                <DetailRow label={t('mtk_lbl_mac_cookie_timeout')} value={form['mac-cookie-timeout'] || '—'} />
               </div>
             )
           )}
           {activeTab === 'scripts' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {[{ label: 'On Login', key: 'on-login' }, { label: 'On Logout', key: 'on-logout' }].map(({ label, key }) => (
+              {[{ label: t('mtk_on_login'), key: 'on-login' }, { label: t('mtk_on_logout'), key: 'on-logout' }].map(({ label, key }) => (
                 <div key={key}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>{label}</div>
                   {editing ? (
-                    <EditTextareaRow label={label} name={key} value={form[key] || ''} onChange={handleChange} placeholder={`# Script ya ${label.toLowerCase()}`} minHeight={120} />
+                    <EditTextareaRow label={label} name={key} value={form[key] || ''} onChange={handleChange} placeholder={`# ${t('mtk_ph_script_example')} ${label.toLowerCase()}`} minHeight={120} />
                   ) : (
                     form[key] ? (
                       <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '10px 14px', overflowX: 'auto' }}>
                         <pre style={{ fontSize: 12, color: '#e0e7ff', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace' }}>{form[key]}</pre>
                       </div>
                     ) : (
-                      <div style={{ padding: '8px 12px', background: 'var(--gray-50)', borderRadius: 8, fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic' }}>Hakuna script</div>
+                      <div style={{ padding: '8px 12px', background: 'var(--gray-50)', borderRadius: 8, fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic' }}>{t('mtk_no_script')}</div>
                     )
                   )}
                 </div>
@@ -707,9 +715,9 @@ function ServerProfileDetailModal({ profile, routerId, onClose, onSaved }: {
           )}
         </div>
         <div className="mtk-modal-footer" style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'flex-end', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
-          <Button variant="ghost" onClick={onClose}>Cancel</Button>
-          {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
-          <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
+          <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+          {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : t('mtk_apply')}</Button>}
+          <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : t('mtk_ok')}</Button>
         </div>
       </div>
     </div>
@@ -723,6 +731,7 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
   user: any; routerId: number; onClose: () => void
   onDelete: (username: string) => void; onSaved: () => void; availableProfiles?: string[]
 }) {
+  const { t } = useLang()
   const [activeTab, setActiveTab] = useState('general')
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({ ...user })
@@ -737,20 +746,20 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
     setSaving(true)
     try {
       await api.patch(`/mikrotik/${routerId}/hotspot/users/`, { username: user.name, ...form })
-      setAlert({ type: 'success', msg: 'User imesasishwa ✓' }); setDirty(false); onSaved()
-    } catch (e: any) { setAlert({ type: 'error', msg: e.response?.data?.error || 'Imeshindwa kuhifadhi' }) }
+      setAlert({ type: 'success', msg: `${t('mtk_user_updated')} ✓` }); setDirty(false); onSaved()
+    } catch (e: any) { setAlert({ type: 'error', msg: e.response?.data?.error || t('mtk_save_failed') }) }
     finally { setSaving(false) }
   }
 
   const handleOK = async () => { if (dirty) await handleApply(); onClose() }
 
-  const tabs = [{ key: 'general', label: 'General' }, { key: 'statistics', label: 'Statistics' }]
+  const tabs = [{ key: 'general', label: t('mtk_tab_general') }, { key: 'statistics', label: t('mtk_tab_statistics') }]
   const profileOptions = availableProfiles.length > 0
     ? availableProfiles.map(p => ({ value: p, label: p }))
     : [{ value: form.profile || 'default', label: form.profile || 'default' }]
   const disabledOptions = [
-    { value: 'false', label: 'Active — mtumiaji anaweza kuingia' },
-    { value: 'true', label: 'Disabled — mtumiaji amezuiwa' },
+    { value: 'false', label: t('mtk_opt_active_desc') },
+    { value: 'true', label: t('mtk_opt_disabled_desc') },
   ]
 
   return (
@@ -761,13 +770,13 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <Icons.User size={16} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Hotspot User</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{t('mtk_user_modal_title')}</div>
                 <div style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, marginTop: 2, fontFamily: 'monospace', wordBreak: 'break-all' }}>{user.name}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
-              <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
+              <IconButton icon={<Icons.X size={14} />} label={t('mtk_close')} onClick={onClose} />
             </div>
           </div>
           {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
@@ -777,60 +786,60 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
               editing ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <div style={{ padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Name</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>{t('mtk_lbl_name')}</div>
                     <div style={{ padding: '7px 10px', background: 'var(--gray-50)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', color: 'var(--gray-500)', border: '1.5px solid var(--gray-100)', wordBreak: 'break-all' }}>
-                      {form.name} <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>(haiwezi kubadilika)</span>
+                      {form.name} <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>({t('mtk_cannot_change')})</span>
                     </div>
                   </div>
-                  <EditRow label="Password" name="password" value={form.password || ''} onChange={handleChange} mono placeholder="Weka password mpya" />
-                  <EditSelectRow label="Profile" name="profile" value={form.profile || 'default'} options={profileOptions} onChange={handleChange} />
-                  <EditRow label="Comment" name="comment" value={form.comment || ''} onChange={handleChange} placeholder="Jina la mteja au maelezo" />
-                  <EditRow label="Limit Uptime" name="limit-uptime" value={form['limit-uptime'] || ''} onChange={handleChange} placeholder="e.g. 1h / unlimited" />
-                  <EditRow label="Limit Bytes In" name="limit-bytes-in" value={form['limit-bytes-in'] || ''} onChange={handleChange} placeholder="bytes (0 = unlimited)" />
-                  <EditRow label="Limit Bytes Out" name="limit-bytes-out" value={form['limit-bytes-out'] || ''} onChange={handleChange} placeholder="bytes (0 = unlimited)" />
-                  <EditRow label="Limit Bytes Total" name="limit-bytes-total" value={form['limit-bytes-total'] || ''} onChange={handleChange} placeholder="bytes (0 = unlimited)" />
-                  <EditRow label="MAC Address" name="mac-address" value={form['mac-address'] || ''} onChange={handleChange} mono placeholder="AA:BB:CC:DD:EE:FF" />
-                  <EditRow label="IP Address" name="address" value={form.address || ''} onChange={handleChange} mono placeholder="192.168.1.100" />
-                  <EditSelectRow label="Disabled" name="disabled" value={form.disabled || 'false'} options={disabledOptions} onChange={handleChange} />
+                  <EditRow label={t('mtk_lbl_password')} name="password" value={form.password || ''} onChange={handleChange} mono placeholder={t('mtk_ph_new_password')} />
+                  <EditSelectRow label={t('mtk_lbl_profile')} name="profile" value={form.profile || 'default'} options={profileOptions} onChange={handleChange} />
+                  <EditRow label={t('mtk_lbl_comment')} name="comment" value={form.comment || ''} onChange={handleChange} placeholder={t('mtk_ph_comment_user')} />
+                  <EditRow label={t('mtk_lbl_limit_uptime')} name="limit-uptime" value={form['limit-uptime'] || ''} onChange={handleChange} placeholder={t('mtk_ph_timeout_1h')} />
+                  <EditRow label={t('mtk_lbl_limit_bytes_in')} name="limit-bytes-in" value={form['limit-bytes-in'] || ''} onChange={handleChange} placeholder={t('mtk_ph_bytes_unlimited')} />
+                  <EditRow label={t('mtk_lbl_limit_bytes_out')} name="limit-bytes-out" value={form['limit-bytes-out'] || ''} onChange={handleChange} placeholder={t('mtk_ph_bytes_unlimited')} />
+                  <EditRow label={t('mtk_lbl_limit_bytes_total')} name="limit-bytes-total" value={form['limit-bytes-total'] || ''} onChange={handleChange} placeholder={t('mtk_ph_bytes_unlimited')} />
+                  <EditRow label={t('mtk_lbl_mac_address')} name="mac-address" value={form['mac-address'] || ''} onChange={handleChange} mono placeholder="AA:BB:CC:DD:EE:FF" />
+                  <EditRow label={t('mtk_lbl_ip_address')} name="address" value={form.address || ''} onChange={handleChange} mono placeholder="192.168.1.100" />
+                  <EditSelectRow label={t('mtk_lbl_disabled')} name="disabled" value={form.disabled || 'false'} options={disabledOptions} onChange={handleChange} />
                 </div>
               ) : (
                 <div>
-                  <DetailRow label="Name" value={user.name} mono />
-                  <DetailRow label="Password" value={user.password || '(hidden)'} mono />
-                  <DetailRow label="Profile" value={<Badge text={form.profile || 'default'} color="indigo" />} />
-                  <DetailRow label="Comment" value={form.comment || '—'} />
-                  <DetailRow label="Limit Uptime" value={form['limit-uptime'] || 'unlimited'} />
-                  <DetailRow label="Limit Bytes In" value={form['limit-bytes-in'] || 'unlimited'} />
-                  <DetailRow label="Limit Bytes Out" value={form['limit-bytes-out'] || 'unlimited'} />
-                  <DetailRow label="Limit Bytes Total" value={form['limit-bytes-total'] || 'unlimited'} />
-                  <DetailRow label="MAC Address" value={form['mac-address'] || '—'} mono />
-                  <DetailRow label="IP Address" value={form.address || '—'} mono />
-                  <DetailRow label="Disabled" value={<Badge text={form.disabled === 'true' ? 'Yes' : 'No'} color={form.disabled === 'true' ? 'red' : 'green'} />} />
+                  <DetailRow label={t('mtk_lbl_name')} value={user.name} mono />
+                  <DetailRow label={t('mtk_lbl_password')} value={user.password || `(${t('mtk_hidden')})`} mono />
+                  <DetailRow label={t('mtk_lbl_profile')} value={<Badge text={form.profile || 'default'} color="indigo" />} />
+                  <DetailRow label={t('mtk_lbl_comment')} value={form.comment || '—'} />
+                  <DetailRow label={t('mtk_lbl_limit_uptime')} value={form['limit-uptime'] || t('mtk_unlimited')} />
+                  <DetailRow label={t('mtk_lbl_limit_bytes_in')} value={form['limit-bytes-in'] || t('mtk_unlimited')} />
+                  <DetailRow label={t('mtk_lbl_limit_bytes_out')} value={form['limit-bytes-out'] || t('mtk_unlimited')} />
+                  <DetailRow label={t('mtk_lbl_limit_bytes_total')} value={form['limit-bytes-total'] || t('mtk_unlimited')} />
+                  <DetailRow label={t('mtk_lbl_mac_address')} value={form['mac-address'] || '—'} mono />
+                  <DetailRow label={t('mtk_lbl_ip_address')} value={form.address || '—'} mono />
+                  <DetailRow label={t('mtk_lbl_disabled')} value={<Badge text={form.disabled === 'true' ? t('mtk_yes') : t('mtk_no')} color={form.disabled === 'true' ? 'red' : 'green'} />} />
                 </div>
               )
             )}
             {activeTab === 'statistics' && (
               <div>
-                <DetailRow label="Uptime" value={user.uptime || '—'} />
-                <DetailRow label="Bytes In" value={user['bytes-in'] ? `${Number(user['bytes-in']).toLocaleString()} B` : '—'} />
-                <DetailRow label="Bytes Out" value={user['bytes-out'] ? `${Number(user['bytes-out']).toLocaleString()} B` : '—'} />
-                <DetailRow label="Packets In" value={user['packets-in'] || '—'} />
-                <DetailRow label="Packets Out" value={user['packets-out'] || '—'} />
-                <DetailRow label="Last Logged In" value={user['last-logged-in'] || '—'} />
+                <DetailRow label={t('mtk_lbl_uptime')} value={user.uptime || '—'} />
+                <DetailRow label={t('mtk_lbl_bytes_in')} value={user['bytes-in'] ? `${Number(user['bytes-in']).toLocaleString()} B` : '—'} />
+                <DetailRow label={t('mtk_lbl_bytes_out')} value={user['bytes-out'] ? `${Number(user['bytes-out']).toLocaleString()} B` : '—'} />
+                <DetailRow label={t('mtk_lbl_packets_in')} value={user['packets-in'] || '—'} />
+                <DetailRow label={t('mtk_lbl_packets_out')} value={user['packets-out'] || '—'} />
+                <DetailRow label={t('mtk_lbl_last_login')} value={user['last-logged-in'] || '—'} />
                 {(!user.uptime && !user['bytes-in']) && (
                   <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--gray-400)', fontSize: 13 }}>
-                    Hakuna statistics — user hajawahi kuingia
+                    {t('mtk_no_stats')}
                   </div>
                 )}
               </div>
             )}
           </div>
           <div className="mtk-modal-footer" style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
-            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>Remove</Button>
+            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>{t('mtk_remove')}</Button>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button variant="ghost" onClick={onClose}>Cancel</Button>
-              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
-              <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
+              <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : t('mtk_apply')}</Button>}
+              <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : t('mtk_ok')}</Button>
             </div>
           </div>
         </div>
@@ -838,7 +847,7 @@ function UserDetailModal({ user, routerId, onClose, onDelete, onSaved, available
       <ConfirmDialog
         open={confirmDelete} onClose={() => setConfirmDelete(false)}
         onConfirm={() => { onDelete(user.name); setConfirmDelete(false); onClose() }}
-        title="Futa User" message={`Futa user "${user.name}"? Hatua hii haiwezi kurudishwa!`} danger
+        title={t('mtk_confirm_delete_user_title')} message={`${t('mtk_confirm_delete_user_msg_prefix')} "${user.name}"? ${t('mtk_action_irreversible')}`} danger
       />
     </>
   )
@@ -851,6 +860,7 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
   scheduler: any; routerId: number; onClose: () => void; onSaved: () => void
   onDelete: (id: string) => void; onToggle: (s: any) => void
 }) {
+  const { t } = useLang()
   const [activeTab, setActiveTab] = useState('general')
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({ ...scheduler })
@@ -871,14 +881,14 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
         interval: form.interval, 'on-event': form['on-event'],
         policy: form.policy, comment: form.comment, disabled: form.disabled,
       })
-      setAlert({ type: 'success', msg: 'Scheduler imesasishwa ✓' }); setDirty(false); onSaved()
-    } catch (e: any) { setAlert({ type: 'error', msg: e.response?.data?.error || 'Imeshindwa kuhifadhi' }) }
+      setAlert({ type: 'success', msg: `${t('mtk_scheduler_updated')} ✓` }); setDirty(false); onSaved()
+    } catch (e: any) { setAlert({ type: 'error', msg: e.response?.data?.error || t('mtk_save_failed') }) }
     finally { setSaving(false) }
   }
 
   const handleOK = async () => { if (dirty) await handleApply(); onClose() }
 
-  const tabs = [{ key: 'general', label: 'General' }, { key: 'script', label: 'Script' }]
+  const tabs = [{ key: 'general', label: t('mtk_tab_general') }, { key: 'script', label: t('mtk_tab_script') }]
   const policyOptions = [
     { value: 'read,write,reboot', label: 'read, write, reboot' },
     { value: 'read,write', label: 'read, write' },
@@ -886,9 +896,9 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
     { value: 'read', label: 'read only' },
   ]
   const intervalPresets = [
-    { l: 'Mara moja', v: '00:00:00' }, { l: 'Kila dakika', v: '00:01:00' },
-    { l: 'Kila saa', v: '01:00:00' }, { l: 'Kila saa 6', v: '06:00:00' },
-    { l: 'Kila siku', v: '1d 00:00:00' }, { l: 'Kila wiki', v: '7d 00:00:00' },
+    { l: t('mtk_int_once'), v: '00:00:00' }, { l: t('mtk_int_every_min'), v: '00:01:00' },
+    { l: t('mtk_int_every_hour'), v: '01:00:00' }, { l: t('mtk_int_every_6h'), v: '06:00:00' },
+    { l: t('mtk_int_every_day'), v: '1d 00:00:00' }, { l: t('mtk_int_every_week'), v: '7d 00:00:00' },
   ]
 
   return (
@@ -899,16 +909,16 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <Icons.Clock size={16} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Scheduler</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{t('mtk_scheduler_modal_title')}</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 13, color: 'var(--primary)', fontWeight: 700, wordBreak: 'break-all' }}>{scheduler.name}</span>
-                  <Badge text={isDisabled ? 'Disabled' : 'Running'} color={isDisabled ? 'red' : 'green'} />
+                  <Badge text={isDisabled ? t('mtk_status_disabled') : t('mtk_status_running')} color={isDisabled ? 'red' : 'green'} />
                 </div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               <EditModeToggle editing={editing} onToggle={() => setEditing(e => !e)} />
-              <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
+              <IconButton icon={<Icons.X size={14} />} label={t('mtk_close')} onClick={onClose} />
             </div>
           </div>
           {alert && <div style={{ padding: '0 1.25rem', paddingTop: '0.75rem', flexShrink: 0 }}><Alert type={alert.type} message={alert.msg} /></div>}
@@ -917,12 +927,12 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
             {activeTab === 'general' && (
               editing ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <EditRow label="Name" name="name" value={form.name} onChange={handleChange} mono />
-                  <EditRow label="Comment" name="comment" value={form.comment || ''} onChange={handleChange} placeholder="Maelezo ya scheduler" />
-                  <EditRow label="Start Date" name="start-date" value={form['start-date'] || ''} onChange={handleChange} placeholder="jan/01/1970" mono />
-                  <EditRow label="Start Time" name="start-time" value={form['start-time'] || ''} onChange={handleChange} placeholder="00:00:00" mono />
+                  <EditRow label={t('mtk_lbl_name')} name="name" value={form.name} onChange={handleChange} mono />
+                  <EditRow label={t('mtk_lbl_comment')} name="comment" value={form.comment || ''} onChange={handleChange} placeholder={t('mtk_ph_scheduler_comment')} />
+                  <EditRow label={t('mtk_lbl_start_date')} name="start-date" value={form['start-date'] || ''} onChange={handleChange} placeholder="jan/01/1970" mono />
+                  <EditRow label={t('mtk_lbl_start_time')} name="start-time" value={form['start-time'] || ''} onChange={handleChange} placeholder="00:00:00" mono />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '6px 0', borderBottom: '1px solid var(--gray-50)' }}>
-                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Interval</label>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('mtk_lbl_interval')}</label>
                     <input value={form.interval || ''} onChange={e => handleChange('interval', e.target.value)} placeholder="00:00:00"
                       style={{ padding: '7px 10px', border: '1.5px solid var(--gray-200)', borderRadius: 7, fontSize: 13, fontFamily: 'monospace', outline: 'none', width: '100%', boxSizing: 'border-box' }}
                       onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
@@ -936,22 +946,22 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
                       ))}
                     </div>
                   </div>
-                  <EditSelectRow label="Policy" name="policy" value={form.policy || 'read,write,reboot'} options={policyOptions} onChange={handleChange} />
-                  <EditSelectRow label="Status" name="disabled" value={form.disabled || 'false'}
-                    options={[{ value: 'false', label: 'Enabled — inafanya kazi' }, { value: 'true', label: 'Disabled — imesimamishwa' }]}
+                  <EditSelectRow label={t('mtk_lbl_policy')} name="policy" value={form.policy || 'read,write,reboot'} options={policyOptions} onChange={handleChange} />
+                  <EditSelectRow label={t('mtk_lbl_status')} name="disabled" value={form.disabled || 'false'}
+                    options={[{ value: 'false', label: t('mtk_opt_enabled_desc') }, { value: 'true', label: t('mtk_opt_disabled_desc2') }]}
                     onChange={handleChange} />
                 </div>
               ) : (
                 <div>
-                  <DetailRow label="Name" value={scheduler.name} mono />
-                  <DetailRow label="Comment" value={form.comment || '—'} />
-                  <DetailRow label="Start Date" value={form['start-date'] || '—'} />
-                  <DetailRow label="Start Time" value={form['start-time'] || '—'} mono />
-                  <DetailRow label="Interval" value={form.interval || 'once'} mono />
-                  <DetailRow label="Policy" value={form.policy || '—'} />
-                  <DetailRow label="Run Count" value={<span style={{ fontWeight: 700, color: (scheduler['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)' }}>{scheduler['run-count'] || '0'}</span>} />
-                  <DetailRow label="Next Run" value={scheduler['next-run'] || '—'} />
-                  <DetailRow label="Status" value={<Badge text={isDisabled ? 'Disabled' : 'Running'} color={isDisabled ? 'red' : 'green'} />} />
+                  <DetailRow label={t('mtk_lbl_name')} value={scheduler.name} mono />
+                  <DetailRow label={t('mtk_lbl_comment')} value={form.comment || '—'} />
+                  <DetailRow label={t('mtk_lbl_start_date')} value={form['start-date'] || '—'} />
+                  <DetailRow label={t('mtk_lbl_start_time')} value={form['start-time'] || '—'} mono />
+                  <DetailRow label={t('mtk_lbl_interval')} value={form.interval || t('mtk_int_once')} mono />
+                  <DetailRow label={t('mtk_lbl_policy')} value={form.policy || '—'} />
+                  <DetailRow label={t('mtk_lbl_run_count')} value={<span style={{ fontWeight: 700, color: (scheduler['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)' }}>{scheduler['run-count'] || '0'}</span>} />
+                  <DetailRow label={t('mtk_lbl_next_run')} value={scheduler['next-run'] || '—'} />
+                  <DetailRow label={t('mtk_lbl_status')} value={<Badge text={isDisabled ? t('mtk_status_disabled') : t('mtk_status_running')} color={isDisabled ? 'red' : 'green'} />} />
                 </div>
               )
             )}
@@ -959,15 +969,15 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
               <div>
                 {editing ? (
                   <>
-                    <EditTextareaRow label="On Event Script" name="on-event" value={form['on-event'] || ''} onChange={handleChange}
-                      placeholder={`# Script ya scheduler\n# Mfano:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`} minHeight={180} />
+                    <EditTextareaRow label={t('mtk_lbl_on_event_script')} name="on-event" value={form['on-event'] || ''} onChange={handleChange}
+                      placeholder={`# ${t('mtk_ph_script_line1')}\n# ${t('mtk_ph_script_example')}:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`} minHeight={180} />
                     <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', marginTop: 8, fontSize: 11, color: '#a5b4fc', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icons.Bulb size={12} /> Mifano ya haraka:</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icons.Bulb size={12} /> {t('mtk_quick_examples')}</span>
                       <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {[
-                          { l: 'Log message', v: ':log info "Scheduler imefanya kazi"' },
-                          { l: 'Futa used users', v: '/ip hotspot user remove [find comment~"used"]' },
-                          { l: 'Reboot router', v: '/system reboot' },
+                          { l: t('mtk_ex_log_message'), v: ':log info "Scheduler imefanya kazi"' },
+                          { l: t('mtk_ex_remove_used_users'), v: '/ip hotspot user remove [find comment~"used"]' },
+                          { l: t('mtk_ex_reboot_router'), v: '/system reboot' },
                         ].map((ex, i) => (
                           <button key={i} onClick={() => handleChange('on-event', ex.v)}
                             style={{ textAlign: 'left', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', color: '#e0e7ff', fontSize: 11, overflowX: 'auto' }}>
@@ -979,13 +989,13 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
                   </>
                 ) : (
                   <>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 8 }}>On Event Script</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 8 }}>{t('mtk_lbl_on_event_script')}</div>
                     {form['on-event'] ? (
                       <div style={{ background: '#1e1b4b', borderRadius: 10, padding: '14px 16px', overflowX: 'auto' }}>
                         <pre style={{ fontSize: 13, color: '#e0e7ff', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'monospace', lineHeight: 1.6 }}>{form['on-event']}</pre>
                       </div>
                     ) : (
-                      <div style={{ padding: '1rem', background: 'var(--gray-50)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', fontStyle: 'italic' }}>Hakuna script</div>
+                      <div style={{ padding: '1rem', background: 'var(--gray-50)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)', fontStyle: 'italic' }}>{t('mtk_no_script')}</div>
                     )}
                   </>
                 )}
@@ -994,15 +1004,15 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
           </div>
           <div className="mtk-modal-footer" style={{ padding: '0.875rem 1.25rem', borderTop: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>Remove</Button>
+              <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)} icon={<Icons.Trash size={13} />}>{t('mtk_remove')}</Button>
               <Button variant={isDisabled ? 'success' : 'warning'} size="sm" onClick={() => { onToggle(scheduler); onClose() }} icon={isDisabled ? <Icons.Play size={12} /> : <Icons.Pause size={12} />}>
-                {isDisabled ? 'Enable' : 'Disable'}
+                {isDisabled ? t('mtk_enable') : t('mtk_disable')}
               </Button>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <Button variant="ghost" onClick={onClose}>Cancel</Button>
-              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : 'Apply'}</Button>}
-              <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : 'OK'}</Button>
+              <Button variant="ghost" onClick={onClose}>{t('cancel')}</Button>
+              {editing && dirty && <Button variant="ghost" onClick={handleApply} disabled={saving} icon={saving ? undefined : <Icons.Save size={13} />}>{saving ? <Spinner size={14} /> : t('mtk_apply')}</Button>}
+              <Button onClick={handleOK} disabled={saving}>{saving ? <Spinner size={14} /> : t('mtk_ok')}</Button>
             </div>
           </div>
         </div>
@@ -1010,7 +1020,7 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
       <ConfirmDialog
         open={confirmDelete} onClose={() => setConfirmDelete(false)}
         onConfirm={() => { onDelete(scheduler['.id']); setConfirmDelete(false); onClose() }}
-        title="Futa Scheduler" message={`Futa scheduler "${scheduler.name}"? Script haitatekelezwa tena.`} danger
+        title={t('mtk_confirm_delete_scheduler_title')} message={`${t('mtk_confirm_delete_scheduler_msg_prefix')} "${scheduler.name}"? ${t('mtk_confirm_delete_scheduler_msg_suffix')}`} danger
       />
     </>
   )
@@ -1021,7 +1031,7 @@ function SchedulerDetailModal({ scheduler, routerId, onClose, onSaved, onDelete,
 // ════════════════════════════════════════════════════════
 function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedTabs: Tab[] }) {
   const { t } = useLang()
-  const visibleTabs = ALL_TABS.filter(t => allowedTabs.includes(t.key as Tab))
+  const visibleTabs = ALL_TABS.filter(tb => allowedTabs.includes(tb.key as Tab)).map(tb => ({ ...tb, label: t(tb.labelKey) }))
   const [tab, setTab] = useState<Tab>(visibleTabs.length > 0 ? visibleTabs[0].key as Tab : 'servers')
   const [data, setData] = useState<any>({})
   const [loading, setLoading] = useState(false)
@@ -1075,8 +1085,8 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     return (
       <div style={{ textAlign: 'center', padding: '4rem 1.25rem', color: 'var(--gray-400)' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Icons.Lock size={40} /></div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Huna ruhusa ya kufikia MikroTik Manager</div>
-        <div style={{ fontSize: 13 }}>Wasiliana na admin wako kukupa ruhusa.</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>{t('mtk_no_permission_title')}</div>
+        <div style={{ fontSize: 13 }}>{t('mtk_no_permission_desc')}</div>
       </div>
     )
   }
@@ -1090,7 +1100,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       const res = await api.get(`/mikrotik/${routerId}/${ENDPOINTS[currentTab as Exclude<Tab, 'terminal'>]}`)
       setData((prev: any) => ({ ...prev, [currentTab]: res.data }))
     } catch (e: any) {
-      if (!silent) showAlrt('error', e.response?.data?.error || 'Hitilafu ya muunganiko')
+      if (!silent) showAlrt('error', e.response?.data?.error || t('mtk_connection_error'))
     } finally { if (!silent) setLoading(false) }
   }
 
@@ -1122,7 +1132,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const handleDeleteUser = async (username: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/users/delete/`, { data: { username } })
-      showAlrt('success', `User ${username} amefutwa ✓`); fetchTab('users')
+      showAlrt('success', `${t('mtk_lbl_user')} ${username} ${t('mtk_deleted_suffix')}`); fetchTab('users')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
 
@@ -1149,23 +1159,23 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
     setConfirmBulkDeleteUsers(false)
     setSelectedUserNames(new Set())
     showAlrt(failed === 0 ? 'success' : 'error',
-      `Imefuta ${success} user(s)${failed ? `, imeshindwa kufuta ${failed}` : ''} ✓`)
+      `${t('mtk_bulk_deleted_prefix')} ${success} ${t('mtk_users_suffix')}${failed ? `, ${t('mtk_bulk_failed_suffix')} ${failed}` : ''} ✓`)
     fetchTab('users')
   }
 
   const handleDisconnect = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/sessions/`, { data: { session_id: id } })
-      showAlrt('success', 'Session imekatwa ✓'); fetchTab('active', true)
+      showAlrt('success', `${t('mtk_session_disconnected')} ✓`); fetchTab('active', true)
     } catch { showAlrt('error', t('error')) }
   }
 
   const handleAddUser = async () => {
-    if (!newUser.username) { showAlrt('error', 'Jaza username'); return }
+    if (!newUser.username) { showAlrt('error', t('mtk_fill_username')); return }
     const payload = { ...newUser, password: newUser.password || newUser.username }
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/users/`, payload)
-      showAlrt('success', `User ${newUser.username} ameongezwa ✓`)
+      showAlrt('success', `${t('mtk_lbl_user')} ${newUser.username} ${t('mtk_added_suffix')}`)
       setShowAddUser(false); setNewUser({ username: '', password: '', profile: '', comment: '' }); fetchTab('users')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
@@ -1173,15 +1183,15 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const handleDeleteBinding = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/ip-bindings/`, { data: { binding_id: id } })
-      showAlrt('success', 'IP Binding imefutwa ✓'); fetchTab('ip_bindings')
+      showAlrt('success', `${t('mtk_binding_deleted')} ✓`); fetchTab('ip_bindings')
     } catch { showAlrt('error', t('error')) }
   }
 
   const handleAddBinding = async () => {
-    if (!newBinding.mac_address) { showAlrt('error', 'Jaza MAC Address'); return }
+    if (!newBinding.mac_address) { showAlrt('error', t('mtk_fill_mac')); return }
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/ip-bindings/`, newBinding)
-      showAlrt('success', 'IP Binding imeongezwa ✓')
+      showAlrt('success', `${t('mtk_binding_added')} ✓`)
       setShowAddBinding(false); setNewBinding({ mac_address: '', ip_address: '', type: 'regular', comment: '' }); fetchTab('ip_bindings')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
@@ -1189,15 +1199,15 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const handleDeleteWG = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/walled-garden/`, { data: { entry_id: id } })
-      showAlrt('success', 'Walled Garden entry imefutwa ✓'); fetchTab('walled_garden')
+      showAlrt('success', `${t('mtk_wg_deleted')} ✓`); fetchTab('walled_garden')
     } catch { showAlrt('error', t('error')) }
   }
 
   const handleAddWG = async () => {
-    if (!newWG.dst_host) { showAlrt('error', 'Jaza Dst Host'); return }
+    if (!newWG.dst_host) { showAlrt('error', t('mtk_fill_dst_host')); return }
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/walled-garden/`, newWG)
-      showAlrt('success', `${newWG.dst_host} imeongezwa ✓`)
+      showAlrt('success', `${newWG.dst_host} ${t('mtk_added_suffix')}`)
       setShowAddWG(false); setNewWG({ dst_host: '', action: 'allow', comment: '' }); fetchTab('walled_garden')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
@@ -1205,15 +1215,15 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const handleDeleteWGIP = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/walled-garden-ip/`, { data: { entry_id: id } })
-      showAlrt('success', 'Walled Garden IP imefutwa ✓'); fetchTab('walled_garden_ip')
+      showAlrt('success', `${t('mtk_wgip_deleted')} ✓`); fetchTab('walled_garden_ip')
     } catch { showAlrt('error', t('error')) }
   }
 
   const handleAddWGIP = async () => {
-    if (!newWGIP.dst_address) { showAlrt('error', 'Jaza Dst Address'); return }
+    if (!newWGIP.dst_address) { showAlrt('error', t('mtk_fill_dst_address')); return }
     try {
       await api.post(`/mikrotik/${routerId}/hotspot/walled-garden-ip/`, newWGIP)
-      showAlrt('success', `${newWGIP.dst_address} imeongezwa ✓`)
+      showAlrt('success', `${newWGIP.dst_address} ${t('mtk_added_suffix')}`)
       setShowAddWGIP(false); setNewWGIP({ dst_address: '', action: 'accept', comment: '' }); fetchTab('walled_garden_ip')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
   }
@@ -1221,14 +1231,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const handleDeleteCookie = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/cookies/`, { data: { cookie_id: id } })
-      showAlrt('success', 'Cookie imefutwa ✓'); fetchTab('cookies')
+      showAlrt('success', `${t('mtk_cookie_deleted')} ✓`); fetchTab('cookies')
     } catch { showAlrt('error', t('error')) }
   }
 
   const handleClearAllCookies = async () => {
     try {
       await api.delete(`/mikrotik/${routerId}/hotspot/cookies/`, { data: {} })
-      showAlrt('success', 'Cookies zote zimefutwa ✓'); fetchTab('cookies')
+      showAlrt('success', `${t('mtk_cookies_cleared')} ✓`); fetchTab('cookies')
     } catch { showAlrt('error', t('error')) }
   }
 
@@ -1251,15 +1261,15 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   }
 
   const handleSaveScheduler = async () => {
-    if (!newScheduler.name) { showAlrt('error', 'Jaza jina la scheduler'); return }
-    if (!newScheduler.on_event) { showAlrt('error', 'Jaza script (On Event)'); return }
+    if (!newScheduler.name) { showAlrt('error', t('mtk_fill_scheduler_name')); return }
+    if (!newScheduler.on_event) { showAlrt('error', t('mtk_fill_scheduler_script')); return }
     try {
       if (editScheduler) {
         await api.patch(`/mikrotik/${routerId}/scheduler/`, { scheduler_id: editScheduler['.id'], ...newScheduler })
-        showAlrt('success', `Scheduler "${newScheduler.name}" imesasishwa ✓`)
+        showAlrt('success', `${t('mtk_scheduler_label')} "${newScheduler.name}" ${t('mtk_updated_suffix')}`)
       } else {
         await api.post(`/mikrotik/${routerId}/scheduler/`, newScheduler)
-        showAlrt('success', `Scheduler "${newScheduler.name}" imeongezwa ✓`)
+        showAlrt('success', `${t('mtk_scheduler_label')} "${newScheduler.name}" ${t('mtk_added_suffix')}`)
       }
       setShowAddScheduler(false); setEditScheduler(null); fetchTab('scheduler')
     } catch (e: any) { showAlrt('error', e.response?.data?.error || t('error')) }
@@ -1268,14 +1278,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const handleDeleteScheduler = async (id: string) => {
     try {
       await api.delete(`/mikrotik/${routerId}/scheduler/`, { data: { scheduler_id: id } })
-      showAlrt('success', 'Scheduler imefutwa ✓'); fetchTab('scheduler')
+      showAlrt('success', `${t('mtk_scheduler_deleted')} ✓`); fetchTab('scheduler')
     } catch { showAlrt('error', t('error')) }
   }
 
   const handleToggleScheduler = async (item: any) => {
     try {
       await api.patch(`/mikrotik/${routerId}/scheduler/`, { scheduler_id: item['.id'], disabled: item.disabled === 'true' ? 'false' : 'true' })
-      showAlrt('success', `Scheduler ${item.disabled === 'true' ? 'imewashwa' : 'imezimwa'} ✓`)
+      showAlrt('success', `${t('mtk_scheduler_label')} ${item.disabled === 'true' ? t('mtk_enabled_suffix') : t('mtk_disabled_suffix')} ✓`)
       fetchTab('scheduler')
     } catch { showAlrt('error', t('error')) }
   }
@@ -1306,7 +1316,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const modalHeader = (title: string, onClose: () => void) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', gap: 10 }}>
       <h3 style={{ fontSize: 15, fontWeight: 700, minWidth: 0, wordBreak: 'break-word' }}>{title}</h3>
-      <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
+      <IconButton icon={<Icons.X size={14} />} label={t('mtk_close')} onClick={onClose} />
     </div>
   )
   const selectStyle: React.CSSProperties = {
@@ -1323,7 +1333,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
   const LiveBadge = () => (
     <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#16a34a', fontWeight: 600, whiteSpace: 'nowrap' }}>
       <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', display: 'inline-block', animation: 'livepulse 1.5s infinite' }} />
-      Live · {countdown}s
+      {t('mtk_live')} · {countdown}s
     </span>
   )
 
@@ -1349,8 +1359,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {tab === 'terminal' && (
         <div>
           <div style={{ marginBottom: '1rem', padding: '10px 14px', background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe', fontSize: 13, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <Icons.Terminal size={16} /> <strong>MikroTik Terminal</strong> — Tekeleza commands moja kwa moja kwenye router yako.
-            Commands zinatumwa salama kupitia API.
+            <Icons.Terminal size={16} /> <strong>{t('mtk_terminal_titlebar')}</strong> — {t('mtk_terminal_banner_desc')}
           </div>
           <MikroTikTerminal routerId={routerId} />
         </div>
@@ -1361,14 +1370,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 1. SERVERS */}
       {!loading && tab === 'servers' && (
         <Card>
-          <CardHeader title={`Hotspot Servers (${d?.count || 0})`} />
+          <CardHeader title={`${t('mtk_hdr_servers')} (${d?.count || 0})`} />
           <TableScroll>
-          <Table headers={['Name', 'Interface', 'Address Pool', 'Profile', 'Idle Timeout', 'Status']}
+          <Table headers={[t('mtk_col_name'), t('mtk_col_interface'), t('mtk_col_address_pool'), t('mtk_col_profile'), t('mtk_col_idle_timeout'), t('mtk_col_status')]}
             rows={(d?.servers || []).map((s: any) => [
               <strong>{s.name || '—'}</strong>, s.interface || '—', s['address-pool'] || '—',
               <Badge text={s.profile || 'default'} color="indigo" />, s['idle-timeout'] || '—',
-              <Badge text={s.disabled === 'true' ? 'Disabled' : 'Running'} color={s.disabled === 'true' ? 'red' : 'green'} />,
-            ])} emptyMessage="Hakuna hotspot servers" />
+              <Badge text={s.disabled === 'true' ? t('mtk_status_disabled') : t('mtk_status_running')} color={s.disabled === 'true' ? 'red' : 'green'} />,
+            ])} emptyMessage={t('mtk_empty_servers')} />
           </TableScroll>
         </Card>
       )}
@@ -1376,20 +1385,20 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 2. SERVER PROFILES */}
       {!loading && tab === 'server_profiles' && (
         <Card>
-          <CardHeader title={`Server Profiles (${(d?.profiles || []).length})`} />
+          <CardHeader title={`${t('mtk_tab_server_profiles')} (${(d?.profiles || []).length})`} />
           <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icons.Bulb size={13} /> Bonyeza profile yoyote kuona na kuhariri maelezo yake (General, Scripts)
+            <Icons.Bulb size={13} /> {t('mtk_hint_profiles')}
           </div>
           <TableScroll>
-          <Table headers={['Name', 'Rate Limit', 'Session Timeout', 'Shared Users', 'On Login Script', '']}
+          <Table headers={[t('mtk_col_name'), t('mtk_col_rate_limit'), t('mtk_col_session_timeout'), t('mtk_col_shared_users'), t('mtk_col_on_login_script'), '']}
             rows={(d?.profiles || []).map((p: any) => [
               <strong style={{ color: 'var(--primary)', cursor: 'pointer' }} onClick={() => setSelectedProfile(p)}>{p.name}</strong>,
-              p['rate-limit'] || <span style={{ color: 'var(--gray-400)' }}>unlimited</span>,
-              p['session-timeout'] || <span style={{ color: 'var(--gray-400)' }}>unlimited</span>,
+              p['rate-limit'] || <span style={{ color: 'var(--gray-400)' }}>{t('mtk_unlimited')}</span>,
+              p['session-timeout'] || <span style={{ color: 'var(--gray-400)' }}>{t('mtk_unlimited')}</span>,
               p['shared-users'] || '1',
-              p['on-login'] ? <Badge text="Ipo" color="green" /> : <Badge text="Hakuna" color="gray" />,
-              <IconButton icon={<Icons.Edit size={14} />} label="Hariri Profile" onClick={() => setSelectedProfile(p)} />,
-            ])} emptyMessage="Hakuna server profiles" />
+              p['on-login'] ? <Badge text={t('mtk_exists')} color="green" /> : <Badge text={t('mtk_none_badge')} color="gray" />,
+              <IconButton icon={<Icons.Edit size={14} />} label={t('mtk_edit_profile_tooltip')} onClick={() => setSelectedProfile(p)} />,
+            ])} emptyMessage={t('mtk_empty_profiles')} />
           </TableScroll>
         </Card>
       )}
@@ -1397,7 +1406,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 3. USERS */}
       {!loading && tab === 'users' && (
         <Card>
-          <CardHeader title={`Users (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon={<Icons.Plus size={13} />}>{t('add_user')}</Button>} />
+          <CardHeader title={`${t('mtk_tab_users')} (${d?.count || 0})`} action={<Button size="sm" onClick={openAddUser} icon={<Icons.Plus size={13} />}>{t('add_user')}</Button>} />
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '0 1rem 1rem', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
@@ -1405,7 +1414,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               <input
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
-                placeholder="Tafuta kwa username, comment au profile..."
+                placeholder={t('mtk_search_users_placeholder')}
                 style={{ width: '100%', padding: '8px 12px 8px 32px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, outline: 'none', transition: 'border-color 0.15s', boxSizing: 'border-box' }}
                 onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
                 onBlur={e => (e.target.style.borderColor = 'var(--gray-200)')}
@@ -1414,13 +1423,13 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             {selectedUserNames.size > 0 && (
               <>
                 <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600 }}>
-                  {selectedUserNames.size} zimechaguliwa
+                  {selectedUserNames.size} {t('mtk_selected_suffix')}
                 </span>
                 <Button size="sm" variant="danger" onClick={() => setConfirmBulkDeleteUsers(true)} icon={<Icons.Trash size={13} />}>
-                  Futa zilizochaguliwa
+                  {t('mtk_delete_selected')}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => setSelectedUserNames(new Set())}>
-                  Ondoa uchaguzi
+                  {t('mtk_deselect')}
                 </Button>
               </>
             )}
@@ -1449,18 +1458,18 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                 style={{ cursor: 'pointer', width: 15, height: 15, flexShrink: 0 }}
               />
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>
-                {allFilteredSelected ? 'Ondoa uchaguzi wote' : `Chagua wote (${filteredUsers.length})`}
+                {allFilteredSelected ? t('mtk_deselect_all') : `${t('mtk_select_all_prefix')} (${filteredUsers.length})`}
               </span>
             </div>
           )}
 
           <div style={{ padding: '8px 16px', background: '#eff6ff', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icons.Bulb size={13} /> Bonyeza jina la user kuona na kuhariri maelezo yake
+            <Icons.Bulb size={13} /> {t('mtk_hint_users')}
           </div>
 
           <TableScroll>
           <Table
-            headers={['', 'Name', 'Profile', 'Limit Uptime', 'Uptime / Hali', 'Comment', 'Status', '']}
+            headers={['', t('mtk_col_name'), t('mtk_col_profile'), t('mtk_col_limit_uptime'), t('mtk_col_uptime_status'), t('mtk_col_comment'), t('mtk_col_status'), '']}
             rows={filteredUsers.map((u: any) => {
               const currentUptime = u.uptime || ''
               const lastLogin     = u['last-logged-in'] || ''
@@ -1471,7 +1480,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               if (neverUsed) {
                 usageBadge = (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', whiteSpace: 'nowrap' }}>
-                    <Icons.Circle size={6} /> Haijatumika
+                    <Icons.Circle size={6} /> {t('mtk_never_used')}
                   </span>
                 )
               } else if (hasStarted) {
@@ -1480,16 +1489,16 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', whiteSpace: 'nowrap' }}>
                       <Icons.Play size={9} /> {currentUptime}
                     </span>
-                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2, whiteSpace: 'nowrap' }}>Login: {lastLogin}</div>}
+                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2, whiteSpace: 'nowrap' }}>{t('mtk_login_label')}: {lastLogin}</div>}
                   </div>
                 )
               } else {
                 usageBadge = (
                   <div>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700, background: '#f3f4f6', color: '#6b7280', border: '1px solid #e5e7eb', whiteSpace: 'nowrap' }}>
-                      <Icons.Pause size={9} /> Nje
+                      <Icons.Pause size={9} /> {t('mtk_offline_badge')}
                     </span>
-                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2, whiteSpace: 'nowrap' }}>Mwisho: {lastLogin}</div>}
+                    {lastLogin && <div style={{ fontSize: 10, color: 'var(--gray-400)', marginTop: 2, whiteSpace: 'nowrap' }}>{t('mtk_last_label')}: {lastLogin}</div>}
                   </div>
                 )
               }
@@ -1507,14 +1516,14 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                 <Badge text={u.profile || 'default'} color="indigo" />,
                 u['limit-uptime']
                   ? <span style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--gray-700)', fontWeight: 600, whiteSpace: 'nowrap' }}>{u['limit-uptime']}</span>
-                  : <span style={{ color: 'var(--gray-300)', fontSize: 12 }}>unlimited</span>,
+                  : <span style={{ color: 'var(--gray-300)', fontSize: 12 }}>{t('mtk_unlimited')}</span>,
                 usageBadge,
                 <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{u.comment || '—'}</span>,
-                <Badge text={u.disabled === 'true' ? 'Disabled' : 'Active'} color={u.disabled === 'true' ? 'red' : 'green'} />,
-                <IconButton icon={<Icons.Edit size={14} />} label="Hariri User" onClick={() => setSelectedUser(u)} />,
+                <Badge text={u.disabled === 'true' ? t('mtk_status_disabled') : t('mtk_status_active')} color={u.disabled === 'true' ? 'red' : 'green'} />,
+                <IconButton icon={<Icons.Edit size={14} />} label={t('mtk_edit_user_tooltip')} onClick={() => setSelectedUser(u)} />,
               ]
             })}
-            emptyMessage={userSearch ? `Hakuna user inayofanana na "${userSearch}"` : 'Hakuna users'}
+            emptyMessage={userSearch ? `${t('mtk_empty_users_search_prefix')} "${userSearch}"` : t('mtk_empty_users')}
           />
           </TableScroll>
         </Card>
@@ -1523,17 +1532,17 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 4. ACTIVE */}
       {!loading && tab === 'active' && (
         <Card>
-          <CardHeader title={`Active (${d?.count || 0})`} action={<LiveBadge />} />
+          <CardHeader title={`${t('mtk_tab_active')} (${d?.count || 0})`} action={<LiveBadge />} />
           {(d?.sessions || []).length === 0
-            ? <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--gray-400)' }}><div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Circle size={30} /></div>Hakuna active sessions</div>
-            : <TableScroll><Table headers={['User', 'MAC Address', 'IP Address', 'Uptime', 'TX Bytes', 'RX Bytes', 'Server', '']}
+            ? <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--gray-400)' }}><div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Circle size={30} /></div>{t('mtk_empty_active')}</div>
+            : <TableScroll><Table headers={[t('mtk_col_user'), t('mtk_col_mac'), t('mtk_col_ip'), t('mtk_col_uptime'), t('mtk_col_tx_bytes'), t('mtk_col_rx_bytes'), t('mtk_col_server'), '']}
                 rows={(d?.sessions || []).map((s: any) => [
                   <strong>{s.user || '—'}</strong>,
                   <code style={{ fontSize: 11 }}>{s['mac-address'] || '—'}</code>,
                   <code style={{ fontSize: 11 }}>{s.address || '—'}</code>,
                   s.uptime || '—', s['bytes-out'] || '0', s['bytes-in'] || '0', s.server || '—',
-                  <IconButton icon={<Icons.X size={14} />} label="Kata Connection" variant="danger" onClick={() => setConfirmDisconnect(s['.id'])} />,
-                ])} emptyMessage="Hakuna active sessions" /></TableScroll>
+                  <IconButton icon={<Icons.X size={14} />} label={t('mtk_disconnect_tooltip')} variant="danger" onClick={() => setConfirmDisconnect(s['.id'])} />,
+                ])} emptyMessage={t('mtk_empty_active')} /></TableScroll>
           }
         </Card>
       )}
@@ -1541,16 +1550,16 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 5. HOSTS */}
       {!loading && tab === 'hosts' && (
         <Card>
-          <CardHeader title={`Hosts (${d?.count || 0})`} action={<LiveBadge />} />
+          <CardHeader title={`${t('mtk_tab_hosts')} (${d?.count || 0})`} action={<LiveBadge />} />
           <TableScroll>
-          <Table headers={['MAC Address', 'IP Address', 'Hostname', 'Server', 'Bridge', 'Status']}
+          <Table headers={[t('mtk_col_mac'), t('mtk_col_ip'), t('mtk_col_hostname'), t('mtk_col_server'), t('mtk_col_bridge'), t('mtk_col_status')]}
             rows={(d?.hosts || []).map((h: any) => [
               <code style={{ fontSize: 11 }}>{h['mac-address'] || '—'}</code>,
               <code style={{ fontSize: 11 }}>{h.address || '—'}</code>,
               h.hostname || <span style={{ color: 'var(--gray-300)' }}>—</span>,
               h.server || '—', h.bridge || '—',
-              <Badge text={h.authorized === 'true' ? 'authorized' : 'unauthorized'} color={h.authorized === 'true' ? 'green' : 'gray'} />,
-            ])} emptyMessage="Hakuna hosts" />
+              <Badge text={h.authorized === 'true' ? t('mtk_authorized') : t('mtk_unauthorized')} color={h.authorized === 'true' ? 'green' : 'gray'} />,
+            ])} emptyMessage={t('mtk_empty_hosts')} />
           </TableScroll>
         </Card>
       )}
@@ -1558,16 +1567,16 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 6. IP BINDINGS */}
       {!loading && tab === 'ip_bindings' && (
         <Card>
-          <CardHeader title={`IP Bindings (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddBinding(true)} icon={<Icons.Plus size={13} />}>Add Binding</Button>} />
+          <CardHeader title={`${t('mtk_tab_ip_bindings')} (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddBinding(true)} icon={<Icons.Plus size={13} />}>{t('mtk_btn_add_binding')}</Button>} />
           <TableScroll>
-          <Table headers={['MAC Address', 'IP Address', 'Type', 'Comment', '']}
+          <Table headers={[t('mtk_col_mac'), t('mtk_col_ip'), t('mtk_col_type'), t('mtk_col_comment'), '']}
             rows={(d?.bindings || []).map((b: any) => [
               <code style={{ fontSize: 11 }}>{b['mac-address'] || '—'}</code>,
               <code style={{ fontSize: 11 }}>{b.address || '—'}</code>,
               <Badge text={b.type || 'regular'} color={b.type === 'bypassed' ? 'green' : b.type === 'blocked' ? 'red' : 'blue'} />,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{b.comment || '—'}</span>,
-              <IconButton icon={<Icons.Trash size={14} />} label="Futa Binding" variant="danger" onClick={() => setConfirmDeleteBinding(b['.id'])} />,
-            ])} emptyMessage="Hakuna IP Bindings" />
+              <IconButton icon={<Icons.Trash size={14} />} label={t('mtk_delete_binding_tooltip')} variant="danger" onClick={() => setConfirmDeleteBinding(b['.id'])} />,
+            ])} emptyMessage={t('mtk_empty_bindings')} />
           </TableScroll>
         </Card>
       )}
@@ -1575,20 +1584,20 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 7. WALLED GARDEN */}
       {!loading && tab === 'walled_garden' && (
         <Card>
-          <CardHeader title={`Walled Garden (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWG(true)} icon={<Icons.Plus size={13} />}>Add Entry</Button>} />
+          <CardHeader title={`${t('mtk_tab_walled_garden')} (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWG(true)} icon={<Icons.Plus size={13} />}>{t('mtk_btn_add_entry')}</Button>} />
           <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icons.Globe size={13} /> Tovuti zinazoweza kufikiwa <strong>bila login</strong> (HTTP)
+            <Icons.Globe size={13} /> {t('mtk_hint_wg_pre')} <strong>{t('mtk_hint_no_login')}</strong> (HTTP)
           </div>
           <TableScroll>
-          <Table headers={['Dst Host', 'Action', 'Server', 'Path', 'Comment', '']}
+          <Table headers={[t('mtk_col_dst_host'), t('mtk_col_action'), t('mtk_col_server'), t('mtk_col_path'), t('mtk_col_comment'), '']}
             rows={(d?.entries || []).map((e: any) => [
               <code style={{ fontSize: 12, color: 'var(--primary)' }}>{e['dst-host'] || '—'}</code>,
               <Badge text={e.action || 'allow'} color={e.action === 'deny' ? 'red' : 'green'} />,
-              e.server || <span style={{ color: 'var(--gray-300)' }}>all</span>,
+              e.server || <span style={{ color: 'var(--gray-300)' }}>{t('mtk_all')}</span>,
               e.path || <span style={{ color: 'var(--gray-300)' }}>—</span>,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{e.comment || '—'}</span>,
-              <IconButton icon={<Icons.Trash size={14} />} label="Futa Entry" variant="danger" onClick={() => setConfirmDeleteWG(e['.id'])} />,
-            ])} emptyMessage="Hakuna Walled Garden entries" />
+              <IconButton icon={<Icons.Trash size={14} />} label={t('mtk_delete_entry_tooltip')} variant="danger" onClick={() => setConfirmDeleteWG(e['.id'])} />,
+            ])} emptyMessage={t('mtk_empty_wg')} />
           </TableScroll>
         </Card>
       )}
@@ -1596,20 +1605,20 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 8. WALLED GARDEN IP */}
       {!loading && tab === 'walled_garden_ip' && (
         <Card>
-          <CardHeader title={`Walled Garden IP List (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWGIP(true)} icon={<Icons.Plus size={13} />}>Add IP</Button>} />
+          <CardHeader title={`${t('mtk_hdr_walled_garden_ip_list')} (${d?.count || 0})`} action={<Button size="sm" onClick={() => setShowAddWGIP(true)} icon={<Icons.Plus size={13} />}>{t('mtk_btn_add_ip')}</Button>} />
           <div style={{ padding: '8px 16px', background: 'var(--info-light)', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icons.Globe2 size={13} /> IP addresses zinazoweza kufikiwa <strong>bila login</strong> (HTTPS/IP direct)
+            <Icons.Globe2 size={13} /> {t('mtk_hint_wgip_pre')} <strong>{t('mtk_hint_no_login')}</strong> (HTTPS/IP direct)
           </div>
           <TableScroll>
-          <Table headers={['Dst Address', 'Action', 'Protocol', 'Server', 'Comment', '']}
+          <Table headers={[t('mtk_col_dst_address'), t('mtk_col_action'), t('mtk_col_protocol'), t('mtk_col_server'), t('mtk_col_comment'), '']}
             rows={(d?.entries || []).map((e: any) => [
               <code style={{ fontSize: 12, color: 'var(--primary)' }}>{e['dst-address'] || '—'}</code>,
               <Badge text={e.action || 'accept'} color={e.action === 'drop' ? 'red' : 'green'} />,
-              e.protocol || <span style={{ color: 'var(--gray-300)' }}>any</span>,
-              e.server || <span style={{ color: 'var(--gray-300)' }}>all</span>,
+              e.protocol || <span style={{ color: 'var(--gray-300)' }}>{t('mtk_any')}</span>,
+              e.server || <span style={{ color: 'var(--gray-300)' }}>{t('mtk_all')}</span>,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{e.comment || '—'}</span>,
-              <IconButton icon={<Icons.Trash size={14} />} label="Futa IP" variant="danger" onClick={() => setConfirmDeleteWGIP(e['.id'])} />,
-            ])} emptyMessage="Hakuna Walled Garden IP entries" />
+              <IconButton icon={<Icons.Trash size={14} />} label={t('mtk_delete_ip_tooltip')} variant="danger" onClick={() => setConfirmDeleteWGIP(e['.id'])} />,
+            ])} emptyMessage={t('mtk_empty_wgip')} />
           </TableScroll>
         </Card>
       )}
@@ -1617,22 +1626,22 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 9. COOKIES */}
       {!loading && tab === 'cookies' && (
         <Card>
-          <CardHeader title={`Cookies (${d?.count || 0})`}
+          <CardHeader title={`${t('mtk_tab_cookies')} (${d?.count || 0})`}
             action={(d?.count || 0) > 0
-              ? <Button size="sm" variant="danger" onClick={() => setConfirmClearCookies(true)} icon={<Icons.Trash size={13} />}>Clear All</Button>
+              ? <Button size="sm" variant="danger" onClick={() => setConfirmClearCookies(true)} icon={<Icons.Trash size={13} />}>{t('mtk_clear_all')}</Button>
               : undefined} />
           <div style={{ padding: '8px 16px', background: '#fff7ed', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icons.Cookie size={13} /> Login cookies — ruhusu mtumiaji kuingia <strong>bila password</strong> tena
+            <Icons.Cookie size={13} /> {t('mtk_hint_cookies_pre')} <strong>{t('mtk_hint_no_password')}</strong> {t('mtk_hint_again')}
           </div>
           <TableScroll>
-          <Table headers={['User', 'MAC Address', 'IP Address', 'Expires At', '']}
+          <Table headers={[t('mtk_col_user'), t('mtk_col_mac'), t('mtk_col_ip'), t('mtk_col_expires_at'), '']}
             rows={(d?.cookies || []).map((c: any) => [
               <strong>{c.user || '—'}</strong>,
               <code style={{ fontSize: 11 }}>{c['mac-address'] || '—'}</code>,
               <code style={{ fontSize: 11 }}>{c.address || '—'}</code>,
               c['expires-at'] || '—',
-              <IconButton icon={<Icons.Trash size={14} />} label="Futa Cookie" variant="danger" onClick={() => setConfirmDeleteCookie(c['.id'])} />,
-            ])} emptyMessage="Hakuna cookies" />
+              <IconButton icon={<Icons.Trash size={14} />} label={t('mtk_delete_cookie_tooltip')} variant="danger" onClick={() => setConfirmDeleteCookie(c['.id'])} />,
+            ])} emptyMessage={t('mtk_empty_cookies')} />
           </TableScroll>
         </Card>
       )}
@@ -1640,13 +1649,13 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* 10. SCHEDULER */}
       {!loading && tab === 'scheduler' && (
         <Card>
-          <CardHeader title={`Scheduler (${(d?.schedulers || []).length})`} action={<Button size="sm" onClick={openAddScheduler} icon={<Icons.Plus size={13} />}>Add Schedule</Button>} />
+          <CardHeader title={`${t('mtk_tab_scheduler')} (${(d?.schedulers || []).length})`} action={<Button size="sm" onClick={openAddScheduler} icon={<Icons.Plus size={13} />}>{t('mtk_btn_add_schedule')}</Button>} />
           <div style={{ padding: '8px 16px', background: '#f0fdf4', borderRadius: 8, margin: '0 1rem 1rem', fontSize: 12, color: '#166534', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icons.Clock size={13} /> Bonyeza scheduler kuona na kuhariri script yake kamili
+            <Icons.Clock size={13} /> {t('mtk_hint_scheduler')}
           </div>
           <TableScroll>
           <Table
-            headers={['Name', 'Start Date', 'Start Time', 'Interval', 'Run Count', 'Next Run', 'Status', '']}
+            headers={[t('mtk_col_name'), t('mtk_col_start_date'), t('mtk_col_start_time'), t('mtk_col_interval'), t('mtk_col_run_count'), t('mtk_col_next_run'), t('mtk_col_status'), '']}
             rows={(d?.schedulers || []).map((s: any) => [
               <div style={{ cursor: 'pointer', minWidth: 80 }} onClick={() => setSelectedScheduler(s)}>
                 <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary)', textDecoration: 'underline dotted' }}>{s.name}</div>
@@ -1654,17 +1663,17 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               </div>,
               s['start-date'] ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)', whiteSpace: 'nowrap' }}>{s['start-date']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
               s['start-time'] ? <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--gray-600)', whiteSpace: 'nowrap' }}>{s['start-time']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
-              s.interval && s.interval !== '00:00:00' ? <Badge text={s.interval} color="blue" /> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>once</span>,
+              s.interval && s.interval !== '00:00:00' ? <Badge text={s.interval} color="blue" /> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>{t('mtk_int_once')}</span>,
               <span style={{ fontWeight: 700, color: (s['run-count'] || 0) > 0 ? '#059669' : 'var(--gray-400)', fontSize: 13 }}>{s['run-count'] || '0'}</span>,
               s['next-run'] ? <span style={{ fontSize: 11, color: 'var(--gray-600)', whiteSpace: 'nowrap' }}>{s['next-run']}</span> : <span style={{ color: 'var(--gray-300)', fontSize: 11 }}>—</span>,
-              <Badge text={s.disabled === 'true' ? 'Disabled' : 'Running'} color={s.disabled === 'true' ? 'red' : 'green'} />,
+              <Badge text={s.disabled === 'true' ? t('mtk_status_disabled') : t('mtk_status_running')} color={s.disabled === 'true' ? 'red' : 'green'} />,
               <div style={{ display: 'flex', gap: 2 }}>
-                <IconButton icon={<Icons.Edit size={14} />} label="Hariri Scheduler" onClick={() => openEditScheduler(s)} />
-                <IconButton icon={s.disabled === 'true' ? <Icons.Play size={13} /> : <Icons.Pause size={13} />} label={s.disabled === 'true' ? 'Washa (Enable)' : 'Zima (Disable)'} variant={s.disabled === 'true' ? 'success' : 'warning'} onClick={() => handleToggleScheduler(s)} />
-                <IconButton icon={<Icons.Trash size={14} />} label="Futa Scheduler" variant="danger" onClick={() => setConfirmDeleteScheduler(s['.id'])} />
+                <IconButton icon={<Icons.Edit size={14} />} label={t('mtk_edit_scheduler_tooltip')} onClick={() => openEditScheduler(s)} />
+                <IconButton icon={s.disabled === 'true' ? <Icons.Play size={13} /> : <Icons.Pause size={13} />} label={s.disabled === 'true' ? t('mtk_enable_tooltip') : t('mtk_disable_tooltip')} variant={s.disabled === 'true' ? 'success' : 'warning'} onClick={() => handleToggleScheduler(s)} />
+                <IconButton icon={<Icons.Trash size={14} />} label={t('mtk_delete_scheduler_tooltip')} variant="danger" onClick={() => setConfirmDeleteScheduler(s['.id'])} />
               </div>,
             ])}
-            emptyMessage="Hakuna schedulers"
+            emptyMessage={t('mtk_empty_schedulers')}
           />
           </TableScroll>
         </Card>
@@ -1693,17 +1702,17 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
         <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
           {modalHeader(t('add_user'), () => setShowAddUser(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Input label="Username *" placeholder="mtumiaji001" value={newUser.username} onChange={(e: any) => setNewUser({ ...newUser, username: e.target.value })} />
-            <Input label="Password (default = username)" placeholder="Acha tupu" value={newUser.password} onChange={(e: any) => setNewUser({ ...newUser, password: e.target.value })} />
+            <Input label={t('mtk_lbl_username_required')} placeholder="mtumiaji001" value={newUser.username} onChange={(e: any) => setNewUser({ ...newUser, username: e.target.value })} />
+            <Input label={t('mtk_lbl_password_default')} placeholder={t('mtk_ph_leave_empty')} value={newUser.password} onChange={(e: any) => setNewUser({ ...newUser, password: e.target.value })} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Profile {profilesLoading && <Spinner size={12} />}</label>
+              <label style={labelStyle}>{t('mtk_lbl_profile')} {profilesLoading && <Spinner size={12} />}</label>
               {profilesLoading
-                ? <div style={{ padding: '10px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)' }}>Inapakia...</div>
+                ? <div style={{ padding: '10px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 13, color: 'var(--gray-400)' }}>{t('mtk_loading')}</div>
                 : <select value={newUser.profile} onChange={(e: any) => setNewUser({ ...newUser, profile: e.target.value })} style={selectStyle}>
                     {availableProfiles.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>}
             </div>
-            <Input label="Comment (optional)" placeholder="Jina la mteja" value={newUser.comment} onChange={(e: any) => setNewUser({ ...newUser, comment: e.target.value })} />
+            <Input label={t('mtk_lbl_comment_optional')} placeholder={t('mtk_ph_client_name')} value={newUser.comment} onChange={(e: any) => setNewUser({ ...newUser, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddUser(false)}>{t('cancel')}</Button>
               <Button onClick={handleAddUser} disabled={profilesLoading} icon={<Icons.Plus size={13} />}>{t('save')}</Button>
@@ -1715,22 +1724,22 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* ── ADD BINDING MODAL ── */}
       {showAddBinding && (
         <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
-          {modalHeader('Add IP Binding', () => setShowAddBinding(false))}
+          {modalHeader(t('mtk_title_add_binding'), () => setShowAddBinding(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Input label="MAC Address *" placeholder="AA:BB:CC:DD:EE:FF" value={newBinding.mac_address} onChange={(e: any) => setNewBinding({ ...newBinding, mac_address: e.target.value })} />
-            <Input label="IP Address (optional)" placeholder="192.168.20.100" value={newBinding.ip_address} onChange={(e: any) => setNewBinding({ ...newBinding, ip_address: e.target.value })} />
+            <Input label={t('mtk_lbl_mac_required')} placeholder="AA:BB:CC:DD:EE:FF" value={newBinding.mac_address} onChange={(e: any) => setNewBinding({ ...newBinding, mac_address: e.target.value })} />
+            <Input label={t('mtk_lbl_ip_optional')} placeholder="192.168.20.100" value={newBinding.ip_address} onChange={(e: any) => setNewBinding({ ...newBinding, ip_address: e.target.value })} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Type</label>
+              <label style={labelStyle}>{t('mtk_lbl_type')}</label>
               <select value={newBinding.type} onChange={(e: any) => setNewBinding({ ...newBinding, type: e.target.value })} style={selectStyle}>
-                <option value="regular">Regular — mtumiaji wa kawaida</option>
-                <option value="bypassed">Bypassed — anaruhusiwa bila login</option>
-                <option value="blocked">Blocked — amezuiwa kabisa</option>
+                <option value="regular">{t('mtk_opt_regular')}</option>
+                <option value="bypassed">{t('mtk_opt_bypassed')}</option>
+                <option value="blocked">{t('mtk_opt_blocked')}</option>
               </select>
             </div>
-            <Input label="Comment (optional)" placeholder="Maelezo" value={newBinding.comment} onChange={(e: any) => setNewBinding({ ...newBinding, comment: e.target.value })} />
+            <Input label={t('mtk_lbl_comment_optional')} placeholder={t('mtk_ph_notes')} value={newBinding.comment} onChange={(e: any) => setNewBinding({ ...newBinding, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddBinding(false)}>{t('cancel')}</Button>
-              <Button onClick={handleAddBinding} icon={<Icons.Plus size={13} />}>Add Binding</Button>
+              <Button onClick={handleAddBinding} icon={<Icons.Plus size={13} />}>{t('mtk_btn_add_binding')}</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1739,20 +1748,20 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* ── ADD WALLED GARDEN MODAL ── */}
       {showAddWG && (
         <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
-          {modalHeader('Add Walled Garden Entry', () => setShowAddWG(false))}
+          {modalHeader(t('mtk_title_add_wg'), () => setShowAddWG(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Input label="Dst Host *" placeholder="example.com au *.example.com" value={newWG.dst_host} onChange={(e: any) => setNewWG({ ...newWG, dst_host: e.target.value })} />
+            <Input label={t('mtk_lbl_dst_host_required')} placeholder={t('mtk_ph_dst_host_example')} value={newWG.dst_host} onChange={(e: any) => setNewWG({ ...newWG, dst_host: e.target.value })} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Action</label>
+              <label style={labelStyle}>{t('mtk_lbl_action')}</label>
               <select value={newWG.action} onChange={(e: any) => setNewWG({ ...newWG, action: e.target.value })} style={selectStyle}>
-                <option value="allow">Allow — ruhusu bila login</option>
-                <option value="deny">Deny — zuia</option>
+                <option value="allow">{t('mtk_opt_allow')}</option>
+                <option value="deny">{t('mtk_opt_deny')}</option>
               </select>
             </div>
-            <Input label="Comment (optional)" placeholder="Maelezo" value={newWG.comment} onChange={(e: any) => setNewWG({ ...newWG, comment: e.target.value })} />
+            <Input label={t('mtk_lbl_comment_optional')} placeholder={t('mtk_ph_notes')} value={newWG.comment} onChange={(e: any) => setNewWG({ ...newWG, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddWG(false)}>{t('cancel')}</Button>
-              <Button onClick={handleAddWG} icon={<Icons.Plus size={13} />}>Add Entry</Button>
+              <Button onClick={handleAddWG} icon={<Icons.Plus size={13} />}>{t('mtk_btn_add_entry')}</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1761,20 +1770,20 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* ── ADD WALLED GARDEN IP MODAL ── */}
       {showAddWGIP && (
         <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBox}>
-          {modalHeader('Add Walled Garden IP', () => setShowAddWGIP(false))}
+          {modalHeader(t('mtk_title_add_wgip'), () => setShowAddWGIP(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Input label="Dst Address *" placeholder="8.8.8.8 au 192.168.1.0/24" value={newWGIP.dst_address} onChange={(e: any) => setNewWGIP({ ...newWGIP, dst_address: e.target.value })} />
+            <Input label={t('mtk_lbl_dst_address_required')} placeholder={t('mtk_ph_dst_address_example')} value={newWGIP.dst_address} onChange={(e: any) => setNewWGIP({ ...newWGIP, dst_address: e.target.value })} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Action</label>
+              <label style={labelStyle}>{t('mtk_lbl_action')}</label>
               <select value={newWGIP.action} onChange={(e: any) => setNewWGIP({ ...newWGIP, action: e.target.value })} style={selectStyle}>
-                <option value="accept">Accept — ruhusu</option>
-                <option value="drop">Drop — zuia</option>
+                <option value="accept">{t('mtk_opt_accept')}</option>
+                <option value="drop">{t('mtk_opt_drop')}</option>
               </select>
             </div>
-            <Input label="Comment (optional)" placeholder="Maelezo" value={newWGIP.comment} onChange={(e: any) => setNewWGIP({ ...newWGIP, comment: e.target.value })} />
+            <Input label={t('mtk_lbl_comment_optional')} placeholder={t('mtk_ph_notes')} value={newWGIP.comment} onChange={(e: any) => setNewWGIP({ ...newWGIP, comment: e.target.value })} />
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddWGIP(false)}>{t('cancel')}</Button>
-              <Button onClick={handleAddWGIP} icon={<Icons.Plus size={13} />}>Add IP</Button>
+              <Button onClick={handleAddWGIP} icon={<Icons.Plus size={13} />}>{t('mtk_btn_add_ip')}</Button>
             </FormActions>
           </div>
         </div></div>
@@ -1783,26 +1792,26 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
       {/* ── ADD/EDIT SCHEDULER MODAL ── */}
       {showAddScheduler && (
         <div className="mtk-modal-overlay" style={modalOverlay}><div className="mtk-modal-box" style={modalBoxLg}>
-          {modalHeader(editScheduler ? `Edit: ${editScheduler.name}` : 'Add Scheduler', () => setShowAddScheduler(false))}
+          {modalHeader(editScheduler ? `${t('mtk_edit_prefix')}: ${editScheduler.name}` : t('mtk_title_add_scheduler'), () => setShowAddScheduler(false))}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Input label="Name *" placeholder="mfano: cleanup-daily" value={newScheduler.name} onChange={(e: any) => setNewScheduler({ ...newScheduler, name: e.target.value })} />
+            <Input label={t('mtk_lbl_name_required')} placeholder={t('mtk_ph_scheduler_name_example')} value={newScheduler.name} onChange={(e: any) => setNewScheduler({ ...newScheduler, name: e.target.value })} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
-                <label style={labelStyle}>Start Date</label>
+                <label style={labelStyle}>{t('mtk_lbl_start_date')}</label>
                 <input value={newScheduler.start_date} onChange={(e: any) => setNewScheduler({ ...newScheduler, start_date: e.target.value })} placeholder="jan/01/1970" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
-                <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>Format: jan/01/1970</span>
+                <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{t('mtk_fmt_date_hint')}</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
-                <label style={labelStyle}>Start Time</label>
+                <label style={labelStyle}>{t('mtk_lbl_start_time')}</label>
                 <input value={newScheduler.start_time} onChange={(e: any) => setNewScheduler({ ...newScheduler, start_time: e.target.value })} placeholder="00:00:00" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
-                <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>Format: HH:MM:SS</span>
+                <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{t('mtk_fmt_time_hint')}</span>
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Interval (00:00:00 = mara moja tu)</label>
+              <label style={labelStyle}>{t('mtk_lbl_interval_hint')}</label>
               <input value={newScheduler.interval} onChange={(e: any) => setNewScheduler({ ...newScheduler, interval: e.target.value })} placeholder="00:00:00" style={{ padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', width: '100%', boxSizing: 'border-box' }} />
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
-                {[{ l: 'Kila dakika', v: '00:01:00' }, { l: 'Kila saa', v: '01:00:00' }, { l: 'Kila saa 6', v: '06:00:00' }, { l: 'Kila siku', v: '1d 00:00:00' }, { l: 'Kila wiki', v: '7d 00:00:00' }].map(opt => (
+                {[{ l: t('mtk_int_every_min'), v: '00:01:00' }, { l: t('mtk_int_every_hour'), v: '01:00:00' }, { l: t('mtk_int_every_6h'), v: '06:00:00' }, { l: t('mtk_int_every_day'), v: '1d 00:00:00' }, { l: t('mtk_int_every_week'), v: '7d 00:00:00' }].map(opt => (
                   <button key={opt.v} onClick={() => setNewScheduler({ ...newScheduler, interval: opt.v })}
                     style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid', borderColor: newScheduler.interval === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: newScheduler.interval === opt.v ? 'var(--primary-light)' : '#fff', color: newScheduler.interval === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                     {opt.l}
@@ -1811,7 +1820,7 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Policy</label>
+              <label style={labelStyle}>{t('mtk_lbl_policy')}</label>
               <select value={newScheduler.policy} onChange={(e: any) => setNewScheduler({ ...newScheduler, policy: e.target.value })} style={selectStyle}>
                 <option value="read,write,reboot">read, write, reboot</option>
                 <option value="read,write">read, write</option>
@@ -1820,13 +1829,13 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
               </select>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>On Event (Script) *</label>
+              <label style={labelStyle}>{t('mtk_lbl_on_event_required')}</label>
               <textarea value={newScheduler.on_event} onChange={(e: any) => setNewScheduler({ ...newScheduler, on_event: e.target.value })}
-                placeholder={`# Mfano:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`} style={textareaStyle} />
+                placeholder={`# ${t('mtk_ph_script_example')}:\n/ip hotspot user remove [find comment~"Batch" uptime>1h]`} style={textareaStyle} />
               <div style={{ background: '#1e1b4b', borderRadius: 8, padding: '8px 12px', fontSize: 11, color: '#a5b4fc', overflowX: 'auto' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icons.Bulb size={12} /> Mifano:</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><Icons.Bulb size={12} /> {t('mtk_quick_examples')}</span>
                 <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {[{ l: 'Log message', v: ':log info "Scheduler imefanya kazi"' }, { l: 'Futa used users', v: '/ip hotspot user remove [find comment~"used"]' }, { l: 'Reboot router', v: '/system reboot' }].map((ex, i) => (
+                  {[{ l: t('mtk_ex_log_message'), v: ':log info "Scheduler imefanya kazi"' }, { l: t('mtk_ex_remove_used_users'), v: '/ip hotspot user remove [find comment~"used"]' }, { l: t('mtk_ex_reboot_router'), v: '/system reboot' }].map((ex, i) => (
                     <button key={i} onClick={() => setNewScheduler({ ...newScheduler, on_event: ex.v })}
                       style={{ textAlign: 'left', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', color: '#e0e7ff', fontSize: 11 }}>
                       <span style={{ color: '#818cf8' }}>{ex.l}:</span> <code>{ex.v}</code>
@@ -1835,11 +1844,11 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
                 </div>
               </div>
             </div>
-            <Input label="Comment (optional)" placeholder="Maelezo ya scheduler" value={newScheduler.comment} onChange={(e: any) => setNewScheduler({ ...newScheduler, comment: e.target.value })} />
+            <Input label={t('mtk_lbl_comment_optional')} placeholder={t('mtk_ph_scheduler_comment')} value={newScheduler.comment} onChange={(e: any) => setNewScheduler({ ...newScheduler, comment: e.target.value })} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              <label style={labelStyle}>Hali ya Awali</label>
+              <label style={labelStyle}>{t('mtk_lbl_initial_state')}</label>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {[{ v: 'false', l: 'Enabled', Ico: Icons.Play }, { v: 'true', l: 'Disabled', Ico: Icons.Pause }].map(opt => (
+                {[{ v: 'false', l: t('mtk_enabled_label'), Ico: Icons.Play }, { v: 'true', l: t('mtk_disabled_label'), Ico: Icons.Pause }].map(opt => (
                   <button key={opt.v} onClick={() => setNewScheduler({ ...newScheduler, disabled: opt.v })}
                     style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid', borderColor: newScheduler.disabled === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: newScheduler.disabled === opt.v ? 'var(--primary-light)' : '#fff', color: newScheduler.disabled === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <opt.Ico size={12} /> {opt.l}
@@ -1849,27 +1858,27 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
             </div>
             <FormActions>
               <Button variant="ghost" onClick={() => setShowAddScheduler(false)}>{t('cancel')}</Button>
-              <Button onClick={handleSaveScheduler} icon={editScheduler ? <Icons.Save size={13} /> : <Icons.Plus size={13} />}>{editScheduler ? 'Sasisha' : 'Ongeza Scheduler'}</Button>
+              <Button onClick={handleSaveScheduler} icon={editScheduler ? <Icons.Save size={13} /> : <Icons.Plus size={13} />}>{editScheduler ? t('mtk_btn_update') : t('mtk_btn_add_scheduler')}</Button>
             </FormActions>
           </div>
         </div></div>
       )}
 
       {/* ── CONFIRM DIALOGS ── */}
-      <ConfirmDialog open={!!confirmDisconnect} onClose={() => setConfirmDisconnect(null)} onConfirm={() => confirmDisconnect && handleDisconnect(confirmDisconnect)} title="Disconnect Session" message="Una uhakika unataka kukata connection hii?" danger />
-      <ConfirmDialog open={!!confirmDeleteUser} onClose={() => setConfirmDeleteUser(null)} onConfirm={() => confirmDeleteUser && handleDeleteUser(confirmDeleteUser)} title={t('delete_user')} message={`Futa user "${confirmDeleteUser}"?`} danger />
-      <ConfirmDialog open={!!confirmDeleteBinding} onClose={() => setConfirmDeleteBinding(null)} onConfirm={() => confirmDeleteBinding && handleDeleteBinding(confirmDeleteBinding)} title="Remove IP Binding" message="Una uhakika unataka kufuta IP Binding hii?" danger />
-      <ConfirmDialog open={!!confirmDeleteWG} onClose={() => setConfirmDeleteWG(null)} onConfirm={() => confirmDeleteWG && handleDeleteWG(confirmDeleteWG)} title="Remove Walled Garden" message="Una uhakika unataka kufuta entry hii?" danger />
-      <ConfirmDialog open={!!confirmDeleteWGIP} onClose={() => setConfirmDeleteWGIP(null)} onConfirm={() => confirmDeleteWGIP && handleDeleteWGIP(confirmDeleteWGIP)} title="Remove Walled Garden IP" message="Una uhakika unataka kufuta IP hii?" danger />
-      <ConfirmDialog open={!!confirmDeleteCookie} onClose={() => setConfirmDeleteCookie(null)} onConfirm={() => confirmDeleteCookie && handleDeleteCookie(confirmDeleteCookie)} title="Remove Cookie" message="Futa cookie hii? Mtumiaji atalazimika kuingia tena." danger />
-      <ConfirmDialog open={confirmClearCookies} onClose={() => setConfirmClearCookies(false)} onConfirm={handleClearAllCookies} title="Clear All Cookies" message="Futa cookies ZOTE? Watumiaji wote watalazimika kuingia tena." danger />
-      <ConfirmDialog open={!!confirmDeleteScheduler} onClose={() => setConfirmDeleteScheduler(null)} onConfirm={() => confirmDeleteScheduler && handleDeleteScheduler(confirmDeleteScheduler)} title="Futa Scheduler" message="Futa scheduler hii? Script haitatekelezwa tena." danger />
+      <ConfirmDialog open={!!confirmDisconnect} onClose={() => setConfirmDisconnect(null)} onConfirm={() => confirmDisconnect && handleDisconnect(confirmDisconnect)} title={t('mtk_confirm_disconnect_title')} message={t('mtk_confirm_disconnect_msg')} danger />
+      <ConfirmDialog open={!!confirmDeleteUser} onClose={() => setConfirmDeleteUser(null)} onConfirm={() => confirmDeleteUser && handleDeleteUser(confirmDeleteUser)} title={t('delete_user')} message={`${t('mtk_confirm_delete_user_msg_prefix')} "${confirmDeleteUser}"?`} danger />
+      <ConfirmDialog open={!!confirmDeleteBinding} onClose={() => setConfirmDeleteBinding(null)} onConfirm={() => confirmDeleteBinding && handleDeleteBinding(confirmDeleteBinding)} title={t('mtk_confirm_delete_binding_title')} message={t('mtk_confirm_delete_binding_msg')} danger />
+      <ConfirmDialog open={!!confirmDeleteWG} onClose={() => setConfirmDeleteWG(null)} onConfirm={() => confirmDeleteWG && handleDeleteWG(confirmDeleteWG)} title={t('mtk_confirm_delete_wg_title')} message={t('mtk_confirm_delete_wg_msg')} danger />
+      <ConfirmDialog open={!!confirmDeleteWGIP} onClose={() => setConfirmDeleteWGIP(null)} onConfirm={() => confirmDeleteWGIP && handleDeleteWGIP(confirmDeleteWGIP)} title={t('mtk_confirm_delete_wgip_title')} message={t('mtk_confirm_delete_wgip_msg')} danger />
+      <ConfirmDialog open={!!confirmDeleteCookie} onClose={() => setConfirmDeleteCookie(null)} onConfirm={() => confirmDeleteCookie && handleDeleteCookie(confirmDeleteCookie)} title={t('mtk_confirm_delete_cookie_title')} message={t('mtk_confirm_delete_cookie_msg')} danger />
+      <ConfirmDialog open={confirmClearCookies} onClose={() => setConfirmClearCookies(false)} onConfirm={handleClearAllCookies} title={t('mtk_confirm_clear_cookies_title')} message={t('mtk_confirm_clear_cookies_msg')} danger />
+      <ConfirmDialog open={!!confirmDeleteScheduler} onClose={() => setConfirmDeleteScheduler(null)} onConfirm={() => confirmDeleteScheduler && handleDeleteScheduler(confirmDeleteScheduler)} title={t('mtk_confirm_delete_scheduler_title')} message={`${t('mtk_confirm_delete_scheduler_msg_prefix')} ${t('mtk_confirm_delete_scheduler_msg_suffix')}`} danger />
       <ConfirmDialog
         open={confirmBulkDeleteUsers}
         onClose={() => setConfirmBulkDeleteUsers(false)}
         onConfirm={handleBulkDeleteUsers}
-        title="Futa Users Walizochaguliwa"
-        message={`Una uhakika unataka kufuta ${selectedUserNames.size} user(s)? Hatua hii haiwezi kurudishwa!${bulkDeleting ? ' Inafuta...' : ''}`}
+        title={t('mtk_confirm_bulk_delete_title')}
+        message={`${t('mtk_confirm_bulk_delete_msg_prefix')} ${selectedUserNames.size} ${t('mtk_users_suffix')}? ${t('mtk_action_irreversible')}${bulkDeleting ? ` ${t('mtk_deleting_ellipsis')}` : ''}`}
         danger
       />
 
@@ -1905,18 +1914,19 @@ function MikroTikManager({ routerId, allowedTabs }: { routerId: number; allowedT
 }
 
 // ── FEATURE LABELS ────────────────────────────────────────
-const FEATURE_LABELS: Record<string, { label: string; icon: ReactNode; desc: string }> = {
-  servers:          { label: 'Servers',          icon: <Icons.Server size={16} />,   desc: 'Ona hotspot servers' },
-  server_profiles:  { label: 'Server Profiles',  icon: <Icons.Clipboard size={16} />, desc: 'Ona server profiles' },
-  users:            { label: 'Users',            icon: <Icons.User size={16} />,      desc: 'Simamia hotspot users' },
-  active:           { label: 'Active Sessions',  icon: <Icons.Circle size={10} />,    desc: 'Ona na kata sessions' },
-  hosts:            { label: 'Hosts',            icon: <Icons.Monitor size={16} />,   desc: 'Vifaa vilivyounganika' },
-  ip_bindings:      { label: 'IP Bindings',      icon: <Icons.Link size={16} />,      desc: 'Simamia IP bindings' },
-  walled_garden:    { label: 'Walled Garden',    icon: <Icons.Globe size={16} />,     desc: 'Tovuti bila login (HTTP)' },
-  walled_garden_ip: { label: 'Walled Garden IP', icon: <Icons.Globe2 size={16} />,    desc: 'IPs bila login (HTTPS)' },
-  cookies:          { label: 'Cookies',          icon: <Icons.Cookie size={16} />,    desc: 'Simamia login cookies' },
-  scheduler:        { label: 'Scheduler',        icon: <Icons.Clock size={16} />,     desc: 'Scripts za wakati maalum' },
-  terminal:         { label: 'Terminal',         icon: <Icons.Terminal size={16} />,  desc: 'Run commands moja kwa moja' },
+// Now stores translation KEYS instead of hardcoded label/desc text.
+const FEATURE_LABELS: Record<string, { labelKey: string; icon: ReactNode; descKey: string }> = {
+  servers:          { labelKey: 'mtk_tab_servers',          icon: <Icons.Server size={16} />,   descKey: 'mtk_desc_servers' },
+  server_profiles:  { labelKey: 'mtk_tab_server_profiles',  icon: <Icons.Clipboard size={16} />, descKey: 'mtk_desc_profiles' },
+  users:            { labelKey: 'mtk_tab_users',            icon: <Icons.User size={16} />,      descKey: 'mtk_desc_users' },
+  active:           { labelKey: 'mtk_feat_active_sessions', icon: <Icons.Circle size={10} />,    descKey: 'mtk_desc_active' },
+  hosts:            { labelKey: 'mtk_tab_hosts',            icon: <Icons.Monitor size={16} />,   descKey: 'mtk_desc_hosts' },
+  ip_bindings:      { labelKey: 'mtk_tab_ip_bindings',      icon: <Icons.Link size={16} />,      descKey: 'mtk_desc_bindings' },
+  walled_garden:    { labelKey: 'mtk_tab_walled_garden',    icon: <Icons.Globe size={16} />,     descKey: 'mtk_desc_wg' },
+  walled_garden_ip: { labelKey: 'mtk_tab_walled_garden_ip', icon: <Icons.Globe2 size={16} />,    descKey: 'mtk_desc_wgip' },
+  cookies:          { labelKey: 'mtk_tab_cookies',          icon: <Icons.Cookie size={16} />,    descKey: 'mtk_desc_cookies' },
+  scheduler:        { labelKey: 'mtk_tab_scheduler',        icon: <Icons.Clock size={16} />,     descKey: 'mtk_desc_scheduler' },
+  terminal:         { labelKey: 'mtk_tab_terminal',         icon: <Icons.Terminal size={16} />,  descKey: 'mtk_desc_terminal' },
 }
 
 function RouterCard({ router, onSelect }: { router: any; onSelect: () => void }) {
@@ -1958,14 +1968,14 @@ export function ClientMikroTikPage() {
       <div style={{ padding: '1.25rem', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
         {!selectedRouter ? (
           <>
-            <PageHeader title={t('mikrotik_mgmt')} subtitle="IP → Hotspot (kama Winbox)" />
+            <PageHeader title={t('mikrotik_mgmt')} subtitle={t('mtk_subtitle_client')} />
             {!loading && allowedTabs.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: '1rem' }}>
                 {allowedTabs.map(key => {
                   const f = FEATURE_LABELS[key]
                   return f ? (
                     <span key={key} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, fontSize: 12, color: '#166534', fontWeight: 600 }}>
-                      {f.icon} {f.label}
+                      {f.icon} {t(f.labelKey)}
                     </span>
                   ) : null
                 })}
@@ -1976,11 +1986,11 @@ export function ClientMikroTikPage() {
               : allowedTabs.length === 0
                 ? <div style={{ textAlign: 'center', padding: '4rem 1.25rem', color: 'var(--gray-400)' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Icons.Lock size={40} /></div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>Huna ruhusa ya MikroTik Manager</div>
-                    <div style={{ fontSize: 13 }}>Wasiliana na admin kukupa ruhusa.</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--gray-600)', marginBottom: 6 }}>{t('mtk_no_permission_title')}</div>
+                    <div style={{ fontSize: 13 }}>{t('mtk_no_permission_desc')}</div>
                   </div>
                 : routers.length === 0
-                  ? <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--gray-400)' }}><div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Router size={32} /></div>Hakuna routers</div>
+                  ? <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--gray-400)' }}><div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icons.Router size={32} /></div>{t('mtk_empty_routers')}</div>
                   : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '1rem' }}>
                       {routers.map(r => <RouterCard key={r.id} router={r} onSelect={() => setSelectedRouter(r.id)} />)}
                     </div>
@@ -1989,7 +1999,7 @@ export function ClientMikroTikPage() {
         ) : (
           <>
             <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>Rudi</Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>{t('mtk_back')}</Button>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{routers.find(r => r.id === selectedRouter)?.name}</span>
             </div>
             <MikroTikManager routerId={selectedRouter} allowedTabs={allowedTabs} />
@@ -2005,7 +2015,7 @@ export function AdminMikroTikPage() {
   const [routers, setRouters] = useState<any[]>([])
   const [selectedRouter, setSelectedRouter] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
-  const allTabs = ALL_TABS.map(t => t.key) as Tab[]
+  const allTabs = ALL_TABS.map(tb => tb.key) as Tab[]
 
   useEffect(() => { api.get('/routers/').then(r => { setRouters(r.data.results || r.data); setLoading(false) }) }, [])
 
@@ -2014,7 +2024,7 @@ export function AdminMikroTikPage() {
       <div style={{ padding: '1.25rem', maxWidth: 1200, margin: '0 auto', boxSizing: 'border-box' }}>
         {!selectedRouter ? (
           <>
-            <PageHeader title={t('mikrotik_mgmt')} subtitle="Simamia routers zote za clients" />
+            <PageHeader title={t('mikrotik_mgmt')} subtitle={t('mtk_subtitle_admin')} />
             {loading
               ? <div style={{ textAlign: 'center', padding: '3rem' }}><Spinner size={32} /></div>
               : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '1rem' }}>
@@ -2025,7 +2035,7 @@ export function AdminMikroTikPage() {
         ) : (
           <>
             <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>Rudi</Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedRouter(null)} icon={<Icons.ArrowLeft size={13} />}>{t('mtk_back')}</Button>
               <span style={{ fontSize: 15, fontWeight: 700 }}>{routers.find(r => r.id === selectedRouter)?.name}</span>
               <span style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}>{routers.find(r => r.id === selectedRouter)?.client_name}</span>
             </div>
@@ -2040,6 +2050,7 @@ export function AdminMikroTikPage() {
 export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
   client: any; onClose: () => void; onSaved: () => void
 }) {
+  const { t } = useLang()
   const [permissions, setPermissions] = useState<string[]>(client.mikrotik_permissions || [])
   const [saving, setSaving] = useState(false)
   const [alert, setAlert] = useState<{ type: any; msg: string } | null>(null)
@@ -2054,7 +2065,7 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
     try {
       await api.post(`/clients/${client.id}/mikrotik-permissions/`, { permissions })
       onSaved(); onClose()
-    } catch { setAlert({ type: 'error', msg: 'Imeshindwa kuhifadhi permissions' }) }
+    } catch { setAlert({ type: 'error', msg: t('mtk_save_permissions_failed') }) }
     finally { setSaving(false) }
   }
 
@@ -2064,20 +2075,20 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--gray-100)', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, gap: 10, flexWrap: 'wrap' }}>
             <div style={{ minWidth: 0 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}><Icons.Shield size={15} /> MikroTik Permissions</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}><Icons.Shield size={15} /> {t('mtk_permissions_title')}</h3>
               <p style={{ fontSize: 12, color: 'var(--gray-500)' }}>{client.business_name}</p>
             </div>
-            <IconButton icon={<Icons.X size={14} />} label="Funga" onClick={onClose} />
+            <IconButton icon={<Icons.X size={14} />} label={t('mtk_close')} onClick={onClose} />
           </div>
           {alert && <Alert type={alert.type} message={alert.msg} />}
           <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <button onClick={() => setPermissions(ALL_FEATURES)} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#166534', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'transform 0.1s' }}
               onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}>
-              <Icons.Check size={12} /> Chagua Zote
+              <Icons.Check size={12} /> {t('mtk_select_all')}
             </button>
             <button onClick={() => setPermissions([])} style={{ padding: '5px 12px', borderRadius: 7, border: '1px solid #fee2e2', background: '#fef2f2', color: '#991b1b', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, transition: 'transform 0.1s' }}
               onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.96)')} onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}>
-              <Icons.X size={12} /> Futa Zote
+              <Icons.X size={12} /> {t('mtk_clear_all')}
             </button>
           </div>
         </div>
@@ -2093,18 +2104,18 @@ export function MikroTikPermissionsModal({ client, onClose, onSaved }: {
                 </div>
                 <span style={{ display: 'flex', color: checked ? '#4338ca' : 'var(--gray-500)', flexShrink: 0 }}>{f.icon}</span>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: checked ? '#4338ca' : 'var(--gray-700)' }}>{f.label}</div>
-                  <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{f.desc}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: checked ? '#4338ca' : 'var(--gray-700)' }}>{t(f.labelKey)}</div>
+                  <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{t(f.descKey)}</div>
                 </div>
               </div>
             )
           })}
         </div>
         <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--gray-100)', flexShrink: 0, display: 'flex', gap: 10, justifyContent: 'space-between', alignItems: 'center', background: '#fafafa', borderRadius: '0 0 16px 16px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{permissions.length} / {ALL_FEATURES.length} features zimechaguliwa</span>
+          <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{permissions.length} / {ALL_FEATURES.length} {t('mtk_features_selected_suffix')}</span>
           <div style={{ display: 'flex', gap: 10 }}>
-            <Button variant="ghost" onClick={onClose}>Funga</Button>
-            <Button onClick={handleSave} disabled={saving} icon={<Icons.Save size={13} />}>{saving ? 'Inahifadhi...' : 'Hifadhi'}</Button>
+            <Button variant="ghost" onClick={onClose}>{t('mtk_close')}</Button>
+            <Button onClick={handleSave} disabled={saving} icon={<Icons.Save size={13} />}>{saving ? t('mtk_saving') : t('save')}</Button>
           </div>
         </div>
       </div>

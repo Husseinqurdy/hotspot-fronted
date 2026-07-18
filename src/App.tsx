@@ -8,6 +8,7 @@ import {
 } from './pages/AllPages'
 import { AdminMikroTikPage, ClientMikroTikPage } from './pages/MikroTikManager'
 import { VoucherManagementPage } from './pages/VoucherManagement'
+import { ClientWithdraw, AdminWithdrawalRequests } from './pages/WithdrawPages'
 import type { JSX } from 'react'
 import { AnalysisPage } from './pages/AnalysisPage'
 
@@ -50,7 +51,8 @@ export default function App() {
             <Route path="/admin/mikrotik" element={<Guard role="superadmin"><AdminMikroTikPage /></Guard>} />
             <Route path="/admin/payments" element={<Guard role="superadmin"><AdminPayments /></Guard>} />
             <Route path="/admin/vouchers" element={<Guard role="superadmin"><AdminVouchers /></Guard>} />
-            
+            <Route path="/admin/requests" element={<Guard role="superadmin"><AdminWithdrawalRequests /></Guard>} />
+
 
             {/* Client */}
             <Route path="/client/dashboard" element={<Guard role="client"><ClientDashboard /></Guard>} />
@@ -60,6 +62,7 @@ export default function App() {
             <Route path="/client/vouchers" element={<Guard role="client"><VoucherManagementPage /></Guard>} />
             <Route path="/client/payments" element={<Guard role="client"><ClientPayments /></Guard>} />
             <Route path="/client/analysis" element={<Guard role="client"><AnalysisPage /></Guard>} />
+            <Route path="/client/withdraw" element={<Guard role="client"><ClientWithdraw /></Guard>} />
 
             <Route path="/" element={<Redirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
