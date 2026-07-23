@@ -370,7 +370,7 @@ function TopBar({
                 <div style={{ fontSize: 11, color: '#6b7280' }}>{isAdmin ? trLocal('super_admin', lang) : trLocal('client', lang)}</div>
               </div>
 
-              <button onClick={() => setProfileOpen(false)}
+              <button onClick={() => { navigate(isAdmin ? '/admin/settings' : '/client/settings'); setProfileOpen(false) }}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#374151', fontSize: 13, fontWeight: 500, textAlign: 'left', transition: 'background 0.12s' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
@@ -481,7 +481,10 @@ function MobileTopBar({
         </button>
         {settingsOpen && (
           <div style={{ position: 'fixed', top: 62, right: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.14)', padding: '10px 14px', width: 'min(220px, calc(100vw - 20px))', animation: 'dropDown 0.18s ease' }}>
-            <div style={{ fontSize: 12, color: '#6b7280' }}>{trLocal('settings_soon', lang)}</div>
+            <button onClick={() => { navigate('/client/settings'); setSettingsOpen(false) }}
+            style={{ width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', background: '#eef2ff', color: '#4338ca', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
+            {trLocal('settings', lang)}
+          </button>
           </div>
         )}
       </div>
