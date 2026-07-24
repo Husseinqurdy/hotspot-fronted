@@ -11,7 +11,11 @@ const TR = {
   phone:            { sw: 'Namba ya Simu', en: 'Phone Number' },
   role:             { sw: 'Cheo', en: 'Role' },
   super_admin:      { sw: 'Msimamizi Mkuu', en: 'Super Admin' },
-  profile_note:     { sw: 'Taarifa hizi haziwezi kubadilishwa hapa', en: 'These details cannot be changed here' },
+  profile_note:     { sw: 'Username na barua pepe haziwezi kubadilishwa hapa', en: 'Username and email cannot be changed here' },
+  edit:             { sw: 'Hariri', en: 'Edit' },
+  cancel:           { sw: 'Ghairi', en: 'Cancel' },
+  phone_saved:      { sw: 'Namba ya simu imehifadhiwa', en: 'Phone number saved' },
+  phone_error:      { sw: 'Imeshindwa kuhifadhi namba ya simu', en: 'Failed to save phone number' },
   change_password:  { sw: 'Badilisha Password', en: 'Change Password' },
   old_password:     { sw: 'Password ya Zamani', en: 'Current Password' },
   new_password:     { sw: 'Password Mpya', en: 'New Password' },
@@ -52,12 +56,17 @@ export default function AdminSettingsModal({ open, onClose }: { open: boolean; o
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null)
 
+  const [editingPhone, setEditingPhone] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [savingPhone, setSavingPhone] = useState(false)
+
   const fetchProfile = async () => {
     setLoading(true)
     setLoadError(false)
     try {
       const res = await api.get('/auth/me/')
       setProfile(res.data.user)
+      setPhone(res.data.user.phone || '')
     } catch {
       setLoadError(true)
     } finally {
@@ -71,6 +80,7 @@ export default function AdminSettingsModal({ open, onClose }: { open: boolean; o
       setOldPassword('')
       setNewPassword('')
       setConfirmPassword('')
+      setEditingPhone(false)
     }
   }, [open])
 
@@ -88,6 +98,28 @@ export default function AdminSettingsModal({ open, onClose }: { open: boolean; o
   }, [toast])
 
   if (!open) return null
+
+  const startEditPhone = () => setEditingPhone(true)
+
+  const cancelEditPhone = () => {
+    setPhone(profile?.phone || '')
+    setEditingPhone(false)
+  }
+
+  const handleSavePhone = async () => {
+    setSavingPhone(true)
+    try {
+      const res = await api.patch('/auth/me/', { phone })
+      setProfile(res.data.user)
+      setPhone(res.data.user.phone || '')
+      setEditingPhone(false)
+      setToast({ type: 'ok', msg: tr('phone_saved', lang) })
+    } catch {
+      setToast({ type: 'err', msg: tr('phone_error', lang) })
+    } finally {
+      setSavingPhone(false)
+    }
+  }
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -187,7 +219,29 @@ export default function AdminSettingsModal({ open, onClose }: { open: boolean; o
 
                 <div style={{ marginBottom: 14 }}>
                   <label style={labelStyle}>{tr('phone', lang)}</label>
-                  <div style={readonlyBoxStyle}>{profile.phone || '—'}</div>
+                  {editingPhone ? (
+                    <>
+                      <input style={inputStyle} value={phone} onChange={e => setPhone(e.target.value)} />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                        <button onClick={handleSavePhone} disabled={savingPhone}
+                          style={{ flex: 1, padding: '8px 0', borderRadius: 9, border: 'none', background: '#6366f1', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: savingPhone ? 'default' : 'pointer', opacity: savingPhone ? 0.7 : 1 }}>
+                          {savingPhone ? '…' : tr('save', lang)}
+                        </button>
+                        <button onClick={cancelEditPhone} disabled={savingPhone}
+                          style={{ flex: 1, padding: '8px 0', borderRadius: 9, border: '1px solid #e5e7eb', background: '#f8fafc', color: '#374151', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
+                          {tr('cancel', lang)}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      <div style={{ ...readonlyBoxStyle, flex: 1 }}>{profile.phone || '—'}</div>
+                      <button onClick={startEditPhone}
+                        style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #e5e7eb', background: '#f8fafc', color: '#6366f1', fontWeight: 700, fontSize: 12.5, cursor: 'pointer', flexShrink: 0 }}>
+                        {tr('edit', lang)}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: 8 }}>
