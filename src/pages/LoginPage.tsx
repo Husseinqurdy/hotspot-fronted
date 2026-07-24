@@ -301,14 +301,16 @@ export default function LoginPage() {
                 </div>
               ))}
             </div>
+          </div>
 
-            {/* Language switcher — normal flow on mobile (see .lg-lang-switcher
-                media query above), so it sits comfortably below the features
-                list instead of floating over them. On desktop it's still
-                pinned to the bottom-left corner via the same class. */}
-            <div className="lg-lang-switcher">
-              <LanguageSwitcher dark={true} />
-            </div>
+          {/* Language switcher — sits as a direct child of .lg-brand (not
+              inside the content wrapper) so its "position:absolute" on
+              desktop is measured against the full-height panel, exactly
+              like before. On mobile the media query turns it into normal
+              flow — since it's still the last element in the DOM here, it
+              simply appears right after the content, below the features. */}
+          <div className="lg-lang-switcher">
+            <LanguageSwitcher dark={true} />
           </div>
         </div>
 
