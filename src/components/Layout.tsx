@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useLang } from '../contexts/LangContext'
 import api from '../lib/api'
 import SettingsModal from './SettingsModal'
+import AdminSettingsModal from './AdminSettingsModal'
 
 // ── SVG ICONS ──────────────────────────────────────────────
 const Icon = {
@@ -757,7 +758,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Settings popup — floats above whatever page is currently open */}
+      {isAdmin ? (
+      <AdminSettingsModal open={settingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
+    ) : (
       <SettingsModal open={settingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
+    )}
     </div>
   )
 }
