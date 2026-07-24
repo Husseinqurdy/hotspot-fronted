@@ -1,6 +1,7 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { LangProvider } from './contexts/LangContext'
+import { LangProvider, useLang } from './contexts/LangContext'
 import LoginPage from './pages/LoginPage'
 import {
   AdminDashboard, AdminClients, AdminDevices, AdminRouters, AdminPayments, AdminVouchers,
@@ -12,6 +13,19 @@ import { ClientWithdraw, AdminWithdrawalRequests } from './pages/WithdrawPages'
 import type { JSX } from 'react'
 import { AnalysisPage } from './pages/AnalysisPage'
 
+// ── PAGE TITLE — inabadilika kulingana na lugha iliyochaguliwa ──
+const PAGE_TITLE: Record<string, string> = {
+  sw: 'NetSafi – Mfumo wa Kusimamia Hotspot & Voucher Internet',
+  en: 'NetSafi – Hotspot & Voucher Internet Management System',
+}
+
+function PageTitleSync() {
+  const { lang } = useLang()
+  useEffect(() => {
+    document.title = PAGE_TITLE[lang] || PAGE_TITLE.sw
+  }, [lang])
+  return null
+}
 
 function Guard({ children, role }: { children: JSX.Element; role: string }) {
   const { user, isLoading } = useAuth()
@@ -40,6 +54,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <LangProvider>
+        <PageTitleSync />
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
