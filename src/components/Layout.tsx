@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useLang } from '../contexts/LangContext'
 import api from '../lib/api'
+import SettingsModal from './SettingsModal'
 
 // ── SVG ICONS ──────────────────────────────────────────────
 const Icon = {
@@ -254,11 +255,12 @@ function LangSwitcher({ dark = false, compact = false }: { dark?: boolean; compa
 // ── TOPBAR (desktop only — hidden on small screens) ────────
 function TopBar({
   sidebarW, displayName, isAdmin, initials,
-  notifications, notifLoading, unreadCount, onMarkAllRead, onNotifItemClick,
+  notifications, notifLoading, unreadCount, onMarkAllRead, onNotifItemClick, onOpenSettings,
 }: {
   sidebarW: number; displayName: string; isAdmin: boolean; initials: string
   notifications: NotificationItem[]; notifLoading: boolean; unreadCount: number
   onMarkAllRead: () => void; onNotifItemClick: (n: NotificationItem) => void
+  onOpenSettings: () => void
 }) {
   const { t, lang } = useLang()
   const { logout } = useAuth()
@@ -370,7 +372,7 @@ function TopBar({
                 <div style={{ fontSize: 11, color: '#6b7280' }}>{isAdmin ? trLocal('super_admin', lang) : trLocal('client', lang)}</div>
               </div>
 
-              <button onClick={() => { navigate(isAdmin ? '/admin/settings' : '/client/settings'); setProfileOpen(false) }}
+              <button onClick={() => { onOpenSettings(); setProfileOpen(false) }}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#374151', fontSize: 13, fontWeight: 500, textAlign: 'left', transition: 'background 0.12s' }}
                 onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
                 onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}>
@@ -400,24 +402,22 @@ function TopBar({
 //    notifications, settings, logout all live here now) ─────
 function MobileTopBar({
   displayName, onMenuClick, menuOpen,
-  notifications, notifLoading, unreadCount, onMarkAllRead, onNotifItemClick,
+  notifications, notifLoading, unreadCount, onMarkAllRead, onNotifItemClick, onOpenSettings,
 }: {
   displayName: string; onMenuClick: () => void; menuOpen: boolean
   notifications: NotificationItem[]; notifLoading: boolean; unreadCount: number
   onMarkAllRead: () => void; onNotifItemClick: (n: NotificationItem) => void
+  onOpenSettings: () => void
 }) {
   const { lang } = useLang()
   const { logout } = useAuth()
   const navigate = useNavigate()
   const [notifOpen, setNotifOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
-  const settingsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) setSettingsOpen(false)
     }
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
@@ -455,7 +455,7 @@ function MobileTopBar({
 
       {/* Notifications */}
       <div ref={notifRef} style={{ position: 'relative' }}>
-        <button onClick={() => { setNotifOpen(o => !o); setSettingsOpen(false) }} style={iconBtnStyle} aria-label={trLocal('notifications', lang)}>
+        <button onClick={() => setNotifOpen(o => !o)} style={iconBtnStyle} aria-label={trLocal('notifications', lang)}>
           <Icon.Bell />
           {unreadCount > 0 && (
             <div style={{ position: 'absolute', top: 6, right: 6, width: 6, height: 6, borderRadius: '50%', background: '#ef4444', border: '1.5px solid #fff' }} />
@@ -474,20 +474,10 @@ function MobileTopBar({
         )}
       </div>
 
-      {/* Settings */}
-      <div ref={settingsRef} style={{ position: 'relative' }}>
-        <button onClick={() => { setSettingsOpen(o => !o); setNotifOpen(false) }} style={iconBtnStyle} aria-label={trLocal('settings', lang)}>
-          <Icon.Settings />
-        </button>
-        {settingsOpen && (
-          <div style={{ position: 'fixed', top: 62, right: 10, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, zIndex: 200, boxShadow: '0 8px 28px rgba(0,0,0,0.14)', padding: '10px 14px', width: 'min(220px, calc(100vw - 20px))', animation: 'dropDown 0.18s ease' }}>
-            <button onClick={() => { navigate('/client/settings'); setSettingsOpen(false) }}
-            style={{ width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', background: '#eef2ff', color: '#4338ca', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>
-            {trLocal('settings', lang)}
-          </button>
-          </div>
-        )}
-      </div>
+      {/* Settings — opens the modal directly, no dropdown needed anymore */}
+      <button onClick={onOpenSettings} style={iconBtnStyle} aria-label={trLocal('settings', lang)}>
+        <Icon.Settings />
+      </button>
 
       {/* Logout */}
       <button onClick={() => { logout(); navigate('/login') }} aria-label={trLocal('logout', lang)}
@@ -513,6 +503,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
 
   // ── Notifications: hifadhi hapa juu ili TopBar (desktop) na
   //    MobileTopBar zote mbili zitumie data ile ile bila kufetch mara mbili ──
@@ -727,6 +718,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         unreadCount={unreadCount}
         onMarkAllRead={handleMarkAllRead}
         onNotifItemClick={handleNotifItemClick}
+        onOpenSettings={() => setSettingsModalOpen(true)}
       />
 
       {/* Compact nav dropdown — opens BELOW the mobile topbar, narrow width, not a full drawer */}
@@ -756,12 +748,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         unreadCount={unreadCount}
         onMarkAllRead={handleMarkAllRead}
         onNotifItemClick={handleNotifItemClick}
+        onOpenSettings={() => setSettingsModalOpen(true)}
       />
 
       {/* Main Content */}
       <main className="layout-main" style={{ marginLeft: sidebarW, flex: 1, minWidth: 0, minHeight: '100vh', paddingTop: TOPBAR_H, transition: 'margin-left 0.25s ease', animation: skipEntranceAnim ? 'none' : 'contentIn 0.4s ease' }}>
         {children}
       </main>
+
+      {/* Settings popup — floats above whatever page is currently open */}
+      <SettingsModal open={settingsModalOpen} onClose={() => setSettingsModalOpen(false)} />
     </div>
   )
 }

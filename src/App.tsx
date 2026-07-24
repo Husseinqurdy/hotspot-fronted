@@ -11,7 +11,7 @@ import { VoucherManagementPage } from './pages/VoucherManagement'
 import { ClientWithdraw, AdminWithdrawalRequests } from './pages/WithdrawPages'
 import type { JSX } from 'react'
 import { AnalysisPage } from './pages/AnalysisPage'
-import ClientSettingsPage from './pages/client/Settings'
+
 
 function Guard({ children, role }: { children: JSX.Element; role: string }) {
   const { user, isLoading } = useAuth()
@@ -64,7 +64,7 @@ export default function App() {
             <Route path="/client/payments" element={<Guard role="client"><ClientPayments /></Guard>} />
             <Route path="/client/analysis" element={<Guard role="client"><AnalysisPage /></Guard>} />
             <Route path="/client/withdraw" element={<Guard role="client"><ClientWithdraw /></Guard>} />
-            <Route path="/client/settings" element={<Guard role="client"><ClientSettingsPage /></Guard>} />
+            
 
             <Route path="/" element={<Redirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
