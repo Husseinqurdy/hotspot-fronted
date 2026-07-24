@@ -203,14 +203,33 @@ export default function LoginPage() {
           animation:lgOrbit linear infinite;
         }
 
+        /* Language switcher — desktop: pinned to bottom-left of the brand panel.
+           On mobile the panel shrinks to fit its content, so pinning it
+           absolutely risks overlapping the last feature row. We fix that
+           below by dropping it into normal flow on small screens instead. */
+        .lg-lang-switcher {
+          position:absolute; bottom:1.5rem; left:1.5rem; z-index:2;
+          animation:lgFadeIn 0.6s ease 0.5s both;
+        }
+
         /* Responsive */
         @media (max-width:768px) {
           .lg-wrap { grid-template-columns:1fr; }
-          .lg-brand { min-height:auto; padding:2.5rem 1.5rem 3rem; }
+          .lg-brand { min-height:auto; padding:2.5rem 1.5rem 2.5rem; }
           .lg-form-side { min-height:auto; padding:2.5rem 1.5rem; }
+
+          /* Take the switcher out of absolute positioning entirely on
+             mobile — let it sit in normal flow below the features list,
+             centered, with its own breathing room. This guarantees it
+             can never overlap content above it, regardless of height. */
+          .lg-lang-switcher {
+            position:static;
+            display:flex; justify-content:center;
+            margin:28px auto 0;
+          }
         }
         @media (max-width:480px) {
-          .lg-brand { padding:2rem 1.25rem 2.5rem; }
+          .lg-brand { padding:2rem 1.25rem 2rem; }
           .lg-form-side { padding:2rem 1.25rem; }
         }
       `}</style>
@@ -282,11 +301,14 @@ export default function LoginPage() {
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* Language switcher — bottom left */}
-          <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', zIndex: 2, animation: 'lgFadeIn 0.6s ease 0.5s both' }}>
-            <LanguageSwitcher dark={true} />
+            {/* Language switcher — normal flow on mobile (see .lg-lang-switcher
+                media query above), so it sits comfortably below the features
+                list instead of floating over them. On desktop it's still
+                pinned to the bottom-left corner via the same class. */}
+            <div className="lg-lang-switcher">
+              <LanguageSwitcher dark={true} />
+            </div>
           </div>
         </div>
 
