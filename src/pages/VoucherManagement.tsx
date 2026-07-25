@@ -395,13 +395,22 @@ export function VoucherManagementPage() {
     if (!manualForm.router_id || !manualForm.profile) { showAlrt('error', t('alert_select_router_profile')); return }
     setSaving(true)
     try {
-      const code = manualForm.custom_code || makeCode()
+      const requestedCode = manualForm.custom_code || makeCode()
       const profileInfo = await getProfileInfo(manualForm.profile)
 
-      await api.post(`/mikrotik/${manualForm.router_id}/hotspot/users/`, {
-        username: code, password: code, profile: manualForm.profile,
+      const res = await api.post(`/mikrotik/${manualForm.router_id}/hotspot/users/`, {
+        username: requestedCode, password: requestedCode, profile: manualForm.profile,
         comment: `Manual|${manualForm.customer_phone || 'N/A'}`,
       })
+
+      // Backend inaweza kurudisha code TOFAUTI na hii tuliyotuma (kama
+      // kulikuwa na mgongano na iliundwa mpya moja kwa moja) — hii ndiyo
+      // 'ukweli' halisi uliyoundwa kwenye MikroTik, tumia hii kila mahali
+      // chini badala ya requestedCode.
+      const code = res.data?.code || requestedCode
+      if (manualForm.custom_code && code !== requestedCode) {
+        showAlrt('warning', `Code "${requestedCode}" tayari ilikuwa inatumika — voucher imeundwa kwa code mpya: ${code}`)
+      }
 
       // Hifadhi PDF ya historia (Sehemu ya 1 ya Analysis page) — best-effort,
       // haizuii voucher kufanya kazi hata kama hii itashindwa.
@@ -443,11 +452,15 @@ export function VoucherManagementPage() {
       for (let i = 0; i < qty; i++) {
         const code = makeCode()
         try {
-          await api.post(`/mikrotik/${batchForm.router_id}/hotspot/users/`, {
+          const res = await api.post(`/mikrotik/${batchForm.router_id}/hotspot/users/`, {
             username: code, password: code, profile: batchForm.profile,
             comment: `Batch|${new Date().toLocaleDateString(dateLocale)}`,
           })
-          results.push({ code, package_name: batchForm.profile, customer_phone: '', duration: profileInfo.duration, speed: profileInfo.speed, package_price: pkgPrice })
+          // Backend inaweza kurudisha code TOFAUTI na hii tuliyotuma (kama
+          // kulikuwa na mgongano na iliundwa mpya moja kwa moja) — tumia
+          // 'code' halisi kutoka response, siyo ile tuliyotuma.
+          const finalCode = res.data?.code || code
+          results.push({ code: finalCode, package_name: batchForm.profile, customer_phone: '', duration: profileInfo.duration, speed: profileInfo.speed, package_price: pkgPrice })
         } catch { failed++ }
       }
       setBatchResult(results)
