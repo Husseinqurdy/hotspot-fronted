@@ -826,8 +826,472 @@ export function AdminDevices() {
         </Modal>
       </div>
     </Layout>
+
   )
 }
+
+// ════════════════════════════════════════════════════════════════
+// ADS MANAGEMENT — bandika sehemu hii ndani ya faili lako lilelile
+// (lile lenye AdminDashboard, AdminClients, AdminDevices, n.k.)
+// Inatumia Layout, PageHeader, Card, Table, Badge, Modal, Input,
+// Select, Alert, FormRow, FormActions, ConfirmDialog, useLang,
+// api, GLOBAL_STYLES, Icons, ABtn, PrimaryBtn, useAlert — vyote
+// tayari vipo juu ya faili lako, hakuna haja ya kuagiza tena.
+//
+// ANGALIA KABLA YA KUBANDIKA:
+// - Nimefikiri endpoints ziko chini ya /ads/... (yaani api.get('/ads/advertisers/')
+//   inakwenda kwenye /api/ads/advertisers/ kama api instance yako ina
+//   baseURL ya '/api'). Badilisha PATHI hizi tatu chini kama urls.py
+//   yako ya ads imewekwa tofauti:
+//     ADV_URL   = '/ads/advertisers/'
+//     ADS_URL   = '/ads/advertisements/'
+//     REPORT_URL= '/ads/report/'
+// ════════════════════════════════════════════════════════════════
+
+const ADV_URL = '/ads/advertisers/'
+const ADS_URL = '/ads/advertisements/'
+const REPORT_URL = '/ads/report/'
+
+// ── Types ──────────────────────────────────────────────────
+interface Advertiser {
+  id: number
+  name: string
+  contact_phone: string
+  contact_email: string
+  is_active: boolean
+  ads_count: number
+  created_at: string
+}
+
+interface RouterOption {
+  id: number
+  name: string
+  client_name?: string
+}
+
+interface Advertisement {
+  id: number
+  advertiser: number
+  advertiser_name: string
+  title: string
+  ad_type: 'banner' | 'video' | 'sponsored_access'
+  media_file: string | null
+  click_url: string
+  sponsored_minutes: number
+  cooldown_hours: number
+  max_daily_grants_per_router: number
+  mikrotik_profile: string
+  is_active: boolean
+  is_currently_active: boolean
+  router_ids: number[]
+  router_names: string[]
+  priority: number
+  impressions?: number
+  clicks?: number
+}
+
+interface AdsReport {
+  total_impressions: number
+  total_clicks: number
+  click_through_rate_percent: number
+  total_sponsored_grants: number
+}
+
+const adTypeMeta: Record<Advertisement['ad_type'], { label: string; color: any }> = {
+  banner: { label: 'Banner', color: 'blue' },
+  video: { label: 'Video', color: 'indigo' },
+  sponsored_access: { label: 'Sponsored', color: 'yellow' },
+}
+
+// ── Extra icons for this section only ────────────────────────
+const AdIcons = {
+  Megaphone: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l3.5 5.5a1 1 0 0 0 1.7-1L9 13"/><path d="M3 11l14-6v14L3 13"/><path d="M17 8a4 4 0 0 1 0 8"/></svg>,
+  Building: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 22V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v18"/><path d="M2 22h20"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>,
+  Report: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="0.5"/><rect x="12" y="8" width="3" height="10" rx="0.5"/><rect x="17" y="5" width="3" height="13" rx="0.5"/></svg>,
+  Click: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 9l11 4-5 2-2 5-4-11z"/></svg>,
+  Gift: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9"/><path d="M12 8c-2 0-3.5-1.5-3.5-3S9.5 2 11 2s1.5 2 1 3.5M12 8c2 0 3.5-1.5 3.5-3S13.5 2 12 2s-1.5 2-1 3.5"/></svg>,
+  Upload: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>,
+}
+
+// ── Small raw-input helper (matches DurationField's inline styling) ──
+const RawInput = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+    <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>{label}</label>
+    {children}
+    {hint && <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{hint}</span>}
+  </div>
+)
+const rawInputStyle: React.CSSProperties = { padding: '9px 11px', border: '1.5px solid var(--gray-200)', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box', width: '100%' }
+
+// ════════════════════════════════════════════════════════════════
+// MAIN PAGE — AdminAds (weka nyuma ya route ya superadmin pekee)
+// ════════════════════════════════════════════════════════════════
+export function AdminAds() {
+  const [tab, setTab] = useState<'ads' | 'advertisers' | 'report'>('ads')
+
+  const TABS: { k: typeof tab; l: string; Ico: React.ElementType }[] = [
+    { k: 'ads', l: 'Matangazo', Ico: AdIcons.Megaphone },
+    { k: 'advertisers', l: 'Advertisers', Ico: AdIcons.Building },
+    { k: 'report', l: 'Ripoti', Ico: AdIcons.Report },
+  ]
+
+  return (
+    <Layout>
+      <style>{GLOBAL_STYLES}</style>
+      <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
+        <PageHeader title="Matangazo (Ads)" subtitle="Simamia advertisers, matangazo, na ufuatilie utendaji kwenye routers zote" />
+
+        <div style={{ display: 'flex', gap: 6, marginBottom: '1.25rem', flexWrap: 'wrap', borderBottom: '1px solid var(--gray-200)', paddingBottom: 2 }}>
+          {TABS.map(x => (
+            <button key={x.k} onClick={() => setTab(x.k)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: '8px 8px 0 0', border: 'none', borderBottom: tab === x.k ? '2px solid var(--primary)' : '2px solid transparent', background: 'transparent', color: tab === x.k ? 'var(--primary)' : 'var(--gray-500)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
+              <x.Ico /> {x.l}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'ads' && <AdsTab />}
+        {tab === 'advertisers' && <AdvertisersTab />}
+        {tab === 'report' && <AdsReportTab />}
+      </div>
+    </Layout>
+  )
+}
+
+// ── ADVERTISERS TAB ───────────────────────────────────────
+function AdvertisersTab() {
+  const { t } = useLang()
+  const { alert, show } = useAlert()
+  const [items, setItems] = useState<Advertiser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editing, setEditing] = useState<Advertiser | null>(null)
+  const [showDelete, setShowDelete] = useState<Advertiser | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ name: '', contact_phone: '', contact_email: '', is_active: true })
+
+  const fetchItems = () => { setLoading(true); api.get(ADV_URL).then(r => { setItems(r.data.results || r.data); setLoading(false) }) }
+  useEffect(() => { fetchItems() }, [])
+
+  const openCreate = () => { setEditing(null); setForm({ name: '', contact_phone: '', contact_email: '', is_active: true }); setShowModal(true) }
+  const openEdit = (a: Advertiser) => { setEditing(a); setForm({ name: a.name, contact_phone: a.contact_phone || '', contact_email: a.contact_email || '', is_active: a.is_active }); setShowModal(true) }
+
+  const handleSave = async () => {
+    if (!form.name) { show('error', t('fill_required')); return }
+    setSaving(true)
+    try {
+      if (editing) await api.patch(`${ADV_URL}${editing.id}/`, form)
+      else await api.post(ADV_URL, form)
+      show('success', `${form.name} ${editing ? t('updated_success') : t('created_success')}`)
+      setShowModal(false); fetchItems()
+    } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
+    finally { setSaving(false) }
+  }
+
+  const handleDelete = async () => {
+    if (!showDelete) return
+    try { await api.delete(`${ADV_URL}${showDelete.id}/`); show('success', t('deleted_success')); setShowDelete(null); fetchItems() }
+    catch { show('error', t('error')) }
+  }
+
+  const ActionBtns = ({ a }: { a: Advertiser }) => (
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+      <ABtn icon={Icons.IcoEdit} tip={t('edit')} cls="ap-btn-edit" onClick={() => openEdit(a)} />
+      <ABtn icon={Icons.IcoDelete} tip={t('delete')} cls="ap-btn-delete" onClick={() => setShowDelete(a)} />
+    </div>
+  )
+
+  const AdvCard = ({ a }: { a: Advertiser }) => (
+    <div className="ap-card-hover" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', animation: 'apFadeUp 0.3s ease both' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: '#111827' }}>{a.name}</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{a.contact_phone || '—'}{a.contact_email ? ` · ${a.contact_email}` : ''}</div>
+        </div>
+        <Badge text={a.is_active ? t('active') : t('inactive')} color={a.is_active ? 'green' : 'red'} />
+      </div>
+      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>Matangazo: <strong>{a.ads_count}</strong></div>
+      <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 10 }}><ActionBtns a={a} /></div>
+    </div>
+  )
+
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+        <PrimaryBtn onClick={openCreate}><Icons.IcoPlus /> Ongeza Advertiser</PrimaryBtn>
+      </div>
+      {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
+
+      <div className="ap-table-wrap">
+        <Card>
+          <Table loading={loading} headers={['Jina', 'Mawasiliano', 'Matangazo', t('status'), '']}
+            rows={items.map(a => [
+              <span style={{ fontWeight: 600, fontSize: 13 }}>{a.name}</span>,
+              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{a.contact_phone || '—'}{a.contact_email ? ` · ${a.contact_email}` : ''}</span>,
+              a.ads_count,
+              <Badge text={a.is_active ? t('active') : t('inactive')} color={a.is_active ? 'green' : 'red'} />,
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}><ActionBtns a={a} /></div>,
+            ])}
+            emptyMessage="Hakuna advertiser bado."
+          />
+        </Card>
+      </div>
+      <div className="ap-cards-wrap">
+        {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+          : items.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>Hakuna advertiser bado.</div>
+          : <div className="ap-cards-grid">{items.map(a => <AdvCard key={a.id} a={a} />)}</div>
+        }
+      </div>
+
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `Hariri: ${editing.name}` : 'Advertiser Mpya'}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Input label="Jina la biashara *" placeholder="Coca-Cola Tanzania" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
+          <FormRow>
+            <Input label="Namba ya simu" placeholder="0712345678" value={form.contact_phone} onChange={(e: any) => setForm({ ...form, contact_phone: e.target.value })} />
+            <Input label="Barua pepe" type="email" placeholder="ads@example.com" value={form.contact_email} onChange={(e: any) => setForm({ ...form, contact_email: e.target.value })} />
+          </FormRow>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray-700)' }}>
+            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
+            Advertiser hai
+          </label>
+          <FormActions>
+            <Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? t('loading') : t('save')}</Button>
+          </FormActions>
+        </div>
+      </Modal>
+      <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Advertiser" message={`Futa "${showDelete?.name}"? Matangazo yake yote yatafutwa pia.`} danger />
+    </>
+  )
+}
+
+// ── ADS TAB ────────────────────────────────────────────────
+function AdsTab() {
+  const { t } = useLang()
+  const { alert, show } = useAlert()
+  const [items, setItems] = useState<Advertisement[]>([])
+  const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
+  const [routers, setRouters] = useState<RouterOption[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editing, setEditing] = useState<Advertisement | null>(null)
+  const [showDelete, setShowDelete] = useState<Advertisement | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const blankForm = { title: '', advertiser: '', ad_type: 'banner' as Advertisement['ad_type'], click_url: '', sponsored_minutes: '15', cooldown_hours: '24', max_daily_grants_per_router: '0', mikrotik_profile: 'sponsored_free', priority: '1', is_active: true, router_ids: [] as number[] }
+  const [form, setForm] = useState(blankForm)
+  const [mediaFile, setMediaFile] = useState<File | null>(null)
+
+  const fetchAll = () => {
+    setLoading(true)
+    Promise.all([api.get(ADS_URL), api.get(ADV_URL), api.get('/routers/')])
+      .then(([adsR, advR, routersR]) => {
+        setItems(adsR.data.results || adsR.data)
+        setAdvertisers(advR.data.results || advR.data)
+        const list = (routersR.data.results || routersR.data).map((r: any) => ({ id: r.id, name: r.name, client_name: r.client_name || r.client?.business_name }))
+        setRouters(list)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }
+  useEffect(() => { fetchAll() }, [])
+
+  const openCreate = () => { setEditing(null); setForm(blankForm); setMediaFile(null); setShowModal(true) }
+  const openEdit = (ad: Advertisement) => {
+    setEditing(ad)
+    setForm({ title: ad.title, advertiser: String(ad.advertiser), ad_type: ad.ad_type, click_url: ad.click_url || '', sponsored_minutes: String(ad.sponsored_minutes), cooldown_hours: String(ad.cooldown_hours), max_daily_grants_per_router: String(ad.max_daily_grants_per_router), mikrotik_profile: ad.mikrotik_profile || 'sponsored_free', priority: String(ad.priority), is_active: ad.is_active, router_ids: ad.router_ids || [] })
+    setMediaFile(null); setShowModal(true)
+  }
+
+  const toggleRouter = (id: number) => setForm(f => ({ ...f, router_ids: f.router_ids.includes(id) ? f.router_ids.filter(r => r !== id) : [...f.router_ids, id] }))
+
+  const handleSave = async () => {
+    if (!form.title || !form.advertiser) { show('error', t('fill_required')); return }
+    setSaving(true)
+    try {
+      const fd = new FormData()
+      fd.append('title', form.title)
+      fd.append('advertiser', form.advertiser)
+      fd.append('ad_type', form.ad_type)
+      fd.append('click_url', form.click_url)
+      fd.append('sponsored_minutes', form.sponsored_minutes)
+      fd.append('cooldown_hours', form.cooldown_hours)
+      fd.append('max_daily_grants_per_router', form.max_daily_grants_per_router)
+      fd.append('mikrotik_profile', form.mikrotik_profile)
+      fd.append('priority', form.priority)
+      fd.append('is_active', String(form.is_active))
+      form.router_ids.forEach(id => fd.append('router_ids', String(id)))
+      if (mediaFile) fd.append('media_file', mediaFile)
+
+      if (editing) await api.patch(`${ADS_URL}${editing.id}/`, fd)
+      else await api.post(ADS_URL, fd)
+      show('success', `${form.title} ${editing ? t('updated_success') : t('created_success')}`)
+      setShowModal(false); fetchAll()
+    } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
+    finally { setSaving(false) }
+  }
+
+  const handleDelete = async () => {
+    if (!showDelete) return
+    try { await api.delete(`${ADS_URL}${showDelete.id}/`); show('success', t('deleted_success')); setShowDelete(null); fetchAll() }
+    catch { show('error', t('error')) }
+  }
+
+  const toggleActive = async (ad: Advertisement) => {
+    try { await api.patch(`${ADS_URL}${ad.id}/`, { is_active: !ad.is_active }); show('success', ad.is_active ? 'Tangazo limezimwa' : 'Tangazo limewashwa'); fetchAll() }
+    catch { show('error', t('error')) }
+  }
+
+  const ActionBtns = ({ ad }: { ad: Advertisement }) => (
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+      <ABtn icon={ad.is_active ? Icons.IcoOn : Icons.IcoOn} tip={ad.is_active ? 'Zima' : 'Washa'} cls={ad.is_active ? 'ap-btn-toggle-on' : 'ap-btn-toggle-off'} onClick={() => toggleActive(ad)} />
+      <ABtn icon={Icons.IcoEdit} tip={t('edit')} cls="ap-btn-edit" onClick={() => openEdit(ad)} />
+      <ABtn icon={Icons.IcoDelete} tip={t('delete')} cls="ap-btn-delete" onClick={() => setShowDelete(ad)} />
+    </div>
+  )
+
+  const AdCard = ({ ad }: { ad: Advertisement }) => (
+    <div className="ap-card-hover" style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 14, padding: '14px 16px', animation: 'apFadeUp 0.3s ease both' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8, gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.title}</div>
+          <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{ad.advertiser_name}</div>
+        </div>
+        <Badge text={adTypeMeta[ad.ad_type].label} color={adTypeMeta[ad.ad_type].color} />
+      </div>
+      <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>
+        Routers: {ad.router_names.length > 0 ? ad.router_names.join(', ') : 'Zote (platform nzima)'}
+      </div>
+      {ad.ad_type === 'sponsored_access' && (
+        <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8, background: '#f0fdf4', padding: '4px 8px', borderRadius: 6 }}>
+          {ad.sponsored_minutes} dakika bure · cooldown {ad.cooldown_hours}h{ad.max_daily_grants_per_router > 0 ? ` · kikomo/siku ${ad.max_daily_grants_per_router}` : ''}
+        </div>
+      )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Badge text={ad.is_currently_active ? 'Inaendesha' : 'Haifanyi kazi'} color={ad.is_currently_active ? 'green' : 'gray'} />
+        <ActionBtns ad={ad} />
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: 8 }}>
+        {advertisers.length === 0 && !loading && (
+          <span style={{ fontSize: 12, color: '#92400e', background: '#fefce8', padding: '6px 12px', borderRadius: 8, alignSelf: 'center' }}>
+            Ongeza Advertiser kwanza kwenye tab "Advertisers"
+          </span>
+        )}
+        <PrimaryBtn onClick={openCreate} disabled={advertisers.length === 0}><Icons.IcoPlus /> Tangazo Jipya</PrimaryBtn>
+      </div>
+      {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
+
+      <div className="ap-table-wrap">
+        <Card>
+          <Table loading={loading} headers={['Tangazo', 'Advertiser', 'Aina', 'Routers', t('status'), '']}
+            rows={items.map(ad => [
+              <span style={{ fontWeight: 600, fontSize: 13 }}>{ad.title}</span>,
+              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{ad.advertiser_name}</span>,
+              <Badge text={adTypeMeta[ad.ad_type].label} color={adTypeMeta[ad.ad_type].color} />,
+              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{ad.router_names.length > 0 ? ad.router_names.join(', ') : 'Zote'}</span>,
+              <Badge text={ad.is_currently_active ? 'Inaendesha' : 'Imezimwa'} color={ad.is_currently_active ? 'green' : 'gray'} />,
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}><ActionBtns ad={ad} /></div>,
+            ])}
+            emptyMessage="Hakuna tangazo bado."
+          />
+        </Card>
+      </div>
+      <div className="ap-cards-wrap">
+        {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
+          : items.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>Hakuna tangazo bado.</div>
+          : <div className="ap-cards-grid">{items.map(ad => <AdCard key={ad.id} ad={ad} />)}</div>
+        }
+      </div>
+
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `Hariri: ${editing.title}` : 'Tangazo Jipya'}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Input label="Kichwa cha tangazo *" placeholder="Punguzo la Vodacom Weekend" value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} />
+          <FormRow>
+            <Select label="Advertiser *" value={form.advertiser} onChange={(e: any) => setForm({ ...form, advertiser: e.target.value })}>
+              <option value="">— chagua —</option>
+              {advertisers.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </Select>
+            <Select label="Aina ya tangazo" value={form.ad_type} onChange={(e: any) => setForm({ ...form, ad_type: e.target.value })}>
+              <option value="banner">Banner (picha)</option>
+              <option value="video">Video</option>
+              <option value="sponsored_access">Sponsored Free Access</option>
+            </Select>
+          </FormRow>
+
+          <RawInput label={`Faili la ${form.ad_type === 'video' ? 'video' : 'picha'}${editing ? ' (acha tupu kuendelea na iliyopo)' : ''}`}>
+            <input type="file" accept={form.ad_type === 'video' ? 'video/*' : 'image/*'} onChange={(e) => setMediaFile(e.target.files?.[0] || null)} style={rawInputStyle} />
+          </RawInput>
+
+          {form.ad_type !== 'sponsored_access' && (
+            <Input label="Link ya kubonyeza (hiari)" placeholder="https://..." value={form.click_url} onChange={(e: any) => setForm({ ...form, click_url: e.target.value })} />
+          )}
+
+          {form.ad_type === 'sponsored_access' && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <FormRow>
+                <Input label="Dakika za bure" type="number" value={form.sponsored_minutes} onChange={(e: any) => setForm({ ...form, sponsored_minutes: e.target.value })} />
+                <Input label="Cooldown (masaa)" type="number" value={form.cooldown_hours} onChange={(e: any) => setForm({ ...form, cooldown_hours: e.target.value })} />
+              </FormRow>
+              <FormRow>
+                <Input label="Kikomo/siku/router (0=hakuna)" type="number" value={form.max_daily_grants_per_router} onChange={(e: any) => setForm({ ...form, max_daily_grants_per_router: e.target.value })} />
+                <Input label="MikroTik profile" value={form.mikrotik_profile} onChange={(e: any) => setForm({ ...form, mikrotik_profile: e.target.value })} />
+              </FormRow>
+            </div>
+          )}
+
+          <RawInput label="Routers zinazolengwa (acha tupu = zote)">
+            <div style={{ maxHeight: 160, overflowY: 'auto', border: '1.5px solid var(--gray-200)', borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {routers.map(r => (
+                <label key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, padding: '4px 2px', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={form.router_ids.includes(r.id)} onChange={() => toggleRouter(r.id)} />
+                  {r.name}{r.client_name ? <span style={{ color: 'var(--gray-400)' }}> ({r.client_name})</span> : null}
+                </label>
+              ))}
+              {routers.length === 0 && <div style={{ fontSize: 12, color: 'var(--gray-400)', padding: 6 }}>Inapakia routers...</div>}
+            </div>
+          </RawInput>
+
+          <Input label="Kipaumbele (namba kubwa = kipaumbele zaidi)" type="number" value={form.priority} onChange={(e: any) => setForm({ ...form, priority: e.target.value })} />
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray-700)' }}>
+            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
+            Tangazo hai
+          </label>
+
+          <FormActions>
+            <Button variant="ghost" onClick={() => setShowModal(false)} disabled={saving}>{t('cancel')}</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? t('loading') : t('save')}</Button>
+          </FormActions>
+        </div>
+      </Modal>
+      <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Tangazo" message={`Futa "${showDelete?.title}"?`} danger />
+    </>
+  )
+}
+
+// ── REPORT TAB ─────────────────────────────────────────────
+function AdsReportTab() {
+  const [report, setReport] = useState<AdsReport | null>(null)
+  const [loading, setLoading] = useState(true)
+  useEffect(() => { api.get(REPORT_URL).then(r => { setReport(r.data); setLoading(false) }).catch(() => setLoading(false)) }, [])
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '0.85rem' }}>
+      <StatCard title="Ads Zilizoonekana" value={loading ? '—' : report?.total_impressions ?? 0} icon={<AdIcons.Megaphone />} color="#6366f1" />
+      <StatCard title="Ads Zilizobonyezwa" value={loading ? '—' : report?.total_clicks ?? 0} icon={<AdIcons.Click />} color="#3b82f6" />
+      <StatCard title="CTR" value={loading ? '—' : `${report?.click_through_rate_percent ?? 0}%`} icon={<AdIcons.Report />} color="#f59e0b" />
+      <StatCard title="Sponsored Grants" value={loading ? '—' : report?.total_sponsored_grants ?? 0} icon={<AdIcons.Gift />} color="#10b981" />
+    </div>
+  )
+}
+
+
+
 
 // ── CLIENT DASHBOARD helpers ──────────────────────────────
 function useCountUp(target: number, duration = 900, active = true) {

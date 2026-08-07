@@ -4,7 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { LangProvider, useLang } from './contexts/LangContext'
 import LoginPage from './pages/LoginPage'
 import {
-  AdminDashboard, AdminClients, AdminDevices, AdminRouters, AdminPayments, AdminVouchers,
+  AdminDashboard, AdminClients, AdminDevices, AdminRouters, AdminPayments, AdminVouchers, AdminAds,
   ClientDashboard, ClientRouters, ClientPackages, ClientPayments,
 } from './pages/AllPages'
 import { AdminMikroTikPage, ClientMikroTikPage } from './pages/MikroTikManager'
@@ -67,7 +67,9 @@ export default function App() {
             <Route path="/admin/mikrotik" element={<Guard role="superadmin"><AdminMikroTikPage /></Guard>} />
             <Route path="/admin/payments" element={<Guard role="superadmin"><AdminPayments /></Guard>} />
             <Route path="/admin/vouchers" element={<Guard role="superadmin"><AdminVouchers /></Guard>} />
+            <Route path="/admin/ads" element={<Guard role="superadmin"><AdminAds /></Guard>} />
             <Route path="/admin/requests" element={<Guard role="superadmin"><AdminWithdrawalRequests /></Guard>} />
+            
 
 
             {/* Client */}
