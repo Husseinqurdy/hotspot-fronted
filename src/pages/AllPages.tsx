@@ -830,6 +830,7 @@ export function AdminDevices() {
   )
 }
 
+
 // ════════════════════════════════════════════════════════════════
 // ADS MANAGEMENT — bandika sehemu hii ndani ya faili lako lilelile
 // (lile lenye AdminDashboard, AdminClients, AdminDevices, n.k.)
@@ -838,11 +839,21 @@ export function AdminDevices() {
 // api, GLOBAL_STYLES, Icons, ABtn, PrimaryBtn, useAlert — vyote
 // tayari vipo juu ya faili lako, hakuna haja ya kuagiza tena.
 //
+// FIX v2 (muhimu):
+// 1. BUG KUU iliyosababisha 400 Bad Request: api.post/api.patch
+//    zilikuwa zikituma FormData huku axios ikiwa na default
+//    'Content-Type: application/json' - hii inavunja multipart
+//    encoding kabisa (media_file inafika "not a file", router_ids
+//    inafika kama string moja badala ya list). Fix: tunaweka
+//    `headers: { 'Content-Type': undefined }` kwenye kila request
+//    ya FormData ili browser yenyewe iweke boundary sahihi.
+// 2. Maneno yote mapya ya UI sasa yana muundo `t('key') || 'Kiswahili'`
+//    ili lugha ikibadilishwa (au key haipo bado kwenye dictionary),
+//    yasionekane tupu/"undefined" - yanarudi kwenye Kiswahili default.
+//
 // ANGALIA KABLA YA KUBANDIKA:
-// - Nimefikiri endpoints ziko chini ya /ads/... (yaani api.get('/ads/advertisers/')
-//   inakwenda kwenye /api/ads/advertisers/ kama api instance yako ina
-//   baseURL ya '/api'). Badilisha PATHI hizi tatu chini kama urls.py
-//   yako ya ads imewekwa tofauti:
+// - Pathi hizi tatu chini - badilisha kama urls.py yako ya ads
+//   imewekwa tofauti:
 //     ADV_URL   = '/ads/advertisers/'
 //     ADS_URL   = '/ads/advertisements/'
 //     REPORT_URL= '/ads/report/'
@@ -851,6 +862,11 @@ export function AdminDevices() {
 const ADV_URL = '/ads/advertisers/'
 const ADS_URL = '/ads/advertisements/'
 const REPORT_URL = '/ads/report/'
+
+// Config ya kutuma FormData kupitia axios instance yenye default
+// Content-Type: application/json - hii inalazimisha axios/browser
+// kuweka Content-Type sahihi (multipart/form-data; boundary=...) yenyewe.
+const FORM_DATA_CONFIG = { headers: { 'Content-Type': undefined as any } }
 
 // ── Types ──────────────────────────────────────────────────
 interface Advertiser {
@@ -897,6 +913,16 @@ interface AdsReport {
   total_sponsored_grants: number
 }
 
+// ── Helper: tafsiri yenye fallback salama ya lugha ─────────
+// Hutumika badala ya t(key) peke yake kwa maneno mapya ya sehemu hii,
+// ili lugha ikibadilishwa (au key haijasajiliwa bado), isionekane
+// tupu/"undefined" - inarudi kwenye Kiswahili default moja kwa moja.
+function useAdsLang() {
+  const { t } = useLang()
+  const tt = (key: string, fallback: string) => t(key) || fallback
+  return { t, tt }
+}
+
 const adTypeMeta: Record<Advertisement['ad_type'], { label: string; color: any }> = {
   banner: { label: 'Banner', color: 'blue' },
   video: { label: 'Video', color: 'indigo' },
@@ -927,19 +953,23 @@ const rawInputStyle: React.CSSProperties = { padding: '9px 11px', border: '1.5px
 // MAIN PAGE — AdminAds (weka nyuma ya route ya superadmin pekee)
 // ════════════════════════════════════════════════════════════════
 export function AdminAds() {
+  const { tt } = useAdsLang()
   const [tab, setTab] = useState<'ads' | 'advertisers' | 'report'>('ads')
 
   const TABS: { k: typeof tab; l: string; Ico: React.ElementType }[] = [
-    { k: 'ads', l: 'Matangazo', Ico: AdIcons.Megaphone },
-    { k: 'advertisers', l: 'Advertisers', Ico: AdIcons.Building },
-    { k: 'report', l: 'Ripoti', Ico: AdIcons.Report },
+    { k: 'ads', l: tt('ads_tab_ads', 'Matangazo'), Ico: AdIcons.Megaphone },
+    { k: 'advertisers', l: tt('ads_tab_advertisers', 'Advertisers'), Ico: AdIcons.Building },
+    { k: 'report', l: tt('ads_tab_report', 'Ripoti'), Ico: AdIcons.Report },
   ]
 
   return (
     <Layout>
       <style>{GLOBAL_STYLES}</style>
       <div style={{ padding: P, maxWidth: 1200, margin: '0 auto' }}>
-        <PageHeader title="Matangazo (Ads)" subtitle="Simamia advertisers, matangazo, na ufuatilie utendaji kwenye routers zote" />
+        <PageHeader
+          title={tt('ads_page_title', 'Matangazo (Ads)')}
+          subtitle={tt('ads_page_subtitle', 'Simamia advertisers, matangazo, na ufuatilie utendaji kwenye routers zote')}
+        />
 
         <div style={{ display: 'flex', gap: 6, marginBottom: '1.25rem', flexWrap: 'wrap', borderBottom: '1px solid var(--gray-200)', paddingBottom: 2 }}>
           {TABS.map(x => (
@@ -960,7 +990,7 @@ export function AdminAds() {
 
 // ── ADVERTISERS TAB ───────────────────────────────────────
 function AdvertisersTab() {
-  const { t } = useLang()
+  const { t, tt } = useAdsLang()
   const { alert, show } = useAlert()
   const [items, setItems] = useState<Advertiser[]>([])
   const [loading, setLoading] = useState(true)
@@ -980,6 +1010,7 @@ function AdvertisersTab() {
     if (!form.name) { show('error', t('fill_required')); return }
     setSaving(true)
     try {
+      // Advertiser hana faili - JSON ya kawaida inatosha, hakuna FormData hapa
       if (editing) await api.patch(`${ADV_URL}${editing.id}/`, form)
       else await api.post(ADV_URL, form)
       show('success', `${form.name} ${editing ? t('updated_success') : t('created_success')}`)
@@ -1010,7 +1041,7 @@ function AdvertisersTab() {
         </div>
         <Badge text={a.is_active ? t('active') : t('inactive')} color={a.is_active ? 'green' : 'red'} />
       </div>
-      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>Matangazo: <strong>{a.ads_count}</strong></div>
+      <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 12 }}>{tt('ads_label_ads_count', 'Matangazo')}: <strong>{a.ads_count}</strong></div>
       <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 10 }}><ActionBtns a={a} /></div>
     </div>
   )
@@ -1018,13 +1049,13 @@ function AdvertisersTab() {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-        <PrimaryBtn onClick={openCreate}><Icons.IcoPlus /> Ongeza Advertiser</PrimaryBtn>
+        <PrimaryBtn onClick={openCreate}><Icons.IcoPlus /> {tt('ads_add_advertiser', 'Ongeza Advertiser')}</PrimaryBtn>
       </div>
       {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
       <div className="ap-table-wrap">
         <Card>
-          <Table loading={loading} headers={['Jina', 'Mawasiliano', 'Matangazo', t('status'), '']}
+          <Table loading={loading} headers={[tt('ads_col_name', 'Jina'), tt('ads_col_contact', 'Mawasiliano'), tt('ads_col_ads_count', 'Matangazo'), t('status'), '']}
             rows={items.map(a => [
               <span style={{ fontWeight: 600, fontSize: 13 }}>{a.name}</span>,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{a.contact_phone || '—'}{a.contact_email ? ` · ${a.contact_email}` : ''}</span>,
@@ -1032,27 +1063,27 @@ function AdvertisersTab() {
               <Badge text={a.is_active ? t('active') : t('inactive')} color={a.is_active ? 'green' : 'red'} />,
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}><ActionBtns a={a} /></div>,
             ])}
-            emptyMessage="Hakuna advertiser bado."
+            emptyMessage={tt('ads_no_advertisers', 'Hakuna advertiser bado.')}
           />
         </Card>
       </div>
       <div className="ap-cards-wrap">
         {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
-          : items.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>Hakuna advertiser bado.</div>
+          : items.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{tt('ads_no_advertisers', 'Hakuna advertiser bado.')}</div>
           : <div className="ap-cards-grid">{items.map(a => <AdvCard key={a.id} a={a} />)}</div>
         }
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `Hariri: ${editing.name}` : 'Advertiser Mpya'}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `${t('edit')}: ${editing.name}` : tt('ads_new_advertiser', 'Advertiser Mpya')}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Input label="Jina la biashara *" placeholder="Coca-Cola Tanzania" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
+          <Input label={`${tt('ads_business_name', 'Jina la biashara')} *`} placeholder="Coca-Cola Tanzania" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
           <FormRow>
-            <Input label="Namba ya simu" placeholder="0712345678" value={form.contact_phone} onChange={(e: any) => setForm({ ...form, contact_phone: e.target.value })} />
-            <Input label="Barua pepe" type="email" placeholder="ads@example.com" value={form.contact_email} onChange={(e: any) => setForm({ ...form, contact_email: e.target.value })} />
+            <Input label={tt('phone', 'Namba ya simu')} placeholder="0712345678" value={form.contact_phone} onChange={(e: any) => setForm({ ...form, contact_phone: e.target.value })} />
+            <Input label={tt('email', 'Barua pepe')} type="email" placeholder="ads@example.com" value={form.contact_email} onChange={(e: any) => setForm({ ...form, contact_email: e.target.value })} />
           </FormRow>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray-700)' }}>
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-            Advertiser hai
+            {tt('ads_advertiser_active', 'Advertiser hai')}
           </label>
           <FormActions>
             <Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
@@ -1060,14 +1091,14 @@ function AdvertisersTab() {
           </FormActions>
         </div>
       </Modal>
-      <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Advertiser" message={`Futa "${showDelete?.name}"? Matangazo yake yote yatafutwa pia.`} danger />
+      <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={tt('ads_delete_advertiser', 'Futa Advertiser')} message={`${tt('ads_delete_advertiser_confirm', 'Futa')} "${showDelete?.name}"? ${tt('ads_delete_advertiser_warning', 'Matangazo yake yote yatafutwa pia.')}`} danger />
     </>
   )
 }
 
 // ── ADS TAB ────────────────────────────────────────────────
 function AdsTab() {
-  const { t } = useLang()
+  const { t, tt } = useAdsLang()
   const { alert, show } = useAlert()
   const [items, setItems] = useState<Advertisement[]>([])
   const [advertisers, setAdvertisers] = useState<Advertiser[]>([])
@@ -1120,11 +1151,20 @@ function AdsTab() {
       fd.append('mikrotik_profile', form.mikrotik_profile)
       fd.append('priority', form.priority)
       fd.append('is_active', String(form.is_active))
+      // Kila router ID lazima iwe field yake tofauti (append moja moja) -
+      // SIYO JSON.stringify(array) - hii ndiyo muundo sahihi wa multipart
+      // unaokubalika na DRF's PrimaryKeyRelatedField(many=True).
       form.router_ids.forEach(id => fd.append('router_ids', String(id)))
       if (mediaFile) fd.append('media_file', mediaFile)
 
-      if (editing) await api.patch(`${ADS_URL}${editing.id}/`, fd)
-      else await api.post(ADS_URL, fd)
+      // FIX MUHIMU: tunaondoa Content-Type ya default (application/json)
+      // ya axios instance kwa request hii pekee, ili browser iweke
+      // 'multipart/form-data; boundary=...' sahihi yenyewe. Bila hii,
+      // FormData inafika backend ikiwa imevunjika (media_file 'not a
+      // file', router_ids 'expected list but got str').
+      if (editing) await api.patch(`${ADS_URL}${editing.id}/`, fd, FORM_DATA_CONFIG)
+      else await api.post(ADS_URL, fd, FORM_DATA_CONFIG)
+
       show('success', `${form.title} ${editing ? t('updated_success') : t('created_success')}`)
       setShowModal(false); fetchAll()
     } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
@@ -1138,13 +1178,17 @@ function AdsTab() {
   }
 
   const toggleActive = async (ad: Advertisement) => {
-    try { await api.patch(`${ADS_URL}${ad.id}/`, { is_active: !ad.is_active }); show('success', ad.is_active ? 'Tangazo limezimwa' : 'Tangazo limewashwa'); fetchAll() }
-    catch { show('error', t('error')) }
+    try {
+      // Field moja tu inabadilika, si file - JSON ya kawaida (si FormData) inatosha hapa
+      await api.patch(`${ADS_URL}${ad.id}/`, { is_active: !ad.is_active })
+      show('success', ad.is_active ? tt('ads_disabled', 'Tangazo limezimwa') : tt('ads_enabled', 'Tangazo limewashwa'))
+      fetchAll()
+    } catch { show('error', t('error')) }
   }
 
   const ActionBtns = ({ ad }: { ad: Advertisement }) => (
     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-      <ABtn icon={ad.is_active ? Icons.IcoOn : Icons.IcoOn} tip={ad.is_active ? 'Zima' : 'Washa'} cls={ad.is_active ? 'ap-btn-toggle-on' : 'ap-btn-toggle-off'} onClick={() => toggleActive(ad)} />
+      <ABtn icon={Icons.IcoOn} tip={ad.is_active ? tt('ads_turn_off', 'Zima') : tt('ads_turn_on', 'Washa')} cls={ad.is_active ? 'ap-btn-toggle-on' : 'ap-btn-toggle-off'} onClick={() => toggleActive(ad)} />
       <ABtn icon={Icons.IcoEdit} tip={t('edit')} cls="ap-btn-edit" onClick={() => openEdit(ad)} />
       <ABtn icon={Icons.IcoDelete} tip={t('delete')} cls="ap-btn-delete" onClick={() => setShowDelete(ad)} />
     </div>
@@ -1160,15 +1204,15 @@ function AdsTab() {
         <Badge text={adTypeMeta[ad.ad_type].label} color={adTypeMeta[ad.ad_type].color} />
       </div>
       <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 8 }}>
-        Routers: {ad.router_names.length > 0 ? ad.router_names.join(', ') : 'Zote (platform nzima)'}
+        {tt('ads_routers_label', 'Routers')}: {ad.router_names.length > 0 ? ad.router_names.join(', ') : tt('ads_all_routers', 'Zote (platform nzima)')}
       </div>
       {ad.ad_type === 'sponsored_access' && (
         <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8, background: '#f0fdf4', padding: '4px 8px', borderRadius: 6 }}>
-          {ad.sponsored_minutes} dakika bure · cooldown {ad.cooldown_hours}h{ad.max_daily_grants_per_router > 0 ? ` · kikomo/siku ${ad.max_daily_grants_per_router}` : ''}
+          {ad.sponsored_minutes} {tt('ads_minutes_free', 'dakika bure')} · cooldown {ad.cooldown_hours}h{ad.max_daily_grants_per_router > 0 ? ` · ${tt('ads_daily_cap', 'kikomo/siku')} ${ad.max_daily_grants_per_router}` : ''}
         </div>
       )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Badge text={ad.is_currently_active ? 'Inaendesha' : 'Haifanyi kazi'} color={ad.is_currently_active ? 'green' : 'gray'} />
+        <Badge text={ad.is_currently_active ? tt('ads_running', 'Inaendesha') : tt('ads_not_running', 'Haifanyi kazi')} color={ad.is_currently_active ? 'green' : 'gray'} />
         <ActionBtns ad={ad} />
       </div>
     </div>
@@ -1179,72 +1223,72 @@ function AdsTab() {
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', gap: 8 }}>
         {advertisers.length === 0 && !loading && (
           <span style={{ fontSize: 12, color: '#92400e', background: '#fefce8', padding: '6px 12px', borderRadius: 8, alignSelf: 'center' }}>
-            Ongeza Advertiser kwanza kwenye tab "Advertisers"
+            {tt('ads_add_advertiser_first', 'Ongeza Advertiser kwanza kwenye tab "Advertisers"')}
           </span>
         )}
-        <PrimaryBtn onClick={openCreate} disabled={advertisers.length === 0}><Icons.IcoPlus /> Tangazo Jipya</PrimaryBtn>
+        <PrimaryBtn onClick={openCreate} disabled={advertisers.length === 0}><Icons.IcoPlus /> {tt('ads_new_ad', 'Tangazo Jipya')}</PrimaryBtn>
       </div>
       {alert && <div style={{ marginBottom: '1rem', animation: 'apFadeUp 0.3s ease' }}><Alert type={alert.type} message={alert.msg} /></div>}
 
       <div className="ap-table-wrap">
         <Card>
-          <Table loading={loading} headers={['Tangazo', 'Advertiser', 'Aina', 'Routers', t('status'), '']}
+          <Table loading={loading} headers={[tt('ads_col_ad', 'Tangazo'), tt('ads_col_advertiser', 'Advertiser'), tt('ads_col_type', 'Aina'), tt('ads_routers_label', 'Routers'), t('status'), '']}
             rows={items.map(ad => [
               <span style={{ fontWeight: 600, fontSize: 13 }}>{ad.title}</span>,
               <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{ad.advertiser_name}</span>,
               <Badge text={adTypeMeta[ad.ad_type].label} color={adTypeMeta[ad.ad_type].color} />,
-              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{ad.router_names.length > 0 ? ad.router_names.join(', ') : 'Zote'}</span>,
-              <Badge text={ad.is_currently_active ? 'Inaendesha' : 'Imezimwa'} color={ad.is_currently_active ? 'green' : 'gray'} />,
+              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{ad.router_names.length > 0 ? ad.router_names.join(', ') : tt('ads_all', 'Zote')}</span>,
+              <Badge text={ad.is_currently_active ? tt('ads_running', 'Inaendesha') : tt('ads_disabled_status', 'Imezimwa')} color={ad.is_currently_active ? 'green' : 'gray'} />,
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}><ActionBtns ad={ad} /></div>,
             ])}
-            emptyMessage="Hakuna tangazo bado."
+            emptyMessage={tt('ads_no_ads', 'Hakuna tangazo bado.')}
           />
         </Card>
       </div>
       <div className="ap-cards-wrap">
         {loading ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af' }}><Icons.IcoSpin /></div>
-          : items.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>Hakuna tangazo bado.</div>
+          : items.length === 0 ? <div style={{ textAlign: 'center', padding: '3rem', color: '#9ca3af', fontSize: 13 }}>{tt('ads_no_ads', 'Hakuna tangazo bado.')}</div>
           : <div className="ap-cards-grid">{items.map(ad => <AdCard key={ad.id} ad={ad} />)}</div>
         }
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `Hariri: ${editing.title}` : 'Tangazo Jipya'}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `${t('edit')}: ${editing.title}` : tt('ads_new_ad', 'Tangazo Jipya')}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Input label="Kichwa cha tangazo *" placeholder="Punguzo la Vodacom Weekend" value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} />
+          <Input label={`${tt('ads_ad_title', 'Kichwa cha tangazo')} *`} placeholder="Punguzo la Vodacom Weekend" value={form.title} onChange={(e: any) => setForm({ ...form, title: e.target.value })} />
           <FormRow>
-            <Select label="Advertiser *" value={form.advertiser} onChange={(e: any) => setForm({ ...form, advertiser: e.target.value })}>
-              <option value="">— chagua —</option>
+            <Select label={`Advertiser *`} value={form.advertiser} onChange={(e: any) => setForm({ ...form, advertiser: e.target.value })}>
+              <option value="">— {tt('ads_choose', 'chagua')} —</option>
               {advertisers.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
             </Select>
-            <Select label="Aina ya tangazo" value={form.ad_type} onChange={(e: any) => setForm({ ...form, ad_type: e.target.value })}>
-              <option value="banner">Banner (picha)</option>
-              <option value="video">Video</option>
+            <Select label={tt('ads_ad_type', 'Aina ya tangazo')} value={form.ad_type} onChange={(e: any) => setForm({ ...form, ad_type: e.target.value })}>
+              <option value="banner">{tt('ads_type_banner', 'Banner (picha)')}</option>
+              <option value="video">{tt('ads_type_video', 'Video')}</option>
               <option value="sponsored_access">Sponsored Free Access</option>
             </Select>
           </FormRow>
 
-          <RawInput label={`Faili la ${form.ad_type === 'video' ? 'video' : 'picha'}${editing ? ' (acha tupu kuendelea na iliyopo)' : ''}`}>
+          <RawInput label={`${tt('ads_media_file', 'Faili la')} ${form.ad_type === 'video' ? tt('ads_video', 'video') : tt('ads_image', 'picha')}${editing ? ` (${tt('ads_leave_empty_keep', 'acha tupu kuendelea na iliyopo')})` : ''}`}>
             <input type="file" accept={form.ad_type === 'video' ? 'video/*' : 'image/*'} onChange={(e) => setMediaFile(e.target.files?.[0] || null)} style={rawInputStyle} />
           </RawInput>
 
           {form.ad_type !== 'sponsored_access' && (
-            <Input label="Link ya kubonyeza (hiari)" placeholder="https://..." value={form.click_url} onChange={(e: any) => setForm({ ...form, click_url: e.target.value })} />
+            <Input label={tt('ads_click_link', 'Link ya kubonyeza (hiari)')} placeholder="https://..." value={form.click_url} onChange={(e: any) => setForm({ ...form, click_url: e.target.value })} />
           )}
 
           {form.ad_type === 'sponsored_access' && (
             <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
               <FormRow>
-                <Input label="Dakika za bure" type="number" value={form.sponsored_minutes} onChange={(e: any) => setForm({ ...form, sponsored_minutes: e.target.value })} />
-                <Input label="Cooldown (masaa)" type="number" value={form.cooldown_hours} onChange={(e: any) => setForm({ ...form, cooldown_hours: e.target.value })} />
+                <Input label={tt('ads_free_minutes', 'Dakika za bure')} type="number" value={form.sponsored_minutes} onChange={(e: any) => setForm({ ...form, sponsored_minutes: e.target.value })} />
+                <Input label={`Cooldown (${tt('hours', 'masaa')})`} type="number" value={form.cooldown_hours} onChange={(e: any) => setForm({ ...form, cooldown_hours: e.target.value })} />
               </FormRow>
               <FormRow>
-                <Input label="Kikomo/siku/router (0=hakuna)" type="number" value={form.max_daily_grants_per_router} onChange={(e: any) => setForm({ ...form, max_daily_grants_per_router: e.target.value })} />
+                <Input label={tt('ads_daily_cap_per_router', 'Kikomo/siku/router (0=hakuna)')} type="number" value={form.max_daily_grants_per_router} onChange={(e: any) => setForm({ ...form, max_daily_grants_per_router: e.target.value })} />
                 <Input label="MikroTik profile" value={form.mikrotik_profile} onChange={(e: any) => setForm({ ...form, mikrotik_profile: e.target.value })} />
               </FormRow>
             </div>
           )}
 
-          <RawInput label="Routers zinazolengwa (acha tupu = zote)">
+          <RawInput label={tt('ads_target_routers', 'Routers zinazolengwa (acha tupu = zote)')}>
             <div style={{ maxHeight: 160, overflowY: 'auto', border: '1.5px solid var(--gray-200)', borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {routers.map(r => (
                 <label key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, padding: '4px 2px', cursor: 'pointer' }}>
@@ -1252,15 +1296,15 @@ function AdsTab() {
                   {r.name}{r.client_name ? <span style={{ color: 'var(--gray-400)' }}> ({r.client_name})</span> : null}
                 </label>
               ))}
-              {routers.length === 0 && <div style={{ fontSize: 12, color: 'var(--gray-400)', padding: 6 }}>Inapakia routers...</div>}
+              {routers.length === 0 && <div style={{ fontSize: 12, color: 'var(--gray-400)', padding: 6 }}>{tt('ads_loading_routers', 'Inapakia routers...')}</div>}
             </div>
           </RawInput>
 
-          <Input label="Kipaumbele (namba kubwa = kipaumbele zaidi)" type="number" value={form.priority} onChange={(e: any) => setForm({ ...form, priority: e.target.value })} />
+          <Input label={tt('ads_priority', 'Kipaumbele (namba kubwa = kipaumbele zaidi)')} type="number" value={form.priority} onChange={(e: any) => setForm({ ...form, priority: e.target.value })} />
 
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--gray-700)' }}>
             <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-            Tangazo hai
+            {tt('ads_ad_active', 'Tangazo hai')}
           </label>
 
           <FormActions>
@@ -1269,23 +1313,24 @@ function AdsTab() {
           </FormActions>
         </div>
       </Modal>
-      <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title="Futa Tangazo" message={`Futa "${showDelete?.title}"?`} danger />
+      <ConfirmDialog open={!!showDelete} onClose={() => setShowDelete(null)} onConfirm={handleDelete} title={tt('ads_delete_ad', 'Futa Tangazo')} message={`${tt('ads_delete_ad_confirm', 'Futa')} "${showDelete?.title}"?`} danger />
     </>
   )
 }
 
 // ── REPORT TAB ─────────────────────────────────────────────
 function AdsReportTab() {
+  const { tt } = useAdsLang()
   const [report, setReport] = useState<AdsReport | null>(null)
   const [loading, setLoading] = useState(true)
   useEffect(() => { api.get(REPORT_URL).then(r => { setReport(r.data); setLoading(false) }).catch(() => setLoading(false)) }, [])
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: '0.85rem' }}>
-      <StatCard title="Ads Zilizoonekana" value={loading ? '—' : report?.total_impressions ?? 0} icon={<AdIcons.Megaphone />} color="#6366f1" />
-      <StatCard title="Ads Zilizobonyezwa" value={loading ? '—' : report?.total_clicks ?? 0} icon={<AdIcons.Click />} color="#3b82f6" />
+      <StatCard title={tt('ads_report_impressions', 'Ads Zilizoonekana')} value={loading ? '—' : report?.total_impressions ?? 0} icon={<AdIcons.Megaphone />} color="#6366f1" />
+      <StatCard title={tt('ads_report_clicks', 'Ads Zilizobonyezwa')} value={loading ? '—' : report?.total_clicks ?? 0} icon={<AdIcons.Click />} color="#3b82f6" />
       <StatCard title="CTR" value={loading ? '—' : `${report?.click_through_rate_percent ?? 0}%`} icon={<AdIcons.Report />} color="#f59e0b" />
-      <StatCard title="Sponsored Grants" value={loading ? '—' : report?.total_sponsored_grants ?? 0} icon={<AdIcons.Gift />} color="#10b981" />
+      <StatCard title={tt('ads_report_sponsored_grants', 'Sponsored Grants')} value={loading ? '—' : report?.total_sponsored_grants ?? 0} icon={<AdIcons.Gift />} color="#10b981" />
     </div>
   )
 }
