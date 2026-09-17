@@ -778,8 +778,6 @@ export function AdminDevices() {
   const fetchClients = () => { api.get('/clients/').then(r => setClients(r.data.results || r.data)) }
   useEffect(() => { fetchDevices(); fetchPending(); fetchClients() }, [])
 
-  const clientName = (id: number) => clients.find(c => c.id === id)?.business_name || '—'
-
   const openEdit = (d: any) => { setEditDev(d); setForm({ name: d.name, network: d.network, lipa_number: d.lipa_number, phone_number: d.phone_number, device_id: d.device_id, description: d.description || '', shared_with: d.shared_with || [] }); setShowModal(true) }
   const openCreate = () => { setEditDev(null); setForm({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '', shared_with: [] }); setShowModal(true) }
   const handleSave = async () => {
