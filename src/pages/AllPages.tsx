@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import api from '../lib/api'
 import Layout from '../components/Layout'
-import { StatCard, Table, Badge, PageHeader, Card, CardHeader, Button, Modal, Input, Select, Alert, FormRow, FormActions, ConfirmDialog } from '../components/UI'
+import { StatCard, Table, Badge, PageHeader, Card, CardHeader, Button, Modal, Input, Select, Alert, FormRow, FormActions, ConfirmDialog, Tabs } from '../components/UI'
 import { useLang } from '../contexts/LangContext'
 import { useAuth } from '../contexts/AuthContext'
 import { MikroTikPermissionsModal } from './MikroTikManager'
@@ -139,6 +139,9 @@ const Icons = {
   IcoActive: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
   IcoUsed:   () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>,
   IcoExpired:() => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,
+  IcoClaim:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>,
+  IcoKey:    () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M10.5 11.5L22 0"/><path d="M15 6l3 3M18 3l3 3"/></svg>,
+  IcoShare:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
 }
 
 // ── REUSABLE: Tooltip wrapper ──────────────────────────────
@@ -753,17 +756,32 @@ export function AdminVouchers() {
 export function AdminDevices() {
   const { t } = useLang()
   const { alert, show } = useAlert()
+  const [tab, setTab] = useState<'active' | 'pending'>('active')
   const [devices, setDevices] = useState<any[]>([])
+  const [pending, setPending] = useState<any[]>([])
+  const [clients, setClients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingPending, setLoadingPending] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editDev, setEditDev] = useState<any>(null)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '' })
+  const [form, setForm] = useState({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '', shared_with: [] as number[] })
+  const [claimTarget, setClaimTarget] = useState<any>(null)
+  const [claimForm, setClaimForm] = useState({ client: '', name: '', network: 'vodacom', lipa_number: '', phone_number: '', shared_with: [] as number[] })
+  const [claiming, setClaiming] = useState(false)
+  const [claimedKey, setClaimedKey] = useState<{ device: string; key: string } | null>(null)
+  const [confirmRegen, setConfirmRegen] = useState<any>(null)
   const NETS = [{ value: 'vodacom', label: 'Vodacom M-Pesa' }, { value: 'tigo', label: 'Tigo Pesa' }, { value: 'airtel', label: 'Airtel Money' }, { value: 'halo', label: 'HaloPesa' }]
-  const fetchDevices = () => { setLoading(true); api.get('/devices/').then(r => { setDevices(r.data.results || r.data); setLoading(false) }) }
-  useEffect(() => { fetchDevices() }, [])
-  const openEdit = (d: any) => { setEditDev(d); setForm({ name: d.name, network: d.network, lipa_number: d.lipa_number, phone_number: d.phone_number, device_id: d.device_id, description: d.description || '' }); setShowModal(true) }
-  const openCreate = () => { setEditDev(null); setForm({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '' }); setShowModal(true) }
+
+  const fetchDevices = () => { setLoading(true); api.get('/devices/').then(r => { setDevices((r.data.results || r.data).filter((d: any) => d.status !== 'unclaimed')); setLoading(false) }).catch(() => setLoading(false)) }
+  const fetchPending = () => { setLoadingPending(true); api.get('/devices/pending/').then(r => { setPending(r.data.results || r.data); setLoadingPending(false) }).catch(() => { setPending([]); setLoadingPending(false) }) }
+  const fetchClients = () => { api.get('/clients/').then(r => setClients(r.data.results || r.data)) }
+  useEffect(() => { fetchDevices(); fetchPending(); fetchClients() }, [])
+
+  const clientName = (id: number) => clients.find(c => c.id === id)?.business_name || '—'
+
+  const openEdit = (d: any) => { setEditDev(d); setForm({ name: d.name, network: d.network, lipa_number: d.lipa_number, phone_number: d.phone_number, device_id: d.device_id, description: d.description || '', shared_with: d.shared_with || [] }); setShowModal(true) }
+  const openCreate = () => { setEditDev(null); setForm({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '', shared_with: [] }); setShowModal(true) }
   const handleSave = async () => {
     if (!form.name || !form.lipa_number || !form.phone_number || !form.device_id) { show('error', t('fill_required')); return }
     setSaving(true)
@@ -776,6 +794,50 @@ export function AdminDevices() {
     try { await api.delete(`/devices/${d.id}/`); show('success', t('deleted_success')); fetchDevices() }
     catch { show('error', t('error')) }
   }
+  const handleRegenerate = async (d: any) => {
+    try {
+      const r = await api.post(`/devices/${d.id}/regenerate-key/`)
+      setClaimedKey({ device: d.name, key: r.data.api_key })
+      show('success', t('updated_success'))
+    } catch { show('error', t('error')) }
+  }
+
+  const openClaim = (d: any) => {
+    setClaimTarget(d)
+    setClaimForm({ client: '', name: '', network: 'vodacom', lipa_number: '', phone_number: '', shared_with: [] })
+  }
+  const handleClaim = async () => {
+    if (!claimForm.client || !claimForm.name || !claimForm.lipa_number) { show('error', t('fill_required')); return }
+    setClaiming(true)
+    try {
+      const r = await api.post(`/devices/${claimTarget.id}/claim/`, claimForm)
+      show('success', t('updated_success'))
+      setClaimTarget(null)
+      if (r.data.api_key) setClaimedKey({ device: claimForm.name, key: r.data.api_key })
+      fetchPending(); fetchDevices()
+    } catch (e: any) { show('error', JSON.stringify(e.response?.data || t('error'))) }
+    finally { setClaiming(false) }
+  }
+
+  const toggleShared = (list: number[], id: number, set: (v: number[]) => void) => {
+    set(list.includes(id) ? list.filter(x => x !== id) : [...list, id])
+  }
+
+  const SharedWithPicker = ({ selected, onChange, exclude }: { selected: number[]; onChange: (v: number[]) => void; exclude?: number }) => (
+    <div>
+      <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-700)' }}>{t('shared_with')}</label>
+      <div style={{ fontSize: 11, color: 'var(--gray-400)', marginBottom: 6 }}>{t('shared_with_hint')}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 140, overflowY: 'auto', border: '1px solid var(--gray-100)', borderRadius: 8, padding: 8 }}>
+        {clients.filter(c => c.id !== exclude).map(c => (
+          <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+            <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggleShared(selected, c.id, onChange)} />
+            {c.business_name}
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
     <Layout>
       <style>{GLOBAL_STYLES}</style>
@@ -787,24 +849,54 @@ export function AdminDevices() {
         <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 9, padding: '0.75rem 1rem', marginBottom: '1.25rem', fontSize: 13, color: '#1e40af', animation: 'apFadeUp 0.3s ease' }}>
           Ukibadilisha lipa namba hapa, clients wote wataona mabadiliko automatically.
         </div>
-        <Card>
-          <Table loading={loading} headers={[t('device_name'), t('network'), t('lipa_number'), 'SIM', 'ID', t('last_seen'), t('status'), '']}
-            rows={devices.map((d, idx) => [
-              <div style={{ animation: `apFadeUp 0.3s ease ${idx * 40}ms both` }}><div style={{ fontWeight: 600, fontSize: 13 }}>{d.name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.description}</div></div>,
-              <Badge text={d.network_display} color={nc[d.network] || 'gray'} />,
-              <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>{d.lipa_number}</span>,
-              <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{d.phone_number}</span>,
-              <code style={{ fontSize: 11 }}>{d.device_id}</code>,
-              d.last_seen ? new Date(d.last_seen).toLocaleString('sw-TZ') : t('never'),
-              <Badge text={d.is_active ? t('active') : t('inactive')} color={d.is_active ? 'green' : 'red'} />,
-              <div style={{ display: 'flex', gap: 4 }}>
-                <ABtn icon={Icons.IcoEdit}   tip={t('edit')}   cls="ap-btn-edit"   onClick={() => openEdit(d)} />
-                <ABtn icon={Icons.IcoDelete} tip={t('delete')} cls="ap-btn-delete" onClick={() => handleDelete(d)} />
-              </div>,
-            ])}
-            emptyMessage={t('no_devices_admin')}
-          />
-        </Card>
+
+        <Tabs
+          tabs={[
+            { key: 'active', label: t('active_devices_tab'), icon: <Icons.Device /> },
+            { key: 'pending', label: `${t('pending_devices')}${pending.length ? ` (${pending.length})` : ''}`, icon: <Icons.IcoSync /> },
+          ]}
+          active={tab}
+          onChange={(k) => setTab(k as any)}
+        />
+
+        {tab === 'active' && (
+          <Card>
+            <Table loading={loading} headers={[t('device_name'), t('network'), t('lipa_number'), 'SIM', 'ID', t('shared_with'), t('last_seen'), t('status'), '']}
+              rows={devices.map((d, idx) => [
+                <div style={{ animation: `apFadeUp 0.3s ease ${idx * 40}ms both` }}><div style={{ fontWeight: 600, fontSize: 13 }}>{d.name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.description}</div></div>,
+                <Badge text={d.network_display} color={nc[d.network] || 'gray'} />,
+                <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 15, color: 'var(--primary)' }}>{d.lipa_number}</span>,
+                <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{d.phone_number}</span>,
+                <code style={{ fontSize: 11 }}>{d.device_id}</code>,
+                d.shared_with_names?.length ? <Badge text={d.shared_with_names.join(', ')} color="purple" /> : <span style={{ color: 'var(--gray-300)' }}>{t('none')}</span>,
+                d.last_seen ? new Date(d.last_seen).toLocaleString('sw-TZ') : t('never'),
+                <Badge text={d.is_active ? t('active') : t('inactive')} color={d.is_active ? 'green' : 'red'} />,
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <ABtn icon={Icons.IcoEdit}   tip={t('edit')}            cls="ap-btn-edit"   onClick={() => openEdit(d)} />
+                  <ABtn icon={Icons.IcoKey}    tip={t('regenerate_key')}  cls="ap-btn-mikrotik" onClick={() => setConfirmRegen(d)} />
+                  <ABtn icon={Icons.IcoDelete} tip={t('delete')}          cls="ap-btn-delete" onClick={() => handleDelete(d)} />
+                </div>,
+              ])}
+              emptyMessage={t('no_devices_admin')}
+            />
+          </Card>
+        )}
+
+        {tab === 'pending' && (
+          <Card>
+            <Table loading={loadingPending} headers={[t('factory_id'), t('first_seen'), t('last_seen'), '']}
+              rows={pending.map((d, idx) => [
+                <code style={{ fontSize: 12, animation: `apFadeUp 0.3s ease ${idx * 40}ms both` }}>{d.device_id}</code>,
+                new Date(d.created_at).toLocaleString('sw-TZ'),
+                d.last_seen ? new Date(d.last_seen).toLocaleString('sw-TZ') : t('never'),
+                <ABtn icon={Icons.IcoClaim} tip={t('claim')} cls="ap-btn-edit" onClick={() => openClaim(d)} />,
+              ])}
+              emptyMessage={t('no_pending_devices')}
+            />
+          </Card>
+        )}
+
+        {/* Modal: unda/hariri device iliyokwishaclaimwa */}
         <Modal open={showModal} onClose={() => setShowModal(false)} title={editDev ? `${t('edit_device')}: ${editDev.name}` : t('add_device')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Input label={`${t('device_name')} *`} placeholder="Vodacom Device 1" value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} />
@@ -817,6 +909,7 @@ export function AdminDevices() {
             </FormRow>
             <Input label={`${t('device_id')} *`} placeholder="VODA_001" value={form.device_id} onChange={(e: any) => setForm({ ...form, device_id: e.target.value })} />
             <Input label={t('description')} placeholder="Device ya Dar es Salaam" value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} />
+            {editDev && <SharedWithPicker selected={form.shared_with} onChange={(v) => setForm({ ...form, shared_with: v })} exclude={editDev.client} />}
             <div style={{ background: 'var(--warning-light)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#92400e' }}>{t('device_id_hint')}</div>
             <FormActions>
               <Button variant="ghost" onClick={() => setShowModal(false)}>{t('cancel')}</Button>
@@ -824,6 +917,49 @@ export function AdminDevices() {
             </FormActions>
           </div>
         </Modal>
+
+        {/* Modal: weka client kwa kifaa kipya (unclaimed) */}
+        <Modal open={!!claimTarget} onClose={() => setClaimTarget(null)} title={`${t('claim_device')}: ${claimTarget?.device_id || ''}`}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Select label={`${t('clients')} *`} value={claimForm.client} onChange={(e: any) => setClaimForm({ ...claimForm, client: e.target.value })}>
+              <option value="">—</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.business_name}</option>)}
+            </Select>
+            <Input label={`${t('device_name')} *`} placeholder="Vodacom Device 1" value={claimForm.name} onChange={(e: any) => setClaimForm({ ...claimForm, name: e.target.value })} />
+            <Select label={`${t('network')} *`} value={claimForm.network} onChange={(e: any) => setClaimForm({ ...claimForm, network: e.target.value })}>
+              {NETS.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
+            </Select>
+            <FormRow>
+              <Input label={`${t('lipa_number')} *`} placeholder="0744123456" value={claimForm.lipa_number} onChange={(e: any) => setClaimForm({ ...claimForm, lipa_number: e.target.value })} />
+              <Input label={t('phone_number')} placeholder="0744123456" value={claimForm.phone_number} onChange={(e: any) => setClaimForm({ ...claimForm, phone_number: e.target.value })} />
+            </FormRow>
+            <SharedWithPicker selected={claimForm.shared_with} onChange={(v) => setClaimForm({ ...claimForm, shared_with: v })} exclude={claimForm.client ? Number(claimForm.client) : undefined} />
+            <FormActions>
+              <Button variant="ghost" onClick={() => setClaimTarget(null)}>{t('cancel')}</Button>
+              <Button onClick={handleClaim} disabled={claiming}>{claiming ? t('loading') : t('claim')}</Button>
+            </FormActions>
+          </div>
+        </Modal>
+
+        {/* api_key inaonyeshwa MARA MOJA TU baada ya claim au regenerate */}
+        <Modal open={!!claimedKey} onClose={() => setClaimedKey(null)} title={`API Key: ${claimedKey?.device || ''}`}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ background: 'var(--warning-light)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#92400e' }}>{t('api_key_shown_once')}</div>
+            <code style={{ fontSize: 13, background: 'var(--gray-100)', padding: '10px 12px', borderRadius: 8, wordBreak: 'break-all', userSelect: 'all' }}>{claimedKey?.key}</code>
+            <FormActions>
+              <Button onClick={() => setClaimedKey(null)}>{t('confirm')}</Button>
+            </FormActions>
+          </div>
+        </Modal>
+
+        <ConfirmDialog
+          open={!!confirmRegen}
+          onClose={() => setConfirmRegen(null)}
+          onConfirm={() => confirmRegen && handleRegenerate(confirmRegen)}
+          title={t('regenerate_key')}
+          message={t('regenerate_key_confirm')}
+          danger
+        />
       </div>
     </Layout>
 
