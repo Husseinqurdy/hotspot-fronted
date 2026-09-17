@@ -1544,6 +1544,12 @@ export function ClientDashboard() {
   useEffect(() => { api.get('/dashboard/client/').then(r => { setData(r.data); setLoaded(true) }) }, [])
   const s = data?.stats
   const identifier = data?.client?.identifier || ''
+  // MPYA: client asiye na sharing yoyote (angalia
+  // apps/clients/models.py::Client.requires_payment_identifier())
+  // haihitaji tena kuonyesha 'YOUR NUMBER' wala kumwambia customer
+  // aongeze chochote kwenye bei — device_id peke yake tayari
+  // inamtambulisha kikamilifu.
+  const requiresIdentifier = data?.client?.requires_payment_identifier ?? true
   const balance = Number(data?.client?.balance || 0)
   const lipaNumbers: any[] = data?.lipa_numbers || []
   const primaryLipa = lipaNumbers[0]?.lipa_number || '—'
@@ -1554,6 +1560,18 @@ export function ClientDashboard() {
   const todayVouchers = useCountUp(s?.today_vouchers ?? 0, 750, loaded)
   const todayRevenue  = useCountUp(s?.today_revenue  ?? 0, 1000, loaded)
   const recent = (data?.recent_vouchers || []).slice(0, 6)
+  const paySteps = requiresIdentifier ? [
+    t('pay_step_1'),
+    `${t('pay_step_2')} (${loaded ? identifier : '…'}) ${t('pay_step_2_suffix')}`,
+    loaded && lipaNumbers.length > 0 ? <>{t('pay_step_3_prefix')} <strong style={{ color: '#fbbf24' }}>TZS {loaded ? `50${identifier}` : '…'}</strong> {t('pay_step_3_to')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</> : t('pay_step_3_prefix'),
+    <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>{t('pay_step_4')}<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}><Icons.Check /> {t('automatic')}</span></span>,
+  ] : [
+    // Client asiye na sharing yoyote — hakuna identifier ya
+    // kuongeza, customer analipa bei kamili ya package.
+    t('pay_step_plain_1'),
+    loaded && lipaNumbers.length > 0 ? <>{t('pay_step_plain_2_prefix')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</> : t('pay_step_plain_2_prefix'),
+    <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>{t('pay_step_plain_3')}<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}><Icons.Check /> {t('automatic')}</span></span>,
+  ]
   const statusMap: Record<string, { label: string; color: string; bg: string }> = {
     active:  { label: t('active'), color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
     used:    { label: t('used'), color: '#6b7280', bg: 'rgba(107,114,128,0.1)' },
@@ -1589,7 +1607,7 @@ export function ClientDashboard() {
                       </div>
                     </div>
                   ))}
-                {lipaNumbers.length > 0 && (
+                {lipaNumbers.length > 0 && requiresIdentifier && (
                   <>
                     <div style={{ width: 1, background: 'rgba(255,255,255,0.15)', alignSelf: 'stretch' }} />
                     <div>
@@ -1602,13 +1620,8 @@ export function ClientDashboard() {
               </div>
               <div className="steps-box">
                 <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(165,180,252,0.8)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{t('how_customers_pay')}</p>
-                {[
-                  t('pay_step_1'),
-                  `${t('pay_step_2')} (${loaded ? identifier : '…'}) ${t('pay_step_2_suffix')}`,
-                  loaded && lipaNumbers.length > 0 ? <>{t('pay_step_3_prefix')} <strong style={{ color: '#fbbf24' }}>TZS {loaded ? `50${identifier}` : '…'}</strong> {t('pay_step_3_to')} <strong style={{ color: '#a5b4fc' }}>{primaryLipa}</strong>.</> : t('pay_step_3_prefix'),
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>{t('pay_step_4')}<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(16,185,129,0.15)', color: '#34d399', fontSize: 10, fontWeight: 700, padding: '1px 8px', borderRadius: 20, flexShrink: 0 }}><Icons.Check /> {t('automatic')}</span></span>,
-                ].map((step, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < 3 ? 6 : 0, alignItems: 'flex-start' }}>
+                {paySteps.map((step, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, marginBottom: i < paySteps.length - 1 ? 6 : 0, alignItems: 'flex-start' }}>
                     <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(99,102,241,0.25)', color: '#a5b4fc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                     <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', margin: 0, lineHeight: 1.55 }}>{step}</p>
                   </div>
