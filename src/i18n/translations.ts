@@ -139,6 +139,15 @@ export const translations = {
     api_key_shown_once: 'Hii ndiyo mara pekee api_key itaonyeshwa. Iandike kwenye kifaa sasa.',
     regenerate_key: 'Tengeneza API Key Mpya',
     regenerate_key_confirm: 'Hii itabatilisha api_key ya sasa. Kifaa hakitafanya kazi mpaka lisasishwe na key mpya. Endelea?',
+    battery: 'Betri',
+    signal: 'Mawimbi',
+    backup_status: 'Backup',
+    backup_active: 'BACKUP',
+    restart_device: 'Washa Upya Kifaa',
+    restart_device_confirm: 'Kifaa kitawashwa upya (soft restart). Kitaacha kufanya kazi kwa sekunde chache.',
+    sim_reset: 'Reset SIM',
+    sim_reset_confirm: 'SIM800C itakatiwa umeme kabisa kisha kurudishiwa (hard power-cycle). Tumia hii endapo haipokei/kutuma SMS.',
+    command_sent: 'Amri imetumwa kwa kifaa',
 
     // Common
     loading: 'Inapakia...',
@@ -296,6 +305,15 @@ export const translations = {
     api_key_shown_once: 'This is the only time the api_key will be shown. Write it into the device now.',
     regenerate_key: 'Generate New API Key',
     regenerate_key_confirm: 'This will invalidate the current api_key. The device will stop working until updated with the new key. Continue?',
+    battery: 'Battery',
+    signal: 'Signal',
+    backup_status: 'Backup',
+    backup_active: 'BACKUP',
+    restart_device: 'Restart Device',
+    restart_device_confirm: 'The device will soft-restart. It will stop working for a few seconds.',
+    sim_reset: 'Reset SIM',
+    sim_reset_confirm: 'SIM800C will be fully power-cycled (hard reset). Use this if it stops sending/receiving SMS.',
+    command_sent: 'Command sent to device',
 
     // Common
     loading: 'Loading...',

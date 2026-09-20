@@ -20,6 +20,20 @@ function useAlert() {
 
 const P = '1.25rem'
 const nc: Record<string, any> = { vodacom: 'green', tigo: 'blue', airtel: 'red', halo: 'yellow', unknown: 'gray' }
+
+// CSQ (nguvu ya mawimbi ya GSM, kutoka firmware): 99=haijulikani,
+// <10=dhaifu, 10-19=wastani, 20-31=nzuri
+const signalBadge = (rssi: number | null | undefined) => {
+  if (rssi === null || rssi === undefined || rssi === 99) return <span style={{ color: 'var(--gray-300)' }}>—</span>
+  const color = rssi < 10 ? 'red' : rssi < 20 ? 'yellow' : 'green'
+  return <Badge text={String(rssi)} color={color} />
+}
+
+const batteryText = (percent: number | null | undefined) => {
+  if (percent === null || percent === undefined) return <span style={{ color: 'var(--gray-300)' }}>—</span>
+  const color = percent < 20 ? '#dc2626' : percent < 50 ? '#d97706' : '#16a34a'
+  return <span style={{ fontWeight: 700, fontSize: 13, color }}>{percent.toFixed(0)}%</span>
+}
 const sc: Record<string, any> = { completed: 'green', failed: 'red', processing: 'yellow', pending: 'gray' }
 const vs: Record<string, any> = { active: 'green', used: 'gray', expired: 'red' }
 
@@ -72,6 +86,7 @@ const GLOBAL_STYLES = `
   .ap-btn-toggle-on:hover  { background:#fefce8; color:#ca8a04; }
   .ap-btn-toggle-off:hover { background:#f0fdf4; color:#16a34a; }
   .ap-btn-sync:hover    { background:#f0f9ff; color:#0284c7; }
+  .ap-btn-power:hover   { background:#fef2f2; color:#dc2626; }
 
   .ap-tr { transition:background 0.12s; animation:apFadeUp 0.3s ease both; }
   .ap-tr:hover { background:#f8fafc; }
@@ -142,6 +157,9 @@ const Icons = {
   IcoClaim:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>,
   IcoKey:    () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M10.5 11.5L22 0"/><path d="M15 6l3 3M18 3l3 3"/></svg>,
   IcoShare:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
+  IcoPower:  () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>,
+  IcoBattery:() => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="6" width="18" height="12" rx="2"/><line x1="23" y1="10" x2="23" y2="14"/></svg>,
+  IcoSignal: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="2" y1="20" x2="2" y2="16"/><line x1="8" y1="20" x2="8" y2="12"/><line x1="14" y1="20" x2="14" y2="8"/><line x1="20" y1="20" x2="20" y2="4"/></svg>,
 }
 
 // ── REUSABLE: Tooltip wrapper ──────────────────────────────
@@ -771,12 +789,26 @@ export function AdminDevices() {
   const [claiming, setClaiming] = useState(false)
   const [claimedKey, setClaimedKey] = useState<{ device: string; key: string } | null>(null)
   const [confirmRegen, setConfirmRegen] = useState<any>(null)
+  const [confirmCommand, setConfirmCommand] = useState<{ device: any; action: 'restart' | 'sim_reset' } | null>(null)
+  const [commandLoading, setCommandLoading] = useState<number | null>(null)
   const NETS = [{ value: 'vodacom', label: 'Vodacom M-Pesa' }, { value: 'tigo', label: 'Tigo Pesa' }, { value: 'airtel', label: 'Airtel Money' }, { value: 'halo', label: 'HaloPesa' }]
 
-  const fetchDevices = () => { setLoading(true); api.get('/devices/').then(r => { setDevices((r.data.results || r.data).filter((d: any) => d.status !== 'unclaimed')); setLoading(false) }).catch(() => setLoading(false)) }
+  const fetchDevices = (silent = false) => {
+    if (!silent) setLoading(true)
+    api.get('/devices/').then(r => {
+      setDevices((r.data.results || r.data).filter((d: any) => d.status !== 'unclaimed'))
+      if (!silent) setLoading(false)
+    }).catch(() => { if (!silent) setLoading(false) })
+  }
   const fetchPending = () => { setLoadingPending(true); api.get('/devices/pending/').then(r => { setPending(r.data.results || r.data); setLoadingPending(false) }).catch(() => { setPending([]); setLoadingPending(false) }) }
   const fetchClients = () => { api.get('/clients/').then(r => setClients(r.data.results || r.data)) }
-  useEffect(() => { fetchDevices(); fetchPending(); fetchClients() }, [])
+  useEffect(() => {
+    fetchDevices(); fetchPending(); fetchClients()
+    // Sasisha monitoring (betri/backup/signal) kila sekunde 15 kimya
+    // kimya (bila spinner), ili data ya live ionekane bila kubonyeza refresh.
+    const interval = setInterval(() => fetchDevices(true), 15000)
+    return () => clearInterval(interval)
+  }, [])
 
   const openEdit = (d: any) => { setEditDev(d); setForm({ name: d.name, network: d.network, lipa_number: d.lipa_number, phone_number: d.phone_number, device_id: d.device_id, description: d.description || '', shared_with: d.shared_with || [] }); setShowModal(true) }
   const openCreate = () => { setEditDev(null); setForm({ name: '', network: 'vodacom', lipa_number: '', phone_number: '', device_id: '', description: '', shared_with: [] }); setShowModal(true) }
@@ -798,6 +830,21 @@ export function AdminDevices() {
       setClaimedKey({ device: d.name, key: r.data.api_key })
       show('success', t('updated_success'))
     } catch { show('error', t('error')) }
+  }
+
+  const runCommand = async () => {
+    if (!confirmCommand) return
+    const { device, action } = confirmCommand
+    setCommandLoading(device.id)
+    try {
+      await api.post(`/devices/${device.id}/command/`, { action })
+      show('success', t('command_sent'))
+    } catch {
+      show('error', t('error'))
+    } finally {
+      setCommandLoading(null)
+      setConfirmCommand(null)
+    }
   }
 
   const openClaim = (d: any) => {
@@ -859,7 +906,7 @@ export function AdminDevices() {
 
         {tab === 'active' && (
           <Card>
-            <Table loading={loading} headers={[t('device_name'), t('network'), t('lipa_number'), 'SIM', 'ID', t('shared_with'), t('last_seen'), t('status'), '']}
+            <Table loading={loading} headers={[t('device_name'), t('network'), t('lipa_number'), 'SIM', 'ID', t('shared_with'), t('battery'), t('signal'), t('backup_status'), t('last_seen'), t('status'), '']}
               rows={devices.map((d, idx) => [
                 <div style={{ animation: `apFadeUp 0.3s ease ${idx * 40}ms both` }}><div style={{ fontWeight: 600, fontSize: 13 }}>{d.name}</div><div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.description}</div></div>,
                 <Badge text={d.network_display} color={nc[d.network] || 'gray'} />,
@@ -867,11 +914,16 @@ export function AdminDevices() {
                 <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{d.phone_number}</span>,
                 <code style={{ fontSize: 11 }}>{d.device_id}</code>,
                 d.shared_with_names?.length ? <Badge text={d.shared_with_names.join(', ')} color="purple" /> : <span style={{ color: 'var(--gray-300)' }}>{t('none')}</span>,
+                batteryText(d.battery_percent),
+                signalBadge(d.last_rssi),
+                d.on_backup_power ? <Badge text={t('backup_active')} color="red" /> : <span style={{ color: 'var(--gray-300)' }}>—</span>,
                 d.last_seen ? new Date(d.last_seen).toLocaleString('sw-TZ') : t('never'),
                 <Badge text={d.is_active ? t('active') : t('inactive')} color={d.is_active ? 'green' : 'red'} />,
                 <div style={{ display: 'flex', gap: 4 }}>
                   <ABtn icon={Icons.IcoEdit}   tip={t('edit')}            cls="ap-btn-edit"   onClick={() => openEdit(d)} />
                   <ABtn icon={Icons.IcoKey}    tip={t('regenerate_key')}  cls="ap-btn-mikrotik" onClick={() => setConfirmRegen(d)} />
+                  <ABtn icon={Icons.IcoSync}   tip={t('restart_device')}  cls="ap-btn-sync"   onClick={() => setConfirmCommand({ device: d, action: 'restart' })} disabled={commandLoading === d.id} spinning={commandLoading === d.id} />
+                  <ABtn icon={Icons.IcoPower}  tip={t('sim_reset')}       cls="ap-btn-power"  onClick={() => setConfirmCommand({ device: d, action: 'sim_reset' })} disabled={commandLoading === d.id} />
                   <ABtn icon={Icons.IcoDelete} tip={t('delete')}          cls="ap-btn-delete" onClick={() => handleDelete(d)} />
                 </div>,
               ])}
@@ -957,6 +1009,15 @@ export function AdminDevices() {
           title={t('regenerate_key')}
           message={t('regenerate_key_confirm')}
           danger
+        />
+
+        <ConfirmDialog
+          open={!!confirmCommand}
+          onClose={() => setConfirmCommand(null)}
+          onConfirm={runCommand}
+          title={confirmCommand?.action === 'restart' ? t('restart_device') : t('sim_reset')}
+          message={confirmCommand?.action === 'restart' ? t('restart_device_confirm') : t('sim_reset_confirm')}
+          danger={confirmCommand?.action === 'sim_reset'}
         />
       </div>
     </Layout>
