@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, PieChart, Pie, Cell, Legend, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import api from '../lib/api'
 import Layout from '../components/Layout'
 import { StatCard, Table, Badge, PageHeader, Card, CardHeader, Button, Modal, Input, Select, Alert, FormRow, FormActions, ConfirmDialog, Tabs } from '../components/UI'
@@ -7,7 +7,7 @@ import { useLang } from '../contexts/LangContext'
 import { useAuth } from '../contexts/AuthContext'
 import { MikroTikPermissionsModal } from './MikroTikManager'
 
-const WEEK = [{ d: 'Ju', v: 12 }, { d: 'Al', v: 19 }, { d: 'Ju', v: 8 }, { d: 'Al', v: 24 }, { d: 'Ij', v: 16 }, { d: 'Ar', v: 31 }, { d: 'Ju', v: 22 }]
+const PIE_COLORS = ['#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899']
 
 function useAlert() {
   const { t } = useLang()
@@ -106,7 +106,7 @@ const GLOBAL_STYLES = `
   }
 
   .dash-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1rem; margin-bottom:1.5rem; }
-  .dash-bottom { display:grid; grid-template-columns:2fr 1fr; gap:1.25rem; }
+  .dash-bottom { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:1.25rem; }
   .banner-inner { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; }
   .lipa-row { display:flex; flex-wrap:wrap; gap:0.75rem 1.5rem; margin-bottom:16px; }
   .steps-box { background:rgba(0,0,0,0.2); border-radius:12px; padding:12px 14px; border:1px solid rgba(99,102,241,0.15); }
@@ -313,16 +313,17 @@ export function AdminDashboard() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
           <Card style={{ gridColumn: 'span 2' }}>
-            <CardHeader title={t('vouchers_this_week')} />
+            <CardHeader title={t('growth_by_month') || 'Ongezeko kwa Mwezi'} />
             <div style={{ padding: '1rem' }}>
               <ResponsiveContainer width="100%" height={180}>
-                <AreaChart data={WEEK}>
-                  <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/><stop offset="95%" stopColor="#6366f1" stopOpacity={0}/></linearGradient></defs>
-                  <XAxis dataKey="d" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
+                <BarChart data={data?.growth_by_month || []}>
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }}/>
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#9ca3af' }} allowDecimals={false}/>
                   <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}/>
-                  <Area type="monotone" dataKey="v" stroke="#6366f1" fill="url(#ag)" strokeWidth={2} name="Vouchers"/>
-                </AreaChart>
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="clients" name="Clients" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="routers" name="Routers" fill="#10b981" radius={[4, 4, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </Card>
@@ -1591,12 +1592,6 @@ function DashChartTooltip({ active, payload, label }: any) {
   )
 }
 
-const DASH_CHART = [
-  { h: '08:00', v: 2 }, { h: '09:00', v: 5 }, { h: '10:00', v: 8 },
-  { h: '11:00', v: 6 }, { h: '12:00', v: 12 }, { h: '13:00', v: 9 },
-  { h: '14:00', v: 15 }, { h: '15:00', v: 11 }, { h: '16:00', v: 7 },
-]
-
 // ── CLIENT DASHBOARD ──────────────────────────────────────
 export function ClientDashboard() {
   const { t } = useLang()
@@ -1717,14 +1712,49 @@ export function ClientDashboard() {
             </div>
             <div style={{ padding: '1rem' }}>
               <ResponsiveContainer width="100%" height={175}>
-                <AreaChart data={DASH_CHART} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
-                  <defs><linearGradient id="cdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.22}/><stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/></linearGradient></defs>
-                  <XAxis dataKey="h" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} />
-                  <Tooltip content={<DashChartTooltip />} cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }} />
-                  <Area type="monotone" dataKey="v" stroke="#8b5cf6" fill="url(#cdGrad)" strokeWidth={2.5} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: '#8b5cf6' }} />
-                </AreaChart>
+                <BarChart data={data?.hourly_vouchers || []} margin={{ top: 4, right: 4, left: -18, bottom: 0 }}>
+                  <XAxis dataKey="hour" axisLine={false} tickLine={false} interval={2} tick={{ fontSize: 9, fill: '#9ca3af' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#9ca3af' }} allowDecimals={false} />
+                  <Tooltip content={<DashChartTooltip />} cursor={{ fill: '#f9fafb' }} />
+                  <Bar dataKey="count" fill="#8b5cf6" radius={[3, 3, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
+            </div>
+          </div>
+          <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.45s both' }}>
+            <div style={{ padding: '1rem 1.25rem 0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#111827', margin: 0 }}>{t('package_breakdown') || 'Mgawanyo wa Package'}</h3>
+            </div>
+            <div style={{ padding: '0.75rem 1rem' }}>
+              {loaded && (data?.package_breakdown || []).length === 0 ? (
+                <div style={{ padding: '2rem 1rem', textAlign: 'center' }}>
+                  <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{t('no_vouchers_today')}</p>
+                </div>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={140}>
+                    <PieChart>
+                      <Pie data={data?.package_breakdown || []} dataKey="count" nameKey="name" innerRadius={38} outerRadius={58} paddingAngle={2}>
+                        {(data?.package_breakdown || []).map((_: any, i: number) => (
+                          <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: any, name: any, props: any) => [`${value} (${props.payload.percent}%)`, name]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+                    {(data?.package_breakdown || []).map((p: any, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4b5563' }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: PIE_COLORS[i % PIE_COLORS.length], flexShrink: 0 }} />
+                          {p.name}
+                        </span>
+                        <span style={{ fontWeight: 700, color: '#111827' }}>{p.percent}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 16, overflow: 'hidden', animation: 'cdFadeSlide 0.5s ease 0.5s both' }}>

@@ -38,6 +38,8 @@ export const translations = {
     system_status: 'Hali ya Mfumo',
     recent_vouchers: 'Vouchers za Hivi Karibuni',
     vouchers_this_week: 'Vouchers za Wiki Hii',
+    growth_by_month: 'Ongezeko kwa Mwezi',
+    package_breakdown: 'Mgawanyo wa Package',
 
     // Lipa namba
     lipa_namba: 'Namba za Kulipa',
@@ -204,6 +206,8 @@ export const translations = {
     system_status: 'System Status',
     recent_vouchers: 'Recent Vouchers',
     vouchers_this_week: "This Week's Vouchers",
+    growth_by_month: 'Growth by Month',
+    package_breakdown: 'Package Breakdown',
 
     // Lipa namba
     lipa_namba: 'Payment Numbers',
