@@ -68,6 +68,15 @@ const LOCAL_TR: Record<string, { sw: string; en: string }> = {
   last_7_days:          { sw: 'Siku 7',                                       en: '7 Days' },
   last_14_days:         { sw: 'Siku 14',                                      en: '14 Days' },
   last_30_days:         { sw: 'Siku 30',                                      en: '30 Days' },
+  last_60_days:         { sw: 'Siku 60',                                      en: '60 Days' },
+  last_90_days:         { sw: 'Siku 90',                                      en: '90 Days' },
+  custom_range:         { sw: 'Chagua Tarehe',                                en: 'Custom Range' },
+  from_date:            { sw: 'Kuanzia',                                      en: 'From' },
+  to_date:              { sw: 'Hadi',                                         en: 'To' },
+  apply:                { sw: 'Tumia',                                        en: 'Apply' },
+  download_pdf:         { sw: 'Pakua PDF',                                    en: 'Download PDF' },
+  downloading:          { sw: 'Inatengeneza PDF...',                          en: 'Generating PDF...' },
+  pdf_download_error:   { sw: 'Imeshindwa kupakua PDF',                       en: 'Failed to download PDF' },
   loading:              { sw: 'Inapakia...',                                  en: 'Loading...' },
   no_sales_data:        { sw: 'Hakuna data ya mauzo bado',                    en: 'No sales data yet' },
   no_sales_data_hint:   { sw: 'Hakuna ripoti bado — itaonekana hapa baada ya saa 23:30', en: 'No reports yet — will appear here after 11:30 PM' },
@@ -140,16 +149,58 @@ export function AnalysisPage() {
 
   // ── Ripoti ya mauzo ──
   const [days, setDays] = useState(14)
+  const [useCustomRange, setUseCustomRange] = useState(false)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [appliedRange, setAppliedRange] = useState<{ start: string; end: string } | null>(null)
   const [reports, setReports] = useState<any[]>([])
   const [reportsLoading, setReportsLoading] = useState(true)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  // Query string inayoakisi hali ya sasa (days PEKEE, au custom range
+  // PEKEE) — inatumika kwa fetchReports NA kwa Download PDF, ili zote
+  // mbili ziwe sawa kila wakati.
+  const currentRangeQuery = () => {
+    if (useCustomRange && appliedRange) {
+      return `start=${appliedRange.start}&end=${appliedRange.end}`
+    }
+    return `days=${days}`
+  }
 
   const fetchReports = () => {
+    if (useCustomRange && !appliedRange) return // bado hajabonyeza 'Tumia'
     setReportsLoading(true)
-    api.get(`/vouchers/sales-reports/?days=${days}`)
+    api.get(`/vouchers/sales-reports/?${currentRangeQuery()}`)
       .then(r => setReports((r.data.results || r.data).sort((a: any, b: any) => a.date.localeCompare(b.date))))
       .finally(() => setReportsLoading(false))
   }
-  useEffect(fetchReports, [days])
+  useEffect(fetchReports, [days, useCustomRange, appliedRange])
+
+  const handleApplyCustomRange = () => {
+    if (!startDate || !endDate) return
+    setAppliedRange({ start: startDate, end: endDate })
+  }
+
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true)
+    try {
+      const res = await api.get(`/vouchers/sales-reports/export-pdf/?${currentRangeQuery()}`, {
+        responseType: 'blob',
+      })
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `ripoti_mauzo_${new Date().toISOString().slice(0, 10)}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      showAlrt('error', L('pdf_download_error'))
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
 
   // ── Historia ya PDF ──
   const [batches, setBatches] = useState<any[]>([])
@@ -197,6 +248,8 @@ export function AnalysisPage() {
     { v: 7, l: L('last_7_days') },
     { v: 14, l: L('last_14_days') },
     { v: 30, l: L('last_30_days') },
+    { v: 60, l: L('last_60_days') },
+    { v: 90, l: L('last_90_days') },
   ]
 
   return (
@@ -230,7 +283,7 @@ export function AnalysisPage() {
           {[
             { l: L('today_revenue'), v: money(todayReport?.total_revenue || 0), c: '#10b981', Ico: Icons.Today },
             { l: L('today_vouchers'), v: todayReport?.total_vouchers_sold || 0, c: '#6366f1', Ico: Icons.Voucher },
-            { l: `${L('total_period')} (${days}d)`, v: money(periodRevenue), c: '#f59e0b', Ico: Icons.Money },
+            { l: `${L('total_period')} (${useCustomRange && appliedRange ? `${reports.length}d` : `${days}d`})`, v: money(periodRevenue), c: '#f59e0b', Ico: Icons.Money },
             { l: L('avg_daily'), v: money(Math.round(avgDaily)), c: '#8b5cf6', Ico: Icons.Report },
           ].map((s, i) => (
             <div key={i} style={{ background: '#fff', border: '1px solid var(--gray-100)', borderRadius: 12, padding: '0.9rem', borderLeft: `4px solid ${s.c}`, boxShadow: 'var(--card-shadow)' }}>
@@ -250,13 +303,33 @@ export function AnalysisPage() {
               <CardHeader
                 title={L('sales_trend')}
                 action={
-                  <div style={{ display: 'flex', gap: 5 }}>
-                    {DAY_OPTS.map(opt => (
-                      <button key={opt.v} onClick={() => setDays(opt.v)}
-                        style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: days === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: days === opt.v ? 'var(--primary-light)' : '#fff', color: days === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                        {opt.l}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      {DAY_OPTS.map(opt => (
+                        <button key={opt.v} onClick={() => { setUseCustomRange(false); setAppliedRange(null); setDays(opt.v) }}
+                          style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: !useCustomRange && days === opt.v ? 'var(--primary)' : 'var(--gray-200)', background: !useCustomRange && days === opt.v ? 'var(--primary-light)' : '#fff', color: !useCustomRange && days === opt.v ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                          {opt.l}
+                        </button>
+                      ))}
+                      <button onClick={() => setUseCustomRange(v => !v)}
+                        style={{ padding: '5px 12px', borderRadius: 7, border: '1.5px solid', borderColor: useCustomRange ? 'var(--primary)' : 'var(--gray-200)', background: useCustomRange ? 'var(--primary-light)' : '#fff', color: useCustomRange ? 'var(--primary-dark)' : 'var(--gray-600)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                        {L('custom_range')}
                       </button>
-                    ))}
+                      <Button size="sm" variant="ghost" onClick={handleDownloadPdf} disabled={downloadingPdf || reports.length === 0}>
+                        {downloadingPdf ? L('downloading') : L('download_pdf')}
+                      </Button>
+                    </div>
+                    {useCustomRange && (
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{L('from_date')}</span>
+                        <input type="date" value={startDate} max={endDate || undefined} onChange={e => setStartDate(e.target.value)}
+                          style={{ padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--gray-200)', fontSize: 12 }} />
+                        <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{L('to_date')}</span>
+                        <input type="date" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)}
+                          style={{ padding: '4px 8px', borderRadius: 6, border: '1.5px solid var(--gray-200)', fontSize: 12 }} />
+                        <Button size="sm" onClick={handleApplyCustomRange} disabled={!startDate || !endDate}>{L('apply')}</Button>
+                      </div>
+                    )}
                   </div>
                 }
               />
