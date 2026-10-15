@@ -490,7 +490,7 @@ export function VoucherManagementPage() {
   const handlePrint = () => {
     const themeObj = printThemeObj
     const biz = business_name
-    const PER_PAGE = 32
+    const COLS = 4 // vocha kwa kila safu
 
     const makeVoucherHtml = (v: any) => {
       const price = Number(v.package_price || v.price || 0)
@@ -551,17 +551,17 @@ export function VoucherManagementPage() {
       </div>`
     }
 
-    // Gawanya vouchers katika vikundi vya PER_PAGE
-    const chunks: any[][] = []
-    for (let i = 0; i < printVouchers.length; i += PER_PAGE) {
-      chunks.push(printVouchers.slice(i, i + PER_PAGE))
+    // Gawanya vouchers katika SAFU za COLS (4). Kila safu ni block moja
+    // isiyogawanyika (break-inside: avoid) na browser yenyewe huamua ni
+    // safu ngapi zinaingia kwenye kila ukurasa kulingana na karatasi
+    // (A4/Letter). HAKUNA tena idadi ya vocha-kwa-ukurasa iliyowekwa kwa
+    // mkono wala page-break ya kulazimisha - hizo ndizo zilizosababisha
+    // kurasa za nusu-tupu (24 + 8 + 24 + 8 ...).
+    const rows: any[][] = []
+    for (let i = 0; i < printVouchers.length; i += COLS) {
+      rows.push(printVouchers.slice(i, i + COLS))
     }
-
-    const pages = chunks.map((chunk, pageIdx) => {
-      const vHtml = chunk.map(makeVoucherHtml).join('')
-      const isLast = pageIdx === chunks.length - 1
-      return `<div class="page${isLast ? ' last-page' : ''}">${vHtml}</div>`
-    }).join('')
+    const pages = `<div class="sheet">${rows.map(r => `<div class="row">${r.map(makeVoucherHtml).join('')}</div>`).join('')}</div>`
 
     const html = `<!DOCTYPE html>
 <html>
@@ -572,19 +572,16 @@ export function VoucherManagementPage() {
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
     body { background: white; font-family: Arial, sans-serif; }
 
-    .page {
-      width: 202mm;
-      padding: 3mm;
+    /* Hakuna width/height ya kudumu: karatasi ikiwa A4 au Letter,
+       safu zinajipanga zenyewe. Safu haigawanyiki katikati ya kurasa. */
+    .sheet { width: 100%; padding: 0 3mm; }
+    .row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: minmax(34mm, auto);
       gap: 2mm;
-      page-break-after: always;
-      break-after: page;
-    }
-    .last-page {
-      page-break-after: avoid;
-      break-after: avoid;
+      margin-bottom: 2mm;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
 
     .voucher {
@@ -639,20 +636,7 @@ export function VoucherManagementPage() {
     @page { size: A4 portrait; margin: 4mm; }
     @media print {
       body { margin: 0; }
-      .page {
-        width: 202mm !important;
-        padding: 3mm !important;
-        gap: 2mm !important;
-        grid-auto-rows: minmax(34mm, auto) !important;
-        page-break-after: always !important;
-        break-after: page !important;
-      }
-      .last-page { page-break-after: avoid !important; break-after: avoid !important; }
-      .voucher {
-        overflow: visible !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-      }
+      .voucher { overflow: visible !important; page-break-inside: avoid !important; break-inside: avoid !important; }
     }
   </style>
 </head>
