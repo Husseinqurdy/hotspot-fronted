@@ -12,6 +12,8 @@ import { VoucherManagementPage } from './pages/VoucherManagement'
 import { ClientWithdraw, AdminWithdrawalRequests } from './pages/WithdrawPages'
 import type { JSX } from 'react'
 import { AnalysisPage } from './pages/AnalysisPage'
+import AccountingPage from './pages/Accounting'
+`import AccountingPage from './pages/Accounting'`
 
 // ── PAGE TITLE — inabadilika kulingana na lugha iliyochaguliwa ──
 const PAGE_TITLE: Record<string, string> = {
@@ -69,7 +71,8 @@ export default function App() {
             <Route path="/admin/vouchers" element={<Guard role="superadmin"><AdminVouchers /></Guard>} />
             <Route path="/admin/ads" element={<Guard role="superadmin"><AdminAds /></Guard>} />
             <Route path="/admin/requests" element={<Guard role="superadmin"><AdminWithdrawalRequests /></Guard>} />
-            
+            <Route path="/admin/accounting" element={<Guard role="superadmin"><AccountingPage /></Guard>} />
+
 
 
             {/* Client */}
