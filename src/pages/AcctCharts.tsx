@@ -2,6 +2,7 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   AreaChart, Area, PieChart, Pie, Cell, ReferenceLine,
 } from 'recharts'
+import { useTr } from './AcctI18n'
 
 // ── TZS helpers (zinatumika kote kwenye moduli) ───────────────
 export const fmt = (n: any) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })
@@ -11,8 +12,11 @@ export const compact = (n: number) => {
   const f = (v: number, s: string) => `${(n < 0 ? '-' : '')}${+(v).toFixed(1)}${s}`
   return a >= 1e9 ? f(a / 1e9, 'B') : a >= 1e6 ? f(a / 1e6, 'M') : a >= 1e3 ? f(a / 1e3, 'K') : `${n}`
 }
-const MONTHS = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ago', 'Sep', 'Okt', 'Nov', 'Des']
-export const monthLabel = (ym: string) => `${MONTHS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(2, 4)}`
+const MONTHS = {
+  sw: ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ago', 'Sep', 'Okt', 'Nov', 'Des'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+}
+export const monthLabel = (ym: string, lang: string) => `${MONTHS[lang === 'sw' ? 'sw' : 'en'][Number(ym.slice(5, 7)) - 1]} ${ym.slice(2, 4)}`
 
 export const C = { income: '#10b981', expense: '#f43f5e', profit: '#6366f1', grid: '#eef0f6', axis: '#94a3b8' }
 const PALETTE = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#0ea5e9', '#a855f7', '#94a3b8']
@@ -23,14 +27,16 @@ const tip = {
 }
 const axis = { tick: { fontSize: 11, fill: C.axis }, axisLine: false, tickLine: false } as const
 
-function Empty({ text = 'Hakuna data ya kuonyesha kwenye kipindi hiki.' }: { text?: string }) {
-  return <div style={{ height: 220, display: 'grid', placeItems: 'center', color: '#94a3b8', fontSize: 13, textAlign: 'center' }}>{text}</div>
+function Empty({ text }: { text?: string }) {
+  const { t } = useTr()
+  return <div style={{ height: 220, display: 'grid', placeItems: 'center', color: '#94a3b8', fontSize: 13, textAlign: 'center' }}>{text || t('no_data')}</div>
 }
 
 // Faida iliyojumuishwa (cumulative) — kwa hero (mandharinyuma meusi)
 export function TrendArea({ months }: { months: any[] }) {
+  const { t, lang } = useTr()
   let run = 0
-  const data = months.map(m => ({ m: monthLabel(m.month), v: (run += Number(m.income) - Number(m.expense)) }))
+  const data = months.map(m => ({ m: monthLabel(m.month, lang), v: (run += Number(m.income) - Number(m.expense)) }))
   if (data.length < 2) return null
   return (
     <ResponsiveContainer width="100%" height={110}>
@@ -42,15 +48,16 @@ export function TrendArea({ months }: { months: any[] }) {
         </defs>
         <XAxis dataKey="m" tick={{ fontSize: 10, fill: 'rgba(255,255,255,.55)' }} axisLine={false} tickLine={false} />
         <YAxis hide domain={['auto', 'auto']} />
-        <Tooltip {...tip} formatter={(v: any) => [money(v), 'Faida jumuishi']} />
-        <Area type="monotone" dataKey="v" stroke="#c7d2fe" strokeWidth={2.5} fill="url(#acTrend)" />
+        <Tooltip {...tip} formatter={(v: any) => [money(v), t('cum_profit')]} />
+        <Area type="monotone" dataKey="v" stroke="#c7d2fe" strokeWidth={2.5} fill="url(#acTrend)" animationDuration={1200} />
       </AreaChart>
     </ResponsiveContainer>
   )
 }
 
 export function MonthlyBars({ months }: { months: any[] }) {
-  const data = months.map(m => ({ m: monthLabel(m.month), Mapato: Number(m.income), Matumizi: Number(m.expense) }))
+  const { t, lang } = useTr()
+  const data = months.map(m => ({ m: monthLabel(m.month, lang), income: Number(m.income), expense: Number(m.expense) }))
   if (!data.length) return <Empty />
   return (
     <ResponsiveContainer width="100%" height={260}>
@@ -60,25 +67,26 @@ export function MonthlyBars({ months }: { months: any[] }) {
         <YAxis {...axis} tickFormatter={compact} width={52} />
         <Tooltip {...tip} cursor={{ fill: 'rgba(99,102,241,.06)' }} />
         <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="Mapato" fill={C.income} radius={[6, 6, 0, 0]} maxBarSize={28} />
-        <Bar dataKey="Matumizi" fill={C.expense} radius={[6, 6, 0, 0]} maxBarSize={28} />
+        <Bar dataKey="income" name={t('income')} fill={C.income} radius={[6, 6, 0, 0]} maxBarSize={28} animationDuration={900} />
+        <Bar dataKey="expense" name={t('expense')} fill={C.expense} radius={[6, 6, 0, 0]} maxBarSize={28} animationDuration={900} animationBegin={150} />
       </BarChart>
     </ResponsiveContainer>
   )
 }
 
 export function SiteBars({ rows }: { rows: any[] }) {
-  const data = rows.map(r => ({ s: r.site, v: Number(r.profit) })).sort((a, b) => b.v - a.v)
-  if (!data.length) return <Empty text="Chagua 'Zote' kwenye Site ili kulinganisha sites." />
+  const { t, be } = useTr()
+  const data = rows.map(r => ({ s: be(r.site), v: Number(r.profit) })).sort((a, b) => b.v - a.v)
+  if (!data.length) return <Empty text={t('site_hint')} />
   return (
     <ResponsiveContainer width="100%" height={Math.max(180, data.length * 42 + 30)}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 0 }}>
         <CartesianGrid stroke={C.grid} horizontal={false} />
         <XAxis type="number" {...axis} tickFormatter={compact} />
         <YAxis type="category" dataKey="s" {...axis} width={110} />
-        <Tooltip {...tip} cursor={{ fill: 'rgba(99,102,241,.06)' }} formatter={(v: any) => [money(v), 'Faida / Hasara']} />
+        <Tooltip {...tip} cursor={{ fill: 'rgba(99,102,241,.06)' }} formatter={(v: any) => [money(v), t('profit_loss')]} />
         <ReferenceLine x={0} stroke="#cbd5e1" />
-        <Bar dataKey="v" radius={6} maxBarSize={22}>
+        <Bar dataKey="v" radius={6} maxBarSize={22} animationDuration={900}>
           {data.map((d, i) => <Cell key={i} fill={d.v >= 0 ? C.profit : C.expense} />)}
         </Bar>
       </BarChart>
@@ -87,25 +95,26 @@ export function SiteBars({ rows }: { rows: any[] }) {
 }
 
 export function CategoryDonut({ items }: { items: { category: string; total: number | string }[] }) {
-  const sorted = items.map(i => ({ name: i.category, value: Number(i.total) })).filter(i => i.value > 0).sort((a, b) => b.value - a.value)
-  if (!sorted.length) return <Empty text="Hakuna rekodi za kundi hili." />
+  const { t, be } = useTr()
+  const sorted = items.map(i => ({ name: be(i.category), value: Number(i.total) })).filter(i => i.value > 0).sort((a, b) => b.value - a.value)
+  if (!sorted.length) return <Empty text={t('no_cat')} />
   const top = sorted.slice(0, 6)
   const rest = sorted.slice(6).reduce((a, b) => a + b.value, 0)
-  const data = rest ? [...top, { name: 'Nyingine', value: rest }] : top
+  const data = rest ? [...top, { name: t('other'), value: rest }] : top
   const total = data.reduce((a, b) => a + b.value, 0)
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
       <div style={{ position: 'relative', width: 180, height: 180, flexShrink: 0 }}>
         <ResponsiveContainer>
           <PieChart>
-            <Pie data={data} dataKey="value" innerRadius={58} outerRadius={86} paddingAngle={2} stroke="none">
+            <Pie data={data} dataKey="value" innerRadius={58} outerRadius={86} paddingAngle={2} stroke="none" animationDuration={1000}>
               {data.map((_, i) => <Cell key={i} fill={PALETTE[i % PALETTE.length]} />)}
             </Pie>
             <Tooltip {...tip} formatter={(v: any, n: any) => [money(v), n]} />
           </PieChart>
         </ResponsiveContainer>
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none', textAlign: 'center' }}>
-          <div><div style={{ fontSize: 11, color: C.axis }}>Jumla (TZS)</div><div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{compact(total)}</div></div>
+          <div><div style={{ fontSize: 11, color: C.axis }}>{t('total_tzs')}</div><div style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>{compact(total)}</div></div>
         </div>
       </div>
       <div style={{ flex: 1, minWidth: 170, display: 'grid', gap: 7 }}>
