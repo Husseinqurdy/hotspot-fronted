@@ -8,7 +8,7 @@ import { useTr } from './AcctI18n'
 const today = () => new Date().toISOString().slice(0, 10)
 const KINDS = ['income', 'expense', 'asset', 'liability', 'loan', 'loan_payment']
 const KIND_COLOR: Record<string, any> = { income: 'green', expense: 'red', asset: 'blue', liability: 'orange', loan: 'purple', loan_payment: 'yellow' }
-const ACTIONS = ['open', 'create', 'update', 'void', 'export', 'site_create', 'site_update']
+const ACTIONS = ['open', 'create', 'update', 'void', 'export', 'site_create', 'site_update', 'site_delete']
 const TABS = ['summary', 'entries', 'sites', 'logs']
 const emptyEntry = { id: 0, kind: 'income', site: '', date: today(), category: '', description: '', amount: '', interest_rate: '', loan_ref: '' }
 const d = (ms: number) => ({ ['--d' as any]: `${ms}ms` }) as React.CSSProperties
@@ -92,6 +92,7 @@ export default function AccountingPage() {
   const [voidTarget, setVoidTarget] = useState<any>(null)
   const [reason, setReason] = useState('')
   const [siteForm, setSiteForm] = useState<any>(null)
+  const [delSite, setDelSite] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [ver, setVer] = useState(0)
 
@@ -99,8 +100,12 @@ export default function AccountingPage() {
     const x = e?.response?.data
     if (!x) return t('err_net')
     if (typeof x === 'string') return bmsg(x)
+    if (Array.isArray(x)) return x.map(bmsg).join(' ')
     if (x.error || x.detail) return bmsg(x.error || x.detail)
-    return Object.entries(x).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.map(bmsg).join(' ') : bmsg(String(v))}`).join(' | ')
+    return Object.entries(x).map(([k, v]) => {
+      const m = Array.isArray(v) ? v.map(bmsg).join(' ') : bmsg(String(v))
+      return k === 'non_field_errors' ? m : `${k}: ${m}`
+    }).join(' | ')
   }
   const fail = (e: any) => setNote({ type: 'error', text: errMsg(e) })
   useEffect(() => { if (!note) return; const id = setTimeout(() => setNote(null), 6500); return () => clearTimeout(id) }, [note])
@@ -155,9 +160,17 @@ export default function AccountingPage() {
       setSiteForm(null); loadSites(); setNote({ type: 'success', text: t('msg_site') })
     } catch (e) { fail(e) } finally { setSaving(false) }
   }
+  const removeSite = async () => {
+    setSaving(true)
+    try {
+      await api.delete(`/accounting/sites/${delSite.id}/`)
+      if (site === String(delSite.id)) setSite('')
+      setDelSite(null); loadSites(); setNote({ type: 'success', text: t('msg_site_deleted') })
+    } catch (e) { setDelSite(null); fail(e) } finally { setSaving(false) }
+  }
   const download = async (type: 'xlsx' | 'pdf') => {
     try {
-      const r = await api.get('/accounting/export/', { params: { ...qp(), type }, responseType: 'blob' })
+      const r = await api.get('/accounting/export/', { params: { ...qp(), type, lang }, responseType: 'blob' })
       const url = URL.createObjectURL(r.data)
       const a = document.createElement('a'); a.href = url; a.download = `accounting-${today()}.${type}`; a.click(); URL.revokeObjectURL(url)
     } catch (e: any) {
@@ -171,6 +184,7 @@ export default function AccountingPage() {
     const x = l.detail || {}
     if (x.changes) return Object.entries(x.changes).map(([k, v]: any) => `${k}: ${v.kabla ?? '—'} → ${v.baada ?? '—'}`).join(', ') || t('none')
     if (x.reason) return `${t('reason')}: ${x.reason} (${fmt(x.snapshot?.amount)})`
+    if (x.snapshot?.name) return x.snapshot.name
     if (x.after) return `${x.kind ? t('k_' + x.kind) : ''} ${x.after.amount ? money(x.after.amount) : x.after.name || ''} ${x.after.description || x.after.category || ''}`.trim()
     if (x.type) return `${t('file')}: ${String(x.type).toUpperCase()} (${x.date_from || t('start')} → ${x.date_to || t('now')})`
     return ''
@@ -283,7 +297,10 @@ export default function AccountingPage() {
               <div style={{ padding: '1rem', display: 'flex', justifyContent: 'flex-end' }}><Button onClick={() => setSiteForm({ name: '', note: '', is_active: true })}>{t('add_site')}</Button></div>
               <Table emptyMessage={t('no_sites')} headers={[t('col_name'), t('col_desc'), t('col_status'), '']}
                 rows={sites.map(x => [x.name, x.note || '—', <Badge text={t(x.is_active ? 'active' : 'disabled')} color={x.is_active ? 'green' : 'gray'} />,
-                  <Button size="sm" variant="ghost" onClick={() => setSiteForm({ ...x })}>{t('edit')}</Button>])} />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <Button size="sm" variant="ghost" onClick={() => setSiteForm({ ...x })}>{t('edit')}</Button>
+                    <Button size="sm" variant="danger" onClick={() => setDelSite(x)}>{t('del')}</Button>
+                  </div>])} />
             </div>
           )}
 
@@ -340,6 +357,13 @@ export default function AccountingPage() {
           <p style={{ fontSize: 13, marginBottom: 12 }}>{t('void_note', { k: t('k_' + voidTarget.kind), a: money(voidTarget.amount), d: voidTarget.date })}</p>
           <Input label={t('void_reason')} value={reason} onChange={(e: any) => setReason(e.target.value)} />
           <FormActions><Button variant="ghost" onClick={() => setVoidTarget(null)}>{t('cancel')}</Button><Button variant="danger" loading={saving} disabled={!reason.trim()} onClick={doVoid}>{t('void_title')}</Button></FormActions>
+        </>)}
+      </Modal>
+
+      <Modal open={!!delSite} onClose={() => setDelSite(null)} title={t('del_site')}>
+        {delSite && (<>
+          <p style={{ fontSize: 13, marginBottom: 12 }}>{t('del_site_note', { n: delSite.name })}</p>
+          <FormActions><Button variant="ghost" onClick={() => setDelSite(null)}>{t('cancel')}</Button><Button variant="danger" loading={saving} onClick={removeSite}>{t('del_site')}</Button></FormActions>
         </>)}
       </Modal>
 

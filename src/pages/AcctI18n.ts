@@ -36,6 +36,9 @@ const D: Record<string, [string, string]> = {
   void_title: ['Futa rekodi', 'Delete record'],
   void_note: ['{k} ya {a} ({d}) itaondolewa kwenye hesabu, lakini itabaki kwenye vitabu na logs.', '{k} of {a} ({d}) will be removed from the totals but will stay in the books and logs.'],
   void_reason: ['Sababu (inahitajika)', 'Reason (required)'],
+  del_site: ['Futa site', 'Delete site'],
+  del_site_note: ['Site "{n}" itafutwa kabisa. Inawezekana tu ikiwa haina rekodi yoyote; ikiwa ina rekodi, izime badala yake.', 'Site "{n}" will be permanently deleted. This only works if it has no records; if it does, disable it instead.'],
+  msg_site_deleted: ['Site imefutwa.', 'Site deleted.'], a_site_delete: ['Amefuta site', 'Deleted a site'],
   site_new: ['Site mpya', 'New site'], site_edit: ['Hariri site', 'Edit site'], site_name: ['Jina la site', 'Site name'], site_note: ['Maelezo (hiari)', 'Note (optional)'],
   keeps_old: ['Imezimwa (rekodi za zamani zinabaki)', 'Disabled (old records stay)'],
   msg_added: ['Rekodi imeongezwa.', 'Record added.'], msg_updated: ['Rekodi imebadilishwa.', 'Record updated.'],
@@ -64,6 +67,7 @@ const BE: Record<string, string> = {
   'Tarehe si sahihi (YYYY-MM-DD).': 'Invalid date (YYYY-MM-DD).',
   'Tarehe ya kuanza iko baada ya ya mwisho.': 'Start date is after the end date.',
   'Site si sahihi.': 'Invalid site.',
+  'Site ina rekodi, haiwezi kufutwa. Izime badala yake.': 'This site has records and cannot be deleted. Disable it instead.',
 }
 const BE_RE: [RegExp, string][] = [
   [/Marejesho yanazidi bakaa ya mkopo \(([\d,.]+)\)\./, 'Repayment exceeds the loan balance ($1).'],
