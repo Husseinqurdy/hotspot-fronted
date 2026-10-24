@@ -14,8 +14,10 @@ const STATE_COLOR: Record<string, any> = { unused: 'gray', running: 'green', exp
 const PAY_COLOR: Record<string, any> = { completed: 'green', processing: 'yellow', pending: 'yellow', failed: 'red', duplicate: 'gray', invalid: 'red' }
 
 const bytes = (b: any) => { let n = Number(b || 0); const u = ['B', 'KB', 'MB', 'GB']; let i = 0; while (n >= 1024 && i < 3) { n /= 1024; i++ } return `${n.toFixed(i ? 1 : 0)} ${u[i]}` }
-const recentGet = (): string[] => { try { return JSON.parse(localStorage.getItem('vt_recent') || '[]') } catch { return [] } }
-const recentSet = (v: string[]) => { try { localStorage.setItem('vt_recent', JSON.stringify(v)) } catch { /* hifadhi si lazima */ } }
+// Orodha ya "zilizotafutwa karibuni" ni ya kila mtumiaji (kwa id) — haishirikiwi kati ya akaunti zinazotumia browser moja
+const recentKey = (uid: number) => `vt_recent:${uid}`
+const recentGet = (uid: number): string[] => { try { const v = JSON.parse(localStorage.getItem(recentKey(uid)) || '[]'); return Array.isArray(v) ? v.slice(0, 6) : [] } catch { return [] } }
+const recentSet = (uid: number, v: string[]) => { try { localStorage.setItem(recentKey(uid), JSON.stringify(v)) } catch { /* hifadhi si lazima */ } }
 
 const CSS = `
 @keyframes vtRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
@@ -67,7 +69,8 @@ function Clock({ expires }: { expires: string }) {
 
 export default function VoucherTrackPage() {
   const { t, dt } = useTt()
-  const { isSuperAdmin } = useAuth()
+  const { user, isSuperAdmin } = useAuth()
+  const uid = user?.id
   const [q, setQ] = useState('')
   const [data, setData] = useState<any>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -75,10 +78,15 @@ export default function VoucherTrackPage() {
   const [live, setLive] = useState<any>(null)
   const [liveBusy, setLiveBusy] = useState(false)
   const [liveErr, setLiveErr] = useState<string | null>(null)
-  const [recent, setRecent] = useState<string[]>(recentGet())
+  const [recent, setRecent] = useState<string[]>([])
   const [copied, setCopied] = useState(false)
   const ref = useRef<HTMLInputElement>(null)
   useEffect(() => { ref.current?.focus() }, [])
+  // pakia orodha ya mtumiaji huyu tu; futa ile ya zamani iliyoshirikiwa na wote (`vt_recent`)
+  useEffect(() => {
+    try { localStorage.removeItem('vt_recent') } catch { /* si lazima */ }
+    setRecent(uid ? recentGet(uid) : [])
+  }, [uid])
 
   const dur = (m: number) => (m % 1440 === 0 ? t('d_day', { n: m / 1440 }) : m % 60 === 0 ? t('d_hour', { n: m / 60 }) : t('d_min', { n: m }))
 
@@ -90,7 +98,7 @@ export default function VoucherTrackPage() {
       const r = await api.get('/tracking/voucher/', { params: { code } })
       setData(r.data)
       const next = [r.data.voucher.code, ...recent.filter(x => x !== r.data.voucher.code)].slice(0, 6)
-      setRecent(next); recentSet(next)
+      setRecent(next); if (uid) recentSet(uid, next)
     } catch (e: any) {
       const s = e?.response?.status
       setErr(s === 404 ? 'not_found' : s === 400 ? 'code_required' : 'err_net')
