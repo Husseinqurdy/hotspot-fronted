@@ -13,7 +13,7 @@ import { ClientWithdraw, AdminWithdrawalRequests } from './pages/WithdrawPages'
 import type { JSX } from 'react'
 import { AnalysisPage } from './pages/AnalysisPage'
 import AccountingPage from './pages/Accounting'
-`import AccountingPage from './pages/Accounting'`
+import VoucherTrackPage from './pages/VoucherTrack'
 
 // ── PAGE TITLE — inabadilika kulingana na lugha iliyochaguliwa ──
 const PAGE_TITLE: Record<string, string> = {
@@ -72,8 +72,7 @@ export default function App() {
             <Route path="/admin/ads" element={<Guard role="superadmin"><AdminAds /></Guard>} />
             <Route path="/admin/requests" element={<Guard role="superadmin"><AdminWithdrawalRequests /></Guard>} />
             <Route path="/admin/accounting" element={<Guard role="superadmin"><AccountingPage /></Guard>} />
-
-
+            <Route path="/admin/tracking" element={<Guard role="superadmin"><VoucherTrackPage /></Guard>} />
 
             {/* Client */}
             <Route path="/client/dashboard" element={<Guard role="client"><ClientDashboard /></Guard>} />
@@ -84,7 +83,7 @@ export default function App() {
             <Route path="/client/payments" element={<Guard role="client"><ClientPayments /></Guard>} />
             <Route path="/client/analysis" element={<Guard role="client"><AnalysisPage /></Guard>} />
             <Route path="/client/withdraw" element={<Guard role="client"><ClientWithdraw /></Guard>} />
-            
+            <Route path="/client/tracking" element={<Guard role="client"><VoucherTrackPage /></Guard>} />
 
             <Route path="/" element={<Redirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -21,6 +21,7 @@ const Icon = {
   Withdraw: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/><path d="M15 15l3 3 3-3"/><path d="M18 12v6"/></svg>,
   Requests: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>,
   Accounting: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><rect x="7" y="5" width="10" height="4" rx="1"/><circle cx="8.5" cy="13" r="0.8" fill="currentColor"/><circle cx="12" cy="13" r="0.8" fill="currentColor"/><circle cx="15.5" cy="13" r="0.8" fill="currentColor"/><circle cx="8.5" cy="17" r="0.8" fill="currentColor"/><circle cx="12" cy="17" r="0.8" fill="currentColor"/><circle cx="15.5" cy="17" r="0.8" fill="currentColor"/></svg>,
+  Tracking: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/><path d="M8.5 11.5l1.8 1.8 3.2-3.6"/></svg>,
   Ads: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l3.5 5.5a1 1 0 0 0 1.7-1L9 13"/><path d="M3 11l14-6v14L3 13"/><path d="M17 8a4 4 0 0 1 0 8"/></svg>,
   Logout: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
   Globe: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
@@ -39,6 +40,7 @@ const LOCAL_TR: Record<string, { sw: string; en: string }> = {
   mikrotik:      { sw: 'Simamia MikroTik', en: 'Manage MikroTik' },
   requests:      { sw: 'Maombi',           en: 'Requests' },
   accounting:    { sw: 'Uhasibu',           en: 'Accounting' },
+  tracking:      { sw: 'Fuatilia Voucher',  en: 'Track Voucher' },
   ads:           { sw: 'Matangazo',        en: 'Ads' },
   super_admin:   { sw: 'Msimamizi Mkuu',   en: 'Super Admin' },
   client:        { sw: 'Mteja',            en: 'Client' },
@@ -288,6 +290,7 @@ function TopBar({
   const getTitle = () => {
     const path = location.pathname
     if (path.includes('accounting')) return trLocal('accounting', lang)
+    if (path.includes('tracking')) return trLocal('tracking', lang)
     if (path.includes('dashboard')) return t('dashboard')
     if (path.includes('routers')) return t('routers')
     if (path.includes('mikrotik')) return trLocal('mikrotik', lang)
@@ -574,6 +577,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { to: '/admin/devices',   label: t('devices'),   icon: <Icon.Devices /> },
     { to: '/admin/payments',  label: t('payments'),  icon: <Icon.Payments /> },
     { to: '/admin/vouchers',  label: t('vouchers'),  icon: <Icon.Vouchers /> },
+    { to: '/admin/tracking', label: trLocal('tracking', lang), icon: <Icon.Tracking /> },
     { to: '/admin/ads',       label: trLocal('ads', lang), icon: <Icon.Ads /> },
     { to: '/admin/requests',  label: trLocal('requests', lang), icon: <Icon.Requests /> },
     { to: '/admin/accounting', label: trLocal('accounting', lang), icon: <Icon.Accounting /> },
@@ -584,6 +588,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { to: '/client/mikrotik',  label: trLocal('mikrotik', lang),    icon: <Icon.MikroTik /> },
     { to: '/client/packages',  label: t('packages'),                icon: <Icon.Packages /> },
     { to: '/client/vouchers',  label: t('vouchers'),                icon: <Icon.Vouchers /> },
+    { to: '/client/tracking', label: trLocal('tracking', lang), icon: <Icon.Tracking /> },
     { to: '/client/payments',  label: t('payments'),                icon: <Icon.Payments /> },
     { to: '/client/analysis',  label: trLocal('analysis', lang),    icon: <Icon.Analysis /> },
     { to: '/client/withdraw',  label: trLocal('withdraw', lang),    icon: <Icon.Withdraw /> },
